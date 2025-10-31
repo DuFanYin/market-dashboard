@@ -51,10 +51,6 @@ def print_report():
     if not a["success"]:
         print("No AHR999 data.")
     else:
-        print(f"Now (UTC):     {a['px_dt'].isoformat()}")
-        print(f"Price:         {fmt(a['px'])} USDT")
-        print(f"SMA200:        {fmt(a['sma200'])} USDT")
-        print(f"Valuation:     {fmt(a['valuation'])} USDT")
         print(f"AHR999:        {a['ahr']:.6f}  {a['zone']}")
 
 # ========= MAIN =========

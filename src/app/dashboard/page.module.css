@@ -2,6 +2,9 @@
 
 .fgChip {
   border-radius: 0.375rem; /* rounded-md */
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap; /* prevent chip text from wrapping */
 }
 
 .fgExtremeGreed {
@@ -105,4 +108,24 @@
     gap: 0.5rem;
   }
 }
+
+/* Layout stabilization */
+.tableFixed { table-layout: fixed; }
+.colName { width: 36%; }
+.colNum { width: 16%; }
+
+.colIndicator { width: 50%; }
+.colScore { width: 16%; }
+.colValue { width: 17%; }
+.colRating { width: 17%; }
+
+/* Chips with consistent width to avoid shifts */
+.chipCompact {
+  display: inline-block;
+  min-width: 56px;
+  text-align: center;
+}
+
+/* Prevent text wrapping for long values/labels */
+.noWrap { white-space: nowrap; }
 

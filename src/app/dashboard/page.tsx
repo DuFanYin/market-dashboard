@@ -16,6 +16,15 @@ export default function Page() {
 
   const okxOk = useMemo(() => okx.filter((r) => r.success), [okx]);
 
+  // Lookup helpers to pre-render labeled rows and only update values
+  const idxByName = useMemo(() => new Map((idx.data ?? []).map((r) => [r.name, r])), [idx]);
+  const getIdx = useCallback((name: string): CnnIndexRow | undefined => idxByName.get(name), [idxByName]);
+
+  const okxByInst = useMemo(() => new Map(okxOk.map((r) => [r.inst, r])), [okxOk]);
+  const getOkx = useCallback((inst: string): OkxRow | undefined => okxByInst.get(inst), [okxByInst]);
+
+  const getFgDetail = useCallback((key: string) => (fg.details ?? {})[key] ?? null, [fg]);
+
   const computeUsOpen = useCallback(() => {
     const nyNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
     const nyDay = nyNow.getDay();
@@ -45,7 +54,7 @@ export default function Page() {
     if (v >= 55) return `${styles.fgChip} ${styles.fgGreed}`;
     if (v >= 45) return `${styles.fgChip} ${styles.fgNeutral}`;
     if (v >= 25) return `${styles.fgChip} ${styles.fgFear}`;
-    return `${styles.fgChip} ${styles.fgExtremeFear}`;
+    return `${styles.fgChip} ${styles.fgNeutral}`;
   }, []);
 
   // Unified fetch function
@@ -180,71 +189,92 @@ export default function Page() {
 
           {/* Section: Markets (CNN Indexes + OKX) */}
           <section className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm overflow-x-auto order-2 sm:order-1">
-            {(!idx.success || !idx.data?.length) && !okxOk.length ? (
-              <p className="text-sm text-gray-500">Unavailable</p>
-            ) : (
-              <table className="w-full text-xs sm:text-sm min-w-[500px]">
-                <thead>
-                  <tr className="text-gray-500">
-                    <th className="text-left py-1 px-1">Name</th>
-                    <th className="text-right py-1 px-1">Current</th>
-                    <th className="text-right py-1 px-1">Prev</th>
-                    <th className="text-right py-1 px-1">Change</th>
-                    <th className="text-right py-1 px-1">% Change</th>
+            <table className={`w-full text-xs sm:text-sm min-w-[500px] ${styles.tableFixed}`}>
+              <colgroup>
+                <col className={styles.colName} />
+                <col className={styles.colNum} />
+                <col className={styles.colNum} />
+                <col className={styles.colNum} />
+                <col className={styles.colNum} />
+              </colgroup>
+              <thead>
+                <tr className="text-gray-500">
+                  <th className="text-left py-1 px-1">Name</th>
+                  <th className="text-right py-1 px-1">Current</th>
+                  <th className="text-right py-1 px-1">Prev</th>
+                  <th className="text-right py-1 px-1">Change</th>
+                  <th className="text-right py-1 px-1">% Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => { const row = getIdx("Dow"); return (
+                  <tr key="Dow" className="border-t">
+                    <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">Dow</td>
+                    <td className="text-right tabular-nums text-gray-900 px-1">{fmt(row?.current)}</td>
+                    <td className="text-right tabular-nums text-gray-500 px-1">{fmt(row?.prev)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row?.change ?? 0)}`}>{(row?.change ?? 0) >= 0 ? "+" : ""}{fmt2(row?.change ?? 0)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row?.pct ?? 0)}`}>{(row?.pct ?? 0) >= 0 ? "+" : ""}{fmt2(row?.pct ?? 0)}%</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {(idx.success && idx.data?.length ? idx.data : []).map((row: CnnIndexRow) => (
-                    <tr key={row.name} className="border-t">
-                      <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">{row.name}</td>
-                      <td className="text-right tabular-nums text-gray-900 px-1">{fmt(row.current)}</td>
-                      <td className="text-right tabular-nums text-gray-500 px-1">{fmt(row.prev)}</td>
-                      <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row.change)}`}>
-                        {row.change >= 0 ? "+" : ""}{fmt2(row.change)}
-                      </td>
-                      <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row.pct)}`}>
-                        {row.pct >= 0 ? "+" : ""}{fmt2(row.pct)}%
-                      </td>
-                    </tr>
-                  ))}
+                ); })()}
 
-                  {(idx.success && idx.data?.length) && okxOk.length ? (
-                    <tr>
-                      <td colSpan={5} className="py-3 sm:py-5" />
-                    </tr>
-                  ) : null}
+                {(() => { const row = getIdx("S&P 500"); return (
+                  <tr key="S&P 500" className="border-t">
+                    <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">S&P 500</td>
+                    <td className="text-right tabular-nums text-gray-900 px-1">{fmt(row?.current)}</td>
+                    <td className="text-right tabular-nums text-gray-500 px-1">{fmt(row?.prev)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row?.change ?? 0)}`}>{(row?.change ?? 0) >= 0 ? "+" : ""}{fmt2(row?.change ?? 0)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row?.pct ?? 0)}`}>{(row?.pct ?? 0) >= 0 ? "+" : ""}{fmt2(row?.pct ?? 0)}%</td>
+                  </tr>
+                ); })()}
 
-                  {okxOk.map((r: OkxRow) => (
-                    <tr key={r.inst} className="border-t">
-                      <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">{r.inst}</td>
-                      <td className="text-right tabular-nums text-gray-900 px-1">{fmt(r.price)}</td>
-                      <td className="text-right tabular-nums text-gray-500 px-1">{fmt(r.open)}</td>
-                      <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(Number(r.change ?? 0))}`}>
-                        {Number(r.change ?? 0) >= 0 ? "+" : ""}{fmt2(r.change ?? 0)}
-                      </td>
-                      <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(Number(r.pct ?? 0))}`}>
-                        {Number(r.pct ?? 0) >= 0 ? "+" : ""}{fmt2(r.pct ?? 0)}%
-                      </td>
-                    </tr>
-                  ))}
+                {(() => { const row = getIdx("Nasdaq"); return (
+                  <tr key="Nasdaq" className="border-t">
+                    <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">Nasdaq</td>
+                    <td className="text-right tabular-nums text-gray-900 px-1">{fmt(row?.current)}</td>
+                    <td className="text-right tabular-nums text-gray-500 px-1">{fmt(row?.prev)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row?.change ?? 0)}`}>{(row?.change ?? 0) >= 0 ? "+" : ""}{fmt2(row?.change ?? 0)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(row?.pct ?? 0)}`}>{(row?.pct ?? 0) >= 0 ? "+" : ""}{fmt2(row?.pct ?? 0)}%</td>
+                  </tr>
+                ); })()}
 
-                  {ahr.success ? (
-                    <>
-                      <tr>
-                        <td colSpan={5} className="py-3" />
-                      </tr>
-                      <tr>
-                        <td colSpan={5} className="pt-2">
-                          <div className={`rounded-md p-3 min-h-16 flex items-center justify-center ${getAhrZoneClass(ahr.zone)}`}>
-                            <p className="text-lg text-center">arh999 Index: {fmt2(ahr.ahr)}</p>
-                          </div>
-                        </td>
-                      </tr>
-                    </>
-                  ) : null}
-                </tbody>
-              </table>
-            )}
+                {/* Fixed spacer to prevent layout shift regardless of data timing */}
+                <tr>
+                  <td colSpan={5} className="py-3 sm:py-5" />
+                </tr>
+
+                {(() => { const r = getOkx("BTC-USDT"); return (
+                  <tr key="BTC-USDT" className="border-t">
+                    <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">BTC-USDT</td>
+                    <td className="text-right tabular-nums text-gray-900 px-1">{fmt(r?.price)}</td>
+                    <td className="text-right tabular-nums text-gray-500 px-1">{fmt(r?.open)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(Number(r?.change ?? 0))}`}>{Number(r?.change ?? 0) >= 0 ? "+" : ""}{fmt2(r?.change ?? 0)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(Number(r?.pct ?? 0))}`}>{Number(r?.pct ?? 0) >= 0 ? "+" : ""}{fmt2(r?.pct ?? 0)}%</td>
+                  </tr>
+                ); })()}
+
+                {(() => { const r = getOkx("ETH-USDT"); return (
+                  <tr key="ETH-USDT" className="border-t">
+                    <td className="py-1.5 sm:py-2 text-gray-700 max-w-[120px] sm:max-w-[160px] truncate pr-1 px-1">ETH-USDT</td>
+                    <td className="text-right tabular-nums text-gray-900 px-1">{fmt(r?.price)}</td>
+                    <td className="text-right tabular-nums text-gray-500 px-1">{fmt(r?.open)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(Number(r?.change ?? 0))}`}>{Number(r?.change ?? 0) >= 0 ? "+" : ""}{fmt2(r?.change ?? 0)}</td>
+                    <td className={`text-right tabular-nums font-medium px-1 ${getChangeClass(Number(r?.pct ?? 0))}`}>{Number(r?.pct ?? 0) >= 0 ? "+" : ""}{fmt2(r?.pct ?? 0)}%</td>
+                  </tr>
+                ); })()}
+
+                {/* Always render AHR block with defaulted values to avoid shifts */}
+                <tr>
+                  <td colSpan={5} className="py-3" />
+                </tr>
+                <tr>
+                  <td colSpan={5} className="pt-2">
+                    <div className={`rounded-md p-3 min-h-16 flex items-center justify-center ${getAhrZoneClass(ahr.zone)}`}>
+                      <p className="text-lg text-center">arh999 Index: {fmt2(ahr.ahr)}</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </section>
 
           {/* Section: CNN Fear & Greed */}
@@ -254,14 +284,12 @@ export default function Page() {
               {/* Score and rating */}
               <div className="flex items-center justify-center gap-2 sm:gap-3">
                 <p className="text-lg sm:text-lg font-bold text-gray-900 tabular-nums">
-                  {fg.summary?.score ?? "-"}
+                  {fmt2(fg.summary?.score ?? 0)}
                 </p>
 
-                {fg.summary?.rating && (
-                  <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs sm:text-lg font-medium ${getFgClass(fg.summary?.score)}`}>
-                    {fg.summary.rating.toUpperCase()}
-                  </span>
-                )}
+                <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs sm:text-lg font-medium ${styles.noWrap} ${getFgClass(fg.summary?.score)}`}>
+                  {(fg.summary?.rating?.toUpperCase() ?? "UNDEFINED")}
+                </span>
               </div>
 
               {/* Gradient bar with pointer and vertical separators */}
@@ -284,8 +312,8 @@ export default function Page() {
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between items-center border-b pb-1">
                     <span className="text-gray-600">{label}</span>
-                    <span className={`tabular-nums px-2 py-0.5 text-xs font-medium ${getFgClass(value)}`}>
-                      {value ?? "-"}
+                    <span className={`tabular-nums px-2 py-0.5 text-xs font-medium ${styles.noWrap} ${getFgClass(value)}`}>
+                      {fmt2(value ?? 0)}
                     </span>
                   </div>
                 ))}
@@ -294,7 +322,13 @@ export default function Page() {
 
             {/* Component Signals */}
             <div className="mt-8 sm:mt-12 overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm min-w-[400px]">
+              <table className={`w-full text-xs sm:text-sm min-w-[400px] ${styles.tableFixed}`}>
+                <colgroup>
+                  <col className={styles.colIndicator} />
+                  <col className={styles.colScore} />
+                  <col className={styles.colValue} />
+                  <col className={styles.colRating} />
+                </colgroup>
                 <thead>
                   <tr className="text-gray-500">
                     <th className="text-left py-1 px-1">Indicator</th>
@@ -304,26 +338,32 @@ export default function Page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(fg.details ?? {}).map(([k, v]) => (
-                    <tr key={k} className="border-t">
-                      <td className="py-1.5 sm:py-2 text-gray-700 px-1">{k}</td>
-                      {!v ? (
-                        <td className="text-right text-gray-400 px-1" colSpan={3}>-</td>
-                      ) : (
-                        <>
-                          <td className="text-right tabular-nums text-gray-900 font-medium px-1">
-                            {fmt2(v.score)}
-                          </td>
-                          <td className="text-right tabular-nums text-gray-500 px-1">{fmt2(v.value)}</td>
-                          <td className="text-right text-[10px] sm:text-xs px-1">
-                            <span className={`px-1.5 sm:px-2 py-0.5 rounded-md font-medium ${getFgClass(v.score)}`}>
-                              {v.rating}
-                            </span>
-                          </td>
-                        </>
-                      )}
+                  {(() => { const v = getFgDetail("put_call_options"); return (
+                    <tr key="put_call_options" className="border-t">
+                      <td className="py-1.5 sm:py-2 text-gray-700 px-1">put_call_options</td>
+                      <td className="text-right tabular-nums text-gray-900 font-medium px-1">{fmt2(v?.score ?? 0)}</td>
+                      <td className={`text-right tabular-nums text-gray-500 px-1 ${styles.noWrap}`}>{fmt2(v?.value ?? 0)}</td>
+                      <td className={`text-right text-[10px] sm:text-xs px-1 ${styles.noWrap}`}><span className={`px-1.5 sm:px-2 py-0.5 rounded-md font-medium ${styles.noWrap} ${getFgClass(v?.score)}`}>{v?.rating ?? "undefined"}</span></td>
                     </tr>
-                  ))}
+                  ); })()}
+
+                  {(() => { const v = getFgDetail("market_volatility_vix"); return (
+                    <tr key="market_volatility_vix" className="border-t">
+                      <td className="py-1.5 sm:py-2 text-gray-700 px-1">market_volatility_vix</td>
+                      <td className="text-right tabular-nums text-gray-900 font-medium px-1">{fmt2(v?.score ?? 0)}</td>
+                      <td className={`text-right tabular-nums text-gray-500 px-1 ${styles.noWrap}`}>{fmt2(v?.value ?? 0)}</td>
+                      <td className={`text-right text-[10px] sm:text-xs px-1 ${styles.noWrap}`}><span className={`px-1.5 sm:px-2 py-0.5 rounded-md font-medium ${styles.noWrap} ${getFgClass(v?.score)}`}>{v?.rating ?? "undefined"}</span></td>
+                    </tr>
+                  ); })()}
+
+                  {(() => { const v = getFgDetail("market_volatility_vix_50"); return (
+                    <tr key="market_volatility_vix_50" className="border-t">
+                      <td className="py-1.5 sm:py-2 text-gray-700 px-1">market_volatility_vix_50</td>
+                      <td className="text-right tabular-nums text-gray-900 font-medium px-1">{fmt2(v?.score ?? 0)}</td>
+                      <td className={`text-right tabular-nums text-gray-500 px-1 ${styles.noWrap}`}>{fmt2(v?.value ?? 0)}</td>
+                      <td className={`text-right text-[10px] sm:text-xs px-1 ${styles.noWrap}`}><span className={`px-1.5 sm:px-2 py-0.5 rounded-md font-medium ${styles.noWrap} ${getFgClass(v?.score)}`}>{v?.rating ?? "undefined"}</span></td>
+                    </tr>
+                  ); })()}
                 </tbody>
               </table>
             </div>
