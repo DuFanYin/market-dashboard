@@ -25,8 +25,8 @@ export default function Page() {
   // Precomputed slices to avoid repeated filtering in JSX
   const okxOk = useMemo(() => okx.filter((r) => r.success), [okx]);
 
-  // Compute US market open status using New York time (ET); recompute each render
-  const { isUsMarketOpen, nyTimeLabel } = useMemo(() => {
+  // Compute US market open status and NY time (kept live)
+  const computeUsOpen = () => {
     const nyNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
     const nyDay = nyNow.getDay();
     const nyHour = nyNow.getHours();
@@ -41,7 +41,21 @@ export default function Page() {
       hour12: true,
       timeZone: "America/New_York",
     });
-    return { isUsMarketOpen: open, nyTimeLabel: label };
+    return { open, label };
+  };
+
+  const init = computeUsOpen();
+  const [isUsMarketOpen, setIsUsMarketOpen] = useState<boolean>(init.open);
+  const [nyTimeLabel, setNyTimeLabel] = useState<string>(init.label);
+
+  // Initialize and keep banner time/status updated
+  useEffect(() => {
+    const id = setInterval(() => {
+      const { open: o, label: l } = computeUsOpen();
+      setIsUsMarketOpen(o);
+      setNyTimeLabel(l);
+    }, 30000);
+    return () => clearInterval(id);
   }, []);
 
   // Deprecated: replaced by getFgStyles for button-like chips
@@ -86,8 +100,11 @@ export default function Page() {
           setIdx(j.cnnIndexes ?? { success: false });
           setFg(j.cnnFearGreed ?? { success: false });
         }
-        setNext5In(5);
       } catch {}
+      finally {
+        // Always reset countdown each cycle, even on transient errors
+        setNext5In(5);
+      }
     }, 5000);
     return () => clearInterval(id);
   }, [isUsMarketOpen]);
@@ -208,7 +225,7 @@ export default function Page() {
                     </tr>
                     <tr>
                       <td colSpan={5} className="pt-2">
-                        <div className={`rounded-md p-3 flex items-center justify-center ${
+                        <div className={`rounded-md p-3 min-h-16 flex items-center justify-center ${
                           ahr.zone === "green"
                             ? "bg-green-100"
                             : ahr.zone === "yellow"
@@ -217,9 +234,8 @@ export default function Page() {
                             ? "bg-red-100"
                             : "bg-gray-50"
                         }`}>
-                          <div className="flex flex-col items-center justify-center w-full">
-                            <p className="text-lg text-gray-600 mb-2 text-center">AHR999 Index: {fmt2(ahr.ahr)}</p>
-                            <p className="text-6xl font-extrabold tabular-nums text-gray-900 text-center"></p>
+                          <div className="flex items-center justify-center w-full">
+                            <p className="text-lg text-center">AHR999 Index: {fmt2(ahr.ahr)}</p>
                           </div>
                         </div>
                       </td>
