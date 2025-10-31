@@ -77,6 +77,12 @@ def get_cnn_fear_greed():
         "put_call_options",
         "market_volatility_vix",
         "market_volatility_vix_50",
+        "market_momentum_sp500",
+        "market_momentum_sp125",
+        "stock_price_strength",
+        "stock_price_breadth",
+        "junk_bond_demand",
+        "safe_haven_demand"
     ]
 
     for k in keys:

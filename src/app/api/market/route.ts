@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import type { MarketApiResponse, CnnIndexes } from "@/types/market";
-import { getCnnMarketIndexes, getCnnFearGreed, getOkxPrices, getAhr999 } from "@/lib/data";
+import { getCnnMarketIndexes, getCnnFearGreed, getOkxPrices, getAhr999, getGoldPrice } from "@/lib/data";
 
 export async function GET() {
   try {
-    const [cnnIndexesRaw, cnnFearGreed, okx, ahr] = await Promise.all([
+    const [cnnIndexesRaw, cnnFearGreed, okx, gold, ahr] = await Promise.all([
       getCnnMarketIndexes(),
       getCnnFearGreed(),
       getOkxPrices(),
+      getGoldPrice(),
       getAhr999(),
     ]);
 
@@ -21,6 +22,7 @@ export async function GET() {
       cnnIndexes,
       cnnFearGreed,
       okx,
+      gold,
       ahr,
     } as const;
 

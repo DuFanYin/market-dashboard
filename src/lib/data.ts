@@ -132,6 +132,13 @@ export async function getCnnFearGreed(): Promise<FearGreedResponse> {
     "put_call_options",
     "market_volatility_vix",
     "market_volatility_vix_50",
+    // Additional components (see backup reference)
+    "market_momentum_sp500",
+    "market_momentum_sp125",
+    "stock_price_strength",
+    "stock_price_breadth",
+    "junk_bond_demand",
+    "safe_haven_demand",
   ];
   const details: Record<string, FearGreedDetail> = {};
   for (const k of keys) {
@@ -279,6 +286,53 @@ export function fmt2(x: unknown): string {
 export function fmt(x: unknown): string {
   const n = Number(x);
   return Number.isFinite(n) ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(x);
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Gold Price (goldprice.org - Spot XAU/USD)
+// ──────────────────────────────────────────────────────────────────────────
+export async function getGoldPrice() {
+  const url = "https://data-asg.goldprice.org/dbXRates/USD";
+  const headers = {
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json,text/plain,*/*",
+  };
+
+  try {
+    const res = await fetch(url, { headers, next: { revalidate: 60 } });
+    if (!res.ok) {
+      return { success: false, inst: "XAU/USD", reason: `HTTP ${res.status}` };
+    }
+
+    const data = await res.json();
+    const item = data?.items?.[0];
+    if (!item) {
+      return { success: false, inst: "XAU/USD", reason: "No data" };
+    }
+
+    const price = Number(item.xauPrice);
+    const prev = Number(item.xauClose);
+    const change = Number(item.chgXau);
+    const pct = Number(item.pcXau);
+
+    return {
+      success: true,
+      inst: "XAU/USD",
+      price: round2(price),
+      open: round2(prev), // goldprice feed provides prev close; treat as open baseline
+      high: undefined,
+      low: undefined,
+      prev: round2(prev),
+      change: round2(change),
+      pct: round2(pct),
+    };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      inst: "XAU/USD",
+      reason: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }
 
 

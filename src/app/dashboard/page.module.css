@@ -114,10 +114,10 @@
 .colName { width: 36%; }
 .colNum { width: 16%; }
 
-.colIndicator { width: 50%; }
-.colScore { width: 16%; }
-.colValue { width: 17%; }
-.colRating { width: 17%; }
+.colComponents { width: 35%; }
+.colScore { width: 18%; }
+.colValue { width: 20%; }
+.colRating { width: 27%; }
 
 /* Chips with consistent width to avoid shifts */
 .chipCompact {
@@ -128,4 +128,43 @@
 
 /* Prevent text wrapping for long values/labels */
 .noWrap { white-space: nowrap; }
+
+/* Compact table utilities for mobile-first rendering */
+.thXs {
+  padding: 0.125rem 0.25rem; /* py-0.5 px-1 (approx) */
+  font-size: 10px;           /* text-[10px] */
+}
+
+@media (min-width: 640px) { /* sm */
+  .thXs {
+    padding: 0.25rem 0.25rem; /* py-1 px-1 */
+    font-size: 0.75rem;       /* text-xs */
+  }
+}
+
+.tdName {
+  padding: 0.25rem 0.25rem;      /* py-1 px-1 (approx) */
+  padding-right: 0.125rem;       /* pr-0.5 */
+  max-width: 60px;               /* max-w-[60px] */
+}
+
+@media (min-width: 640px) {
+  .tdName {
+    max-width: 160px;            /* sm:max-w-[160px] */
+    padding-right: 0.25rem;      /* sm:pr-1 */
+  }
+}
+
+.tdNum {
+  padding-left: 0.125rem;  /* px-0.5 */
+  padding-right: 0.125rem;
+  text-align: right;
+}
+
+@media (min-width: 640px) {
+  .tdNum {
+    padding-left: 0.25rem; /* sm:px-1 */
+    padding-right: 0.25rem;
+  }
+}
 

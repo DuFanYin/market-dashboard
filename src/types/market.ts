@@ -38,12 +38,26 @@ export type OkxRow = {
   reason?: string;
 };
 
+export type GoldPrice = {
+  success: boolean;
+  inst: string;
+  price?: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  prev?: number;
+  change?: number;
+  pct?: number;
+  reason?: string;
+};
+
 export type MarketApiResponse = {
   success: boolean;
   date: string;
   cnnIndexes: CnnIndexes;
   cnnFearGreed: CnnFearGreed;
   okx: OkxRow[];
+  gold?: GoldPrice;
   // Optional extension field provided by our API for convenience
   ahr?: {
     success: boolean;
