@@ -143,7 +143,9 @@
 }
 
 .tdName {
-  padding: 0.25rem 0.25rem;      /* py-1 px-1 (approx) */
+  padding-top: 0.125rem;         /* py-0.5 on mobile */
+  padding-bottom: 0.125rem;
+  padding-left: 0.125rem;
   padding-right: 0.125rem;       /* pr-0.5 */
   max-width: 60px;               /* max-w-[60px] */
 }
@@ -151,6 +153,9 @@
 @media (min-width: 640px) {
   .tdName {
     max-width: 160px;            /* sm:max-w-[160px] */
+    padding-top: 0.5rem;         /* sm:py-2 */
+    padding-bottom: 0.5rem;
+    padding-left: 0.25rem;
     padding-right: 0.25rem;      /* sm:pr-1 */
   }
 }
