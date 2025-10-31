@@ -151,7 +151,7 @@ export default function Page() {
         <div className="grid gap-8 md:grid-cols-2">
   
         {/* Section: Markets (CNN Indexes + OKX) */}
-        <section className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
 
           {(!idx.success || !idx.data?.length) && !okxOk.length ? (
             <p className="text-sm text-gray-500">Unavailable</p>
@@ -169,7 +169,7 @@ export default function Page() {
               <tbody>
                 {(idx.success && idx.data?.length ? idx.data : []).map((row: CnnIndexRow) => (
                   <tr key={row.name} className="border-t">
-                    <td className="py-2 text-gray-700">{row.name}</td>
+                    <td className="py-2 text-gray-700 max-w-[160px] truncate pr-2">{row.name}</td>
                     <td className="text-right tabular-nums text-gray-900">{fmt(row.current)}</td>
                     <td className="text-right tabular-nums text-gray-500">{fmt(row.prev)}</td>
                     <td className={`text-right tabular-nums font-medium ${row.change >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -189,7 +189,7 @@ export default function Page() {
 
                 {okxOk.map((r: OkxRow) => (
                   <tr key={r.inst} className="border-t">
-                    <td className="py-2 text-gray-700">{r.inst}</td>
+                    <td className="py-2 text-gray-700 max-w-[160px] truncate pr-2">{r.inst}</td>
                     <td className="text-right tabular-nums text-gray-900">{fmt(r.price)}</td>
                     <td className="text-right tabular-nums text-gray-500">{fmt(r.open)}</td>
                     <td className={`text-right tabular-nums font-medium ${Number(r.change ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -232,7 +232,7 @@ export default function Page() {
         </section>
   
           {/* Section: CNN Fear & Greed */}
-          <section className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm space-y-6">
+          <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm space-y-6">
             {/* Summary block */}
             <div className="space-y-4">
 
