@@ -21,12 +21,10 @@ export async function GET() {
       cnnIndexes,
       cnnFearGreed,
       okx,
+      ahr,
     } as const;
 
-    // Keep AHR available at root response under a non-breaking top-level field if needed later
-    // but not part of MarketApiResponse union; page fetches AHR separately via lib.
-
-    return NextResponse.json({ ...body, ahr }, { status: 200 });
+    return NextResponse.json(body, { status: 200 });
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown";
     return NextResponse.json({ error: true, message }, { status: 500 });

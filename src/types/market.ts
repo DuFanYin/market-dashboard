@@ -44,6 +44,17 @@ export type MarketApiResponse = {
   cnnIndexes: CnnIndexes;
   cnnFearGreed: CnnFearGreed;
   okx: OkxRow[];
+  // Optional extension field provided by our API for convenience
+  ahr?: {
+    success: boolean;
+    px?: number;
+    px_dt?: string;
+    sma200?: number;
+    valuation?: number;
+    ahr?: number;
+    zone?: string;
+    error?: string;
+  };
 } | { error: true; message: string };
 
 

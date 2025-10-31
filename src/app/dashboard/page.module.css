@@ -1,0 +1,108 @@
+/* CNN Fear & Greed custom styles */
+
+.fgChip {
+  border-radius: 0.375rem; /* rounded-md */
+}
+
+.fgExtremeGreed {
+  background-color: #2e7d32;
+  color: #ffffff;
+}
+
+.fgGreed {
+  background-color: #a5d6a7;
+  color: #1f2937; /* gray-800 */
+}
+
+.fgNeutral {
+  background-color: #ffffff;
+  color: #1f2937; /* gray-800 */
+}
+
+.fgFear {
+  background-color: #ff8a80;
+  color: #ffffff;
+}
+
+.fgExtremeFear {
+  background-color: #c62828;
+  color: #ffffff;
+}
+
+.fgGradient {
+  background: linear-gradient(
+    90deg,
+    #c62828 0%,
+    #ff8a80 45%,
+    #ffffff 50%,
+    #a5d6a7 55%,
+    #2e7d32 100%
+  );
+}
+
+.separator {
+  position: absolute;
+  height: 100%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.sep25 { left: 25%; }
+.sep45 { left: 45%; }
+.sep55 { left: 55%; }
+.sep75 { left: 75%; }
+
+.pointer {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: #000000;
+}
+
+/* Market status banner */
+.bannerOpen {
+  background-color: rgb(220 252 231);
+  border-color: rgb(187 247 208);
+  color: rgb(22 101 52);
+}
+
+.bannerClosed {
+  background-color: rgb(243 244 246);
+  border-color: rgb(229 231 235);
+  color: rgb(31 41 55);
+}
+
+.statusOpen {
+  color: rgb(21 128 61);
+  font-weight: 600;
+}
+
+.statusClosed {
+  color: rgb(185 28 28);
+  font-weight: 600;
+}
+
+/* AHR999 zone colors */
+.ahrGreen { background-color: rgb(220 252 231); }
+.ahrYellow { background-color: rgb(254 249 195); }
+.ahrRed { background-color: rgb(254 226 226); }
+.ahrDefault { background-color: rgb(249 250 251); }
+
+/* Change indicator colors */
+.positive { color: rgb(22 163 74); }
+.negative { color: rgb(220 38 38); }
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .mobileHide {
+    display: none;
+  }
+  
+  .mobileStack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+

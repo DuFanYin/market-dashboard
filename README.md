@@ -17,24 +17,27 @@ A lightweight, production-ready Next.js dashboard that tracks macro indexes, cry
 ```
 src/
   app/
-    api/route.ts        # Single API endpoint that aggregates server-side data fetches
+    api/
+      market/route.ts   # App Router endpoint: GET /api/market (aggregates server data)
+    dashboard/
+      page.tsx          # Client page: UI and client-side polling
+      page.module.css   # CSS module for Fear & Greed visuals
     layout.tsx          # Root layout and global styles
-    page.tsx            # Client component: UI, polling, and rendering
+    page.tsx            # Redirects to /dashboard
     globals.css         # Tailwind base and global styles
   lib/
     data.ts             # Server-side fetchers/parsers for CNN/OKX/AHR999 + helpers
-    api.ts              # (Optional) client fetch helper (unused in main flow)
   types/
     market.ts           # Shared types for API responses
 ```
 
 ## Data Flow
-- Client (`src/app/page.tsx`)
+- Client (`src/app/dashboard/page.tsx`)
   - Renders the dashboard and manages polling with `useEffect`
   - Determines US market open status in New York time
-  - Calls the app API (`/api`) on intervals, updates state for each section
-- Server API (`src/app/api/route.ts`)
-  - On each call, aggregates fresh data from external sources via `lib/data.ts`
+  - Calls the app API (`/api/market`) on intervals, updates state for each section
+- Server API (`src/app/api/market/route.ts`)
+  - Aggregates fresh data from external sources via `lib/data.ts`
   - Returns: `{ cnnIndexes, cnnFearGreed, okx, ahr }`
 - Fetchers (`src/lib/data.ts`)
   - `getCnnMarketIndexes()` – CNN markets endpoint
@@ -44,9 +47,9 @@ src/
   - Includes minimal console logging for observability
 
 ## Refresh Cadence
-- 5s cycle: Always updates crypto; updates CNN and Fear & Greed only if market is open
+- 60s cycle: Always updates crypto; updates CNN and Fear & Greed only if US market is open
 - 5m cycle: Updates AHR999
-- Top banner shows a live countdown to the next 5s refresh
+- Top banner shows a live countdown to the next refresh
 
 ## Commands
 - Development: `npm run dev`
@@ -61,8 +64,8 @@ src/
 5. No environment variables required
 
 ## Notes & Decisions
-- `page.tsx` is a client component to enable fine-grained polling without SSR coupling
-- Server route `/api` enforces `cache: "no-store"` for live data
+- `dashboard/page.tsx` is a client component to enable client-side polling
+- Server route `/api/market` enforces `cache: "no-store"` for live data
 - Stable ordering for OKX rows is guaranteed based on input symbols to avoid row flicker
 - Minimal styling is implemented with Tailwind; the layout remains simple and responsive
 
