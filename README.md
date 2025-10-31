@@ -16,26 +16,43 @@ A lightweight, production-ready Next.js dashboard that tracks macro indexes, cry
 ## Project Structure
 ```
 src/
-  app/
-    api/
-      market/route.ts   # App Router endpoint: GET /api/market (aggregates server data)
-    dashboard/
-      page.tsx          # Client page: UI and client-side polling
-      page.module.css   # CSS module for Fear & Greed visuals
-    layout.tsx          # Root layout and global styles
-    page.tsx            # Redirects to /dashboard
-    globals.css         # Tailwind base and global styles
-  lib/
-    data.ts             # Server-side fetchers/parsers for CNN/OKX/AHR999/Gold + helpers
-  types/
-    market.ts           # Shared types for API responses
+├── app
+│   ├── api
+│   │   └── market
+│   │       └── route.ts
+│   ├── dashboard
+│   │   ├── page.module.css
+│   │   └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components
+│   ├── FearGreedPanel.tsx
+│   └── MarketsTable.tsx
+├── hooks
+│   └── useMarketData.ts
+├── lib
+│   └── data.ts
+└── types
+    ├── market.ts
+    └── routes.d.ts
 ```
 
 ## Data Flow
-- Client (`src/app/dashboard/page.tsx`)
-  - Renders the dashboard and manages polling with `useEffect`
-  - Determines US market open status in New York time
+- Client Components (`src/app/dashboard/page.tsx`)
+  - Main dashboard page that orchestrates layout and renders child components
+  - Uses `useMarketData` hook for all data logic and state management
+  - Transforms raw data into display-ready format (marketRows)
+  - Renders `MarketsTable` and `FearGreedPanel` components
+- Custom Hook (`src/hooks/useMarketData.ts`)
+  - Encapsulates all data fetching, polling intervals, and state management
+  - Manages intervals: 1s countdown, 30s market status, 60s refresh, 300s AHR update
+  - Determines US market open status in New York time via `computeUsOpen()`
   - Calls the app API (`/api/market`) on intervals, updates state for each section
+  - Returns: `{ data, isUsMarketOpen, nyTimeLabel, next5In, handleRefresh }`
+- UI Components (`src/components/`)
+  - `MarketsTable`: Renders markets table (CNN indexes, crypto, gold, AHR999)
+  - `FearGreedPanel`: Renders Fear & Greed panel (score, gradient, historical, components)
 - Server API (`src/app/api/market/route.ts`)
   - Aggregates fresh data from external sources via `lib/data.ts`
   - Returns: `{ cnnIndexes, cnnFearGreed, okx, gold, ahr }`
@@ -64,7 +81,9 @@ src/
 5. No environment variables required
 
 ## Notes & Decisions
-- `dashboard/page.tsx` is a client component to enable client-side polling
+- `dashboard/page.tsx` is a client component focused on layout structure
+- Data logic is extracted into `useMarketData` custom hook for separation of concerns
+- UI is split into `MarketsTable` and `FearGreedPanel` components for maintainability
 - Server route `/api/market` enforces `cache: "no-store"` for live data
 - Stable ordering for OKX rows is guaranteed based on input symbols to avoid row flicker
 - Minimal styling is implemented with Tailwind + a small CSS module; the layout is responsive and mobile-optimized
