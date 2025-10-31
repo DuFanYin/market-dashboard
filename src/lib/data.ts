@@ -56,6 +56,7 @@ export type CnnIndexRow = {
 };
 
 export async function getCnnMarketIndexes(): Promise<{ success: boolean; data: CnnIndexRow[] | null }> {
+  console.log(`[CNN] Fetching market indexes...`);
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -63,8 +64,14 @@ export async function getCnnMarketIndexes(): Promise<{ success: boolean; data: C
   const dateStr = `${yyyy}-${mm}-${dd}`;
   const url = `https://production.dataviz.cnn.io/markets/index/DJII-USA,SP500-CME,COMP-USA/${dateStr}`;
   const j = await getJson(url, { headers: HEADERS_CNN });
-  if (!j || typeof j !== "object" || (Array.isArray(j) && j.length === 0)) return { success: false, data: null };
-  if ((j as Record<string, unknown>).hasOwnProperty("blocked") || (j as Record<string, unknown>).hasOwnProperty("error")) return { success: false, data: null };
+  if (!j || typeof j !== "object" || (Array.isArray(j) && j.length === 0)) {
+    console.warn(`[CNN] Indexes unavailable (empty).`);
+    return { success: false, data: null };
+  }
+  if ((j as Record<string, unknown>).hasOwnProperty("blocked") || (j as Record<string, unknown>).hasOwnProperty("error")) {
+    console.error(`[CNN] Indexes blocked or errored.`);
+    return { success: false, data: null };
+  }
   const arr = j as CnnApiRow[];
   const data: CnnIndexRow[] = arr.map((x) => ({
     name: x.name,
@@ -73,6 +80,7 @@ export async function getCnnMarketIndexes(): Promise<{ success: boolean; data: C
     change: round2(x.price_change_from_prev_close),
     pct: round2(Number(x.percent_change_from_prev_close) * 100),
   }));
+  console.log(`[CNN] Indexes fetched (${data.length}).`);
   return { success: true, data };
 }
 
@@ -106,6 +114,7 @@ export type FearGreedResponse = {
 };
 
 export async function getCnnFearGreed(): Promise<FearGreedResponse> {
+  console.log(`[CNN] Fetching Fear & Greed...`);
   const today = new Date();
   const yyyy = today.getUTCFullYear();
   const mm = String(today.getUTCMonth() + 1).padStart(2, "0");
@@ -113,7 +122,10 @@ export async function getCnnFearGreed(): Promise<FearGreedResponse> {
   const dateStr = `${yyyy}-${mm}-${dd}`;
   const url = `https://production.dataviz.cnn.io/index/fearandgreed/graphdata/${dateStr}`;
   const j = await getJson(url, { headers: HEADERS_CNN });
-  if (!j || typeof j !== "object" || (j as Record<string, unknown>).hasOwnProperty("blocked") || (j as Record<string, unknown>).hasOwnProperty("error")) return { success: false };
+  if (!j || typeof j !== "object" || (j as Record<string, unknown>).hasOwnProperty("blocked") || (j as Record<string, unknown>).hasOwnProperty("error")) {
+    console.warn(`[CNN] Fear & Greed unavailable.`);
+    return { success: false };
+  }
   const obj = j as FearGreedApi;
   const fg = obj?.fear_and_greed ?? {};
   const keys = [
@@ -134,6 +146,7 @@ export async function getCnnFearGreed(): Promise<FearGreedResponse> {
       };
     }
   }
+  console.log(`[CNN] Fear & Greed fetched (score=${fg?.score ?? "-"}).`);
   return {
     success: true,
     summary: {
@@ -162,24 +175,28 @@ export type OkxRow = { inst: string; success: boolean; price?: number; open?: nu
 type OkxTickerResponse = { data?: Array<{ idxPx?: number | string; sodUtc0?: number | string }>; };
 
 export async function getOkxPrices(symbols: string[] = ["BTC-USDT", "ETH-USDT"]): Promise<OkxRow[]> {
-  const results: OkxRow[] = [];
-  await Promise.all(
+  console.log(`[OKX] Fetching ${symbols.length} index tickers...`);
+  const rows = await Promise.all(
     symbols.map(async (inst) => {
       const url = `${OKX_TICKER_URL}?instId=${encodeURIComponent(inst)}`;
       const j = (await getJson(url, { headers: OKX_HEADERS })) as OkxTickerResponse | { error: string } | { blocked: true } | null;
       if (!j || typeof j !== "object" || !("data" in j) || !j.data?.length) {
-        results.push({ inst, success: false });
-        return;
+        return { inst, success: false } as OkxRow;
       }
       const d = j.data[0] ?? {};
       const price = round2(d.idxPx ?? NaN);
       const openUtc = round2(d.sodUtc0 ?? NaN);
       const change = round2(price - openUtc);
       const pct = round2((change / openUtc) * 100);
-      results.push({ inst, success: true, price, open: openUtc, change, pct });
+      return { inst, success: true, price, open: openUtc, change, pct } as OkxRow;
     })
   );
-  return results;
+  // Ensure stable ordering according to input symbols
+  const order: Record<string, number> = Object.fromEntries(symbols.map((s, i) => [s, i]));
+  rows.sort((a, b) => (order[a.inst] ?? 0) - (order[b.inst] ?? 0));
+  const okCount = rows.filter((r) => r.success).length;
+  console.log(`[OKX] Tickers fetched (${okCount}/${rows.length} ok).`);
+  return rows;
 }
 
 // ========= 4. AHR999 =========
@@ -197,11 +214,13 @@ export type Ahr999 = {
 };
 
 export async function getAhr999(): Promise<Ahr999> {
+  console.log(`[AHR999] Computing from OKX history and ticker...`);
   // history
   const candlesUrl = `${OKX_CANDLES}?instId=BTC-USDT&bar=1D&limit=400`;
   type OkxCandlesResponse = { data?: Array<[string | number, unknown, unknown, unknown, string | number]> };
   const candles = (await getJson(candlesUrl)) as OkxCandlesResponse | { error: string } | { blocked: true } | null;
   if (!candles || typeof candles !== "object" || !("data" in candles)) {
+    console.error(`[AHR999] No candles returned.`);
     return { success: false, error: "no candles" };
   }
   const rows: Array<[Date, number, number]> = [];
@@ -223,6 +242,7 @@ export async function getAhr999(): Promise<Ahr999> {
   const tickUrl = `${OKX_TICKER_URL}?instId=BTC-USDT`;
   const tick = (await getJson(tickUrl)) as { data?: Array<{ idxPx?: number | string; ts?: number | string }> } | { error: string } | { blocked: true } | null;
   if (!tick || typeof tick !== "object" || !("data" in tick) || !tick.data?.length) {
+    console.error(`[AHR999] No price returned.`);
     return { success: false, error: "no price" };
   }
   const px = Number(tick.data[0]?.idxPx);
@@ -239,6 +259,7 @@ export async function getAhr999(): Promise<Ahr999> {
   else if (ahr < 1.2) zone = "yellow";
   else zone = "red";
 
+  console.log(`[AHR999] Done. ahr=${ahr.toFixed(2)} zone=${zone}`);
   return {
     success: true,
     px: round2(px),

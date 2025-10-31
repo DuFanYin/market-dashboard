@@ -1,46 +1,159 @@
-import { headers } from "next/headers";
-import type { MarketApiResponse, CnnIndexRow, OkxRow } from "@/types/market";
-import { getAhr999, fmt, fmt2 } from "@/lib/data";
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import type { CnnIndexRow, OkxRow } from "@/types/market";
+import type { CnnIndexes, CnnFearGreed } from "@/types/market";
+import { fmt, fmt2 } from "@/lib/data";
+import type { Ahr999 } from "@/lib/data";
 
-export const revalidate = 300;
+// removed revalidate because this is a client component; polling handles freshness
 
-export default async function Page() {
-  const hdrs = await headers();
-  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
-  const proto = hdrs.get("x-forwarded-proto") ?? "http";
-  const origin = `${proto}://${host}`;
+type ApiJson = {
+  error?: true;
+  cnnIndexes?: CnnIndexes;
+  cnnFearGreed?: CnnFearGreed;
+  okx?: OkxRow[];
+  ahr?: Ahr999;
+};
 
-  const [marketRes, ahr] = await Promise.all([
-    fetch(`${origin}/api`, { cache: "no-store" }),
-    getAhr999(),
-  ]);
+export default function Page() {
+  const [idx, setIdx] = useState<CnnIndexes>({ success: false });
+  const [fg, setFg] = useState<CnnFearGreed>({ success: false });
+  const [okx, setOkx] = useState<OkxRow[]>([]);
+  const [ahr, setAhr] = useState<Ahr999>({ success: false });
+  const [next5In, setNext5In] = useState<number>(5);
 
-  const market = (await marketRes.json()) as MarketApiResponse;
-  const idx = "error" in market ? { success: false } : market.cnnIndexes;
-  const fg = "error" in market ? { success: false } : market.cnnFearGreed;
-  const okx = "error" in market ? [] : market.okx;
+  // Precomputed slices to avoid repeated filtering in JSX
+  const okxOk = useMemo(() => okx.filter((r) => r.success), [okx]);
+
+  // Compute US market open status using New York time (ET); recompute each render
+  const { isUsMarketOpen, nyTimeLabel } = useMemo(() => {
+    const nyNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+    const nyDay = nyNow.getDay();
+    const nyHour = nyNow.getHours();
+    const nyMinute = nyNow.getMinutes();
+    const isWeekday = nyDay >= 1 && nyDay <= 5;
+    const isAfterOpen = nyHour > 9 || (nyHour === 9 && nyMinute >= 30);
+    const isBeforeClose = nyHour < 16;
+    const open = isWeekday && isAfterOpen && isBeforeClose;
+    const label = nyNow.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/New_York",
+    });
+    return { isUsMarketOpen: open, nyTimeLabel: label };
+  }, []);
+
+  // Deprecated: replaced by getFgStyles for button-like chips
+
+  const getFgStyles = (n: number | null | undefined) => {
+    const v = Number(n ?? 0);
+    if (v >= 75) return { backgroundColor: "#2e7d32", color: "#fff" };
+    if (v >= 55) return { backgroundColor: "#a5d6a7", color: "#1f2937" };
+    if (v >= 45) return { backgroundColor: "#ffffff", color: "#1f2937" };
+    if (v >= 25) return { backgroundColor: "#ff8a80", color: "#fff" };
+    return { backgroundColor: "#c62828", color: "#fff" };
+  };
+
+  // Initial load (fetch everything once)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api`, { cache: "no-store" });
+        const j: ApiJson = await res.json();
+        if (cancelled) return;
+        if (!j?.error) {
+          setIdx(j.cnnIndexes ?? { success: false });
+          setFg(j.cnnFearGreed ?? { success: false });
+          setOkx(j.okx ?? []);
+          setAhr(j.ahr ?? { success: false });
+          setNext5In(5);
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // 5s refresh: always crypto; CNN + F&G only when US market is open
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const res = await fetch(`/api`, { cache: "no-store" });
+        const j: ApiJson = await res.json();
+        setOkx(j.okx ?? []);
+        if (isUsMarketOpen) {
+          setIdx(j.cnnIndexes ?? { success: false });
+          setFg(j.cnnFearGreed ?? { success: false });
+        }
+        setNext5In(5);
+      } catch {}
+    }, 5000);
+    return () => clearInterval(id);
+  }, [isUsMarketOpen]);
+
+  // 1s ticking countdown for 5s refresh
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNext5In((s) => (s > 1 ? s - 1 : 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // 5m refresh: AHR only
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const res = await fetch(`/api`, { cache: "no-store" });
+        const j: ApiJson = await res.json();
+        setAhr(j.ahr ?? { success: false });
+      } catch {}
+    }, 300000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-100 px-6 py-10">
       <div className="mx-auto max-w-7xl space-y-12">
+       
   
-        {/* HEADER */}
-        <header className="flex flex-col md:flex-row items-start md:items-end md:justify-between gap-2">
+        {/* Header */}
+        <header className="flex flex-col items-center justify-center gap-2 text-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Market Dashboard</h1>
             <p className="text-sm text-gray-500">Macro · Crypto · Sentiment</p>
           </div>
-          <span className="text-xs text-gray-500">Updates every 5 minutes</span>
         </header>
+
+         {/* US Stock Market status banner */}
+         <div
+          className={
+            `rounded-md border p-3 text-sm ` +
+            (isUsMarketOpen
+              ? "bg-green-100 border-green-200 text-green-800"
+              : "bg-gray-100 border-gray-200 text-gray-800")
+          }
+        >
+          <div className="flex items-center">
+            <div className="text-xs text-transparent select-none">{next5In}s</div>
+            <div className="flex-1 text-center">
+              US Stock Market: {" "}
+              <span className={isUsMarketOpen ? "text-green-700 font-semibold" : "text-red-700 font-semibold"}>
+                {isUsMarketOpen ? "OPEN" : "CLOSED"}
+              </span>
+              <span className="ml-2 text-xs text-gray-600">(New York {nyTimeLabel} ET)</span>
+            </div>
+            <div className="text-xs text-gray-600">{next5In}s</div>
+          </div>
+        </div>
   
-        {/* GRID */}
+        {/* Main grid */}
         <div className="grid gap-8 md:grid-cols-2">
   
-        {/* 1 — MARKETS (single table; spacer row between CNN and OKX) */}
+        {/* Section: Markets (CNN Indexes + OKX) */}
         <section className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Markets</h2>
 
-          {(!idx.success || !idx.data?.length) && !okx.length ? (
+          {(!idx.success || !idx.data?.length) && !okxOk.length ? (
             <p className="text-sm text-gray-500">Unavailable</p>
           ) : (
             <table className="w-full text-sm">
@@ -68,13 +181,13 @@ export default async function Page() {
                   </tr>
                 ))}
 
-                {(idx.success && idx.data?.length) && okx.filter((r: OkxRow) => r.success).length ? (
+                {(idx.success && idx.data?.length) && okxOk.length ? (
                   <tr>
                     <td colSpan={50} className="py-5" />
                   </tr>
                 ) : null}
 
-                {okx.filter((r: OkxRow) => r.success).map((r: OkxRow) => (
+                {okxOk.map((r: OkxRow) => (
                   <tr key={r.inst} className="border-t">
                     <td className="py-2 text-gray-700">{r.inst}</td>
                     <td className="text-right tabular-nums text-gray-900">{fmt(r.price)}</td>
@@ -95,7 +208,7 @@ export default async function Page() {
                     </tr>
                     <tr>
                       <td colSpan={5} className="pt-2">
-                        <div className={`rounded-md p-3 ${
+                        <div className={`rounded-md p-3 flex items-center justify-center ${
                           ahr.zone === "green"
                             ? "bg-green-100"
                             : ahr.zone === "yellow"
@@ -104,9 +217,9 @@ export default async function Page() {
                             ? "bg-red-100"
                             : "bg-gray-50"
                         }`}>
-                          <div className="flex flex-col items-center justify-center">
-                            <p className="text-lg text-gray-600 mb-2">AHR999 {fmt2(ahr.ahr)}</p>
-                            <p className="text-6xl font-extrabold tabular-nums text-gray-900"></p>
+                          <div className="flex flex-col items-center justify-center w-full">
+                            <p className="text-lg text-gray-600 mb-2 text-center">AHR999 Index: {fmt2(ahr.ahr)}</p>
+                            <p className="text-6xl font-extrabold tabular-nums text-gray-900 text-center"></p>
                           </div>
                         </div>
                       </td>
@@ -118,30 +231,21 @@ export default async function Page() {
           )}
         </section>
   
-          {/* 2 — FEAR & GREED */}
+          {/* Section: CNN Fear & Greed */}
           <section className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm space-y-6">
-            {/* Summary Bar View */}
+            {/* Summary block */}
             <div className="space-y-4">
 
-              {/* Score + Rating */}
-              <div className="flex items-center justify-between">
+              {/* Score and rating */}
+              <div className="flex items-center justify-center gap-3">
                 <p className="text-4xl font-bold text-gray-900 tabular-nums">
                   {fg.summary?.score ?? "-"}
                 </p>
 
                 {fg.summary?.rating && (
                   <span
-                    className={`px-2 py-1 rounded-md text-xs font-medium ${
-                      Number(fg.summary.score) >= 75
-                        ? "bg-red-100 text-red-700"
-                        : Number(fg.summary.score) >= 55
-                        ? "bg-yellow-100 text-yellow-700"
-                        : Number(fg.summary.score) >= 45
-                        ? "bg-gray-100 text-gray-700"
-                        : Number(fg.summary.score) >= 25
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
+                    className="px-2 py-1 rounded-md text-xs font-medium"
+                    style={getFgStyles(fg.summary?.score)}
                   >
                     {fg.summary.rating.toUpperCase()}
                   </span>
@@ -149,7 +253,7 @@ export default async function Page() {
               </div>
 
               {/* Gradient bar with pointer and vertical separators */}
-              <div className="relative w-full h-5 rounded-md overflow-hidden border border-gray-400">
+              <div className="relative w-full h-6 rounded-md overflow-hidden border border-gray-400">
                 {/* Full gradient background */}
                 <div
                   className="absolute inset-0"
@@ -177,42 +281,31 @@ export default async function Page() {
                 ></div>
               </div>
 
-              {/* Labels */}
-              <div className="flex justify-between text-[10px] text-gray-600 font-medium mt-1">
-                <span>Extreme Fear</span>
-                <span>Fear</span>
-                <span>Neutral</span>
-                <span>Greed</span>
-                <span>Extreme Greed</span>
-              </div>
-
 
               {/* Historical */}
               <div className="grid grid-cols-2 gap-2 text-sm mt-4">
-                <div className="flex justify-between border-b pb-1">
+                <div className="flex justify-between items-center border-b pb-1">
                   <span className="text-gray-600">Previous Close</span>
-                  <span className="tabular-nums">{fg.summary?.prev ?? "-"}</span>
+                  <span className="tabular-nums px-2 py-0.5 rounded-md text-xs font-medium" style={getFgStyles(fg.summary?.prev)}>{fg.summary?.prev ?? "-"}</span>
                 </div>
-                <div className="flex justify-between border-b pb-1">
+                <div className="flex justify-between items-center border-b pb-1">
                   <span className="text-gray-600">1 Week Ago</span>
-                  <span className="tabular-nums">{fg.summary?.w1 ?? "-"}</span>
+                  <span className="tabular-nums px-2 py-0.5 rounded-md text-xs font-medium" style={getFgStyles(fg.summary?.w1)}>{fg.summary?.w1 ?? "-"}</span>
                 </div>
-                <div className="flex justify-between border-b pb-1">
+                <div className="flex justify-between items-center border-b pb-1">
                   <span className="text-gray-600">1 Month Ago</span>
-                  <span className="tabular-nums">{fg.summary?.m1 ?? "-"}</span>
+                  <span className="tabular-nums px-2 py-0.5 rounded-md text-xs font-medium" style={getFgStyles(fg.summary?.m1)}>{fg.summary?.m1 ?? "-"}</span>
                 </div>
-                <div className="flex justify-between border-b pb-1">
+                <div className="flex justify-between items-center border-b pb-1">
                   <span className="text-gray-600">1 Year Ago</span>
-                  <span className="tabular-nums">{fg.summary?.y1 ?? "-"}</span>
+                  <span className="tabular-nums px-2 py-0.5 rounded-md text-xs font-medium" style={getFgStyles(fg.summary?.y1)}>{fg.summary?.y1 ?? "-"}</span>
                 </div>
               </div>
 
-              <hr className="border-gray-200" />
             </div>
 
                 {/* Component Signals */}
                 <div>
-                  <p className="text-xs text-gray-500 font-medium mb-2">Component Signals</p>
 
                   <table className="w-full text-sm">
                     <thead>
@@ -236,7 +329,11 @@ export default async function Page() {
                                 {fmt2(v.score)}
                               </td>
                               <td className="text-right tabular-nums text-gray-500">{fmt2(v.value)}</td>
-                              <td className="text-right text-gray-700 text-xs">{v.rating}</td>
+                              <td className="text-right text-xs">
+                                <span className="px-2 py-0.5 rounded-md font-medium" style={getFgStyles(v.score)}>
+                                  {v.rating}
+                                </span>
+                              </td>
                             </>
                           )}
                         </tr>
