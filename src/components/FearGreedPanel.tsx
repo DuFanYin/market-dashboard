@@ -69,8 +69,8 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
         <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm mt-2 sm:mt-4">
           {[
             { label: "Previous Close", value: fg.summary?.prev },
-            { label: "1 Week Ago", value: fg.summary?.w1 },
             { label: "1 Month Ago", value: fg.summary?.m1 },
+            { label: "1 Week Ago", value: fg.summary?.w1 },
             { label: "1 Year Ago", value: fg.summary?.y1 },
           ].map(({ label, value }) => (
             <div key={label} className="flex justify-between items-center border-b pb-1">

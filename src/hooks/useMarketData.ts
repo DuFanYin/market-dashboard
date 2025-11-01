@@ -5,21 +5,27 @@ import type { MarketApiResponse } from "@/types/market";
 type ValidResponse = Extract<MarketApiResponse, { success: boolean }>;
 
 function computeUsOpen() {
-  const nyNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const nyDay = nyNow.getDay();
-  const nyHour = nyNow.getHours();
-  const nyMinute = nyNow.getMinutes();
-  const isWeekday = nyDay >= 1 && nyDay <= 5;
-  const isAfterOpen = nyHour > 9 || (nyHour === 9 && nyMinute >= 30);
-  const isBeforeClose = nyHour < 16;
-  const open = isWeekday && isAfterOpen && isBeforeClose;
-  const label = nyNow.toLocaleTimeString("en-US", {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
-    timeZone: "America/New_York",
+    hour12: false,
   });
-  return { open, label };
+
+  const parts = formatter.formatToParts(now);
+  const day = parts.find((p) => p.type === "weekday")?.value;
+  const hour = Number(parts.find((p) => p.type === "hour")?.value);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value);
+
+  const weekday = ["Mon","Tue","Wed","Thu","Fri"].includes(day ?? "");
+  const open = weekday && (hour > 9 || (hour === 9 && minute >= 30)) && hour < 16;
+
+  return {
+    open,
+    label: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+  };
 }
 
 export function useMarketData() {
@@ -41,18 +47,9 @@ export function useMarketData() {
     return null;
   }
 
-  // Update market status every 30s
+  // Combined effect: Initial load + all intervals
   useEffect(() => {
-    const id = setInterval(() => {
-      const { open, label } = computeUsOpen();
-      setIsUsMarketOpen(open);
-      setNyTimeLabel(label);
-    }, 30000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Initial load
-  useEffect(() => {
+    // Initial load
     let cancelled = false;
     (async () => {
       const result = await fetchData();
@@ -60,47 +57,31 @@ export function useMarketData() {
       setData(result);
       setNext5In(60);
     })();
-    return () => { cancelled = true; };
-  }, []);
 
-  // 60s refresh: always crypto & gold; CNN + F&G only when US market is open
-  useEffect(() => {
-    const id = setInterval(async () => {
+    // 60s refresh: all data (crypto, gold, CNN, F&G, AHR) + market status update
+    const refreshInterval = setInterval(async () => {
       const result = await fetchData();
       if (!result) return;
       
-      setData((prev) => {
-        if (!prev) return result;
-        return {
-          ...result,
-          okx: result.okx ?? [],
-          gold: result.gold ?? { success: false, inst: "XAU/USD" },
-          cnnIndexes: isUsMarketOpen ? (result.cnnIndexes ?? { success: false }) : prev.cnnIndexes,
-          cnnFearGreed: isUsMarketOpen ? (result.cnnFearGreed ?? { success: false }) : prev.cnnFearGreed,
-          ahr: prev.ahr, // Keep existing AHR (updated separately)
-        };
-      });
+      setData(result);
       setNext5In(60);
+      
+      // Update market status
+      const { open, label } = computeUsOpen();
+      setIsUsMarketOpen(open);
+      setNyTimeLabel(label);
     }, 60000);
-    return () => clearInterval(id);
-  }, [isUsMarketOpen]);
 
-  // 1s countdown
-  useEffect(() => {
-    const id = setInterval(() => {
+    // 1s countdown
+    const countdownInterval = setInterval(() => {
       setNext5In((s) => (s > 1 ? s - 1 : 1));
     }, 1000);
-    return () => clearInterval(id);
-  }, []);
 
-  // 5m refresh: AHR only
-  useEffect(() => {
-    const id = setInterval(async () => {
-      const result = await fetchData();
-      if (!result?.ahr) return;
-      setData((prev) => prev ? { ...prev, ahr: result.ahr } : prev);
-    }, 300000);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      clearInterval(refreshInterval);
+      clearInterval(countdownInterval);
+    };
   }, []);
 
   // Manual refresh
