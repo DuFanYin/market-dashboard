@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# position
+/position/positions.yaml
+
 # testing
 /coverage
 

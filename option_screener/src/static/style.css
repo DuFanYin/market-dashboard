@@ -1,0 +1,246 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.controls {
+    background-color: #252526;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+label {
+    color: #cccccc;
+    font-weight: bold;
+}
+
+input[type="file"] {
+    background-color: #3c3c3c;
+    color: #d4d4d4;
+    border: 1px solid #555;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+select, input[type="number"] {
+    background-color: #3c3c3c;
+    color: #d4d4d4;
+    border: 1px solid #555;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-family: inherit;
+}
+
+select:focus, input:focus {
+    outline: none;
+    border-color: #007acc;
+}
+
+button {
+    background-color: #0e639c;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #1177bb;
+}
+
+button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.status {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 3px;
+    display: none;
+}
+
+.status.error {
+    background-color: #5a1d1d;
+    color: #f48771;
+    border: 1px solid #be1100;
+}
+
+.status.success {
+    background-color: #1e3a1e;
+    color: #89d185;
+    border: 1px solid #4ec9b0;
+}
+
+#tableContainer {
+    margin-top: 10px;
+}
+
+table.scrollable-table {
+    border-collapse: collapse;
+    font-size: 9px;
+    table-layout: fixed;
+    width: auto;
+    background-color: #252526;
+    border-radius: 5px;
+    display: table;
+}
+
+/* Container for scrolling */
+.scrollable-table-wrapper {
+    max-height: 80vh;
+    overflow-x: auto;
+    overflow-y: auto;
+    background-color: #252526;
+    border-radius: 5px;
+    position: relative;
+}
+
+
+th, td {
+    padding: 3px 5px;
+    text-align: right;
+    border: 1px solid #3c3c3c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    line-height: 1.1;
+    box-sizing: border-box;
+}
+
+/* All header cells - sticky at top */
+thead th {
+    position: sticky;
+    background-color: #000000 !important;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* First header row - expiration dates (excluding first column) */
+thead tr:first-child th:not(:first-child) {
+    top: 0;
+    z-index: 12;
+    background-color: #000000 !important;
+    border-bottom: 1px solid #000000 !important; /* Match background to hide content below */
+    text-align: center;
+}
+
+/* Second header row - call/put headers (excluding first column which has rowspan) */
+thead tr:last-child th {
+    /* Calculate exact height: padding-top (3px) + content height (~9.9px with line-height 1.1 * 9px) + padding-bottom (3px) + border-bottom (1px) = ~16.9px */
+    /* Round to 17px and subtract border to align perfectly */
+    top: 16px; /* First row height exactly: 3 + 9.9 + 3 + 1 = 16.9px, use 16px */
+    z-index: 11;
+    background-color: #000000 !important;
+    border-top: 1px solid #000000 !important; /* Match background to hide gap */
+    text-align: center;
+}
+
+/* First column - strike column (all cells) */
+th:first-child,
+td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #000000 !important;
+    width: 65px;
+    text-align: right;
+    font-weight: bold;
+    /* Ensure borders are covered by background */
+    border-right: 1px solid #000000 !important;
+}
+
+/* Strike header (rowspan 2) - highest priority at intersection */
+thead tr:first-child th:first-child {
+    top: 0;
+    left: 0;
+    z-index: 20;
+    background-color: #000000 !important;
+    border-right: 1px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+    text-align: center;
+}
+
+/* First column header in second row - extend background to cover intersection */
+thead tr:last-child th:first-child {
+    top: 16px;
+    z-index: 19;
+    background-color: #000000 !important;
+    border-right: 1px solid #000000 !important;
+    border-top: 1px solid #000000 !important;
+    text-align: center;
+}
+
+/* First column data cells */
+tbody td:first-child {
+    z-index: 10;
+    background-color: #000000 !important;
+    border-right: 1px solid #000000 !important;
+}
+
+th:not(:first-child), td:not(:first-child) {
+    width: 60px;
+}
+
+tbody tr:hover {
+    background-color: #2a2d2e;
+}
+
+td.null-value {
+    color: #858585;
+}
+
+td.price-in-range {
+    background-color: #4ec9b0 !important;
+    color: #1e1e1e;
+    font-weight: bold;
+}
+
+.symbol-header {
+    margin-top: 15px;
+    margin-bottom: 4px;
+    color: #4ec9b0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.expiration-info {
+    color: #858585;
+    font-size: 9px;
+    margin-bottom: 6px;
+}
+

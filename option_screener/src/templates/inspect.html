@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option Chain Inspector</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Option Chain Inspector</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="fileSelect">Select data file:</label>
+                <select id="fileSelect" style="width: 150px;">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="optionTypeFilter">Type:</label>
+                <input type="text" id="optionTypeFilter" placeholder="call | put" style="width: 80px;" />
+            </div>
+            
+            <div class="control-group">
+                <label for="priceMin">Price Min:</label>
+                <input type="number" id="priceMin" step="0.01" placeholder="Min" style="width: 80px;" />
+            </div>
+            
+            <div class="control-group">
+                <label for="priceMax">Price Max:</label>
+                <input type="number" id="priceMax" step="0.01" placeholder="Max" style="width: 80px;" />
+            </div>
+            
+            <button id="updateBtn" disabled>Update Table</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        <div id="tableContainer"></div>
+    </div>
+
+    <script>
+        let jsonData = null;
+
+        // Load available files and populate dropdown
+        async function loadFileList() {
+            const fileSelect = document.getElementById('fileSelect');
+            try {
+                const response = await fetch('/api/files');
+                if (!response.ok) {
+                    throw new Error('Failed to load file list');
+                }
+                const files = await response.json();
+                
+                fileSelect.innerHTML = '<option value="">Select a file...</option>';
+                if (files.length === 0) {
+                    fileSelect.innerHTML = '<option value="">No files available</option>';
+                    return;
+                }
+                
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file;
+                    option.textContent = file;
+                    fileSelect.appendChild(option);
+                });
+            } catch (error) {
+                fileSelect.innerHTML = '<option value="">Error loading files</option>';
+                showStatus('Error loading file list: ' + error.message, 'error');
+            }
+        }
+
+        // File select handler - load selected file
+        document.getElementById('fileSelect').addEventListener('change', async function(e) {
+            const filename = e.target.value;
+            if (!filename) {
+                jsonData = null;
+                document.getElementById('updateBtn').disabled = true;
+                document.getElementById('tableContainer').innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/data?filename=${encodeURIComponent(filename)}`);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to load file');
+                }
+
+                jsonData = await response.json();
+                document.getElementById('updateBtn').disabled = false;
+                showStatus('File loaded successfully!', 'success');
+                updateTable();
+            } catch (error) {
+                showStatus('Error loading file: ' + error.message, 'error');
+                jsonData = null;
+                document.getElementById('updateBtn').disabled = true;
+            }
+        });
+
+        // Load file list on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadFileList();
+        });
+
+
+        function formatDate(dateStr) {
+            // Convert YYYY-MM-DD to YYYY/MM/DD
+            if (!dateStr) return dateStr;
+            return dateStr.replace(/-/g, '/');
+        }
+
+        function formatTimestamp(timestamp) {
+            // Format Unix timestamp (UTC) to readable string
+            if (!timestamp) return '';
+            const date = new Date(timestamp * 1000); // Convert to milliseconds
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const hours = String(date.getUTCHours()).padStart(2, '0');
+            const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+            return `${year}/${month}/${day} ${hours}:${minutes}:${seconds} UTC`;
+        }
+
+        function calculateMidPrice(option) {
+            const bid = option.bid;
+            const ask = option.ask;
+            
+            if (bid === null || bid === undefined || ask === null || ask === undefined) {
+                return null;
+            }
+            
+            try {
+                const bidVal = parseFloat(bid);
+                const askVal = parseFloat(ask);
+                const midPrice = (bidVal + askVal) / 2.0;
+                return Math.round(midPrice * 100) / 100;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function buildOptionTable(data) {
+            const chains = data.chains || {};
+            const result = {};
+            
+            // Get first (and only) symbol
+            const symbols = data.symbols || Object.keys(chains);
+            const sym = symbols[0] || Object.keys(chains)[0];
+            
+            if (!sym) return result;
+            
+            const expirationGroups = chains[sym] || {};
+            result[sym] = {};
+            
+            Object.keys(expirationGroups).forEach(exp => {
+                const optList = expirationGroups[exp] || [];
+                result[sym][exp] = { call: {}, put: {} };
+                
+                optList.forEach(option => {
+                    const optType = (option.option_type || '').toLowerCase();
+                    if (optType !== 'call' && optType !== 'put') {
+                        return;
+                    }
+                    
+                    const strike = option.strike;
+                    if (strike === null || strike === undefined) {
+                        return;
+                    }
+                    
+                    const strikeVal = parseFloat(strike);
+                    const midPrice = calculateMidPrice(option);
+                    result[sym][exp][optType][strikeVal] = midPrice;
+                });
+            });
+            
+            return result;
+        }
+
+        function updateTable() {
+            if (!jsonData) {
+                showStatus('No data loaded', 'error');
+                return;
+            }
+
+            const table = buildOptionTable(jsonData);
+            const container = document.getElementById('tableContainer');
+            
+            if (Object.keys(table).length === 0) {
+                container.innerHTML = '<p style="color: #858585;">No data found for requested filters.</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            Object.keys(table).sort().forEach(sym => {
+                const symTable = table[sym];
+                const expirations = Object.keys(symTable).sort();
+                
+                if (expirations.length === 0) {
+                    return;
+                }
+                
+                // Collect all strikes
+                const allStrikes = new Set();
+                expirations.forEach(exp => {
+                    Object.keys(symTable[exp].call || {}).forEach(strike => {
+                        allStrikes.add(parseFloat(strike));
+                    });
+                    Object.keys(symTable[exp].put || {}).forEach(strike => {
+                        allStrikes.add(parseFloat(strike));
+                    });
+                });
+                const strikes = Array.from(allStrikes).sort((a, b) => a - b);
+                
+                // Get timestamp and format it
+                const timestamp = jsonData.timestamp;
+                const lastUpdate = timestamp ? `Last update: ${formatTimestamp(timestamp)}` : '';
+                html += `<div class="symbol-header">Symbol: ${sym}${lastUpdate ? ' | ' + lastUpdate : ''}</div>`;
+                
+                html += '<div class="scrollable-table-wrapper"><table class="scrollable-table"><thead>';
+                html += '<tr>';
+                html += `<th rowspan="2">Strike</th>`;
+                expirations.forEach(exp => {
+                    const expDisplay = formatDate(exp);
+                    html += `<th colspan="2">${expDisplay}</th>`;
+                });
+                html += '</tr>';
+                html += '<tr>';
+                expirations.forEach(exp => {
+                    html += '<th>call</th>';
+                    html += '<th>put</th>';
+                });
+                html += '</tr>';
+                html += '</thead><tbody>';
+                
+                const optionTypeFilter = document.getElementById('optionTypeFilter').value.trim().toLowerCase();
+                const priceMin = parseFloat(document.getElementById('priceMin').value);
+                const priceMax = parseFloat(document.getElementById('priceMax').value);
+                const hasPriceFilter = !isNaN(priceMin) || !isNaN(priceMax);
+                const hasTypeFilter = optionTypeFilter === 'call' || optionTypeFilter === 'put';
+                
+                strikes.forEach(strike => {
+                    html += '<tr>';
+                    html += `<td>${strike.toFixed(2)}</td>`;
+                    expirations.forEach(exp => {
+                        // Call column
+                        const callPrice = symTable[exp].call[strike];
+                        if (callPrice === null || callPrice === undefined) {
+                            html += `<td class="null-value">-</td>`;
+                        } else {
+                            let cellClass = '';
+                            if (hasPriceFilter) {
+                                const inPriceRange = (!isNaN(priceMin) && !isNaN(priceMax) && callPrice >= priceMin && callPrice <= priceMax) ||
+                                                    (!isNaN(priceMin) && isNaN(priceMax) && callPrice >= priceMin) ||
+                                                    (isNaN(priceMin) && !isNaN(priceMax) && callPrice <= priceMax);
+                                const typeMatches = !hasTypeFilter || optionTypeFilter === 'call';
+                                if (inPriceRange && typeMatches) {
+                                    cellClass = ' class="price-in-range"';
+                                }
+                            }
+                            html += `<td${cellClass}>${callPrice.toFixed(2)}</td>`;
+                        }
+                        
+                        // Put column
+                        const putPrice = symTable[exp].put[strike];
+                        if (putPrice === null || putPrice === undefined) {
+                            html += `<td class="null-value">-</td>`;
+                        } else {
+                            let cellClass = '';
+                            if (hasPriceFilter) {
+                                const inPriceRange = (!isNaN(priceMin) && !isNaN(priceMax) && putPrice >= priceMin && putPrice <= priceMax) ||
+                                                    (!isNaN(priceMin) && isNaN(priceMax) && putPrice >= priceMin) ||
+                                                    (isNaN(priceMin) && !isNaN(priceMax) && putPrice <= priceMax);
+                                const typeMatches = !hasTypeFilter || optionTypeFilter === 'put';
+                                if (inPriceRange && typeMatches) {
+                                    cellClass = ' class="price-in-range"';
+                                }
+                            }
+                            html += `<td${cellClass}>${putPrice.toFixed(2)}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+            });
+            
+            container.innerHTML = html;
+            showStatus('Table updated', 'success');
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // Update button handler
+        document.getElementById('updateBtn').addEventListener('click', updateTable);
+
+        // Auto-update when filters change
+        document.getElementById('optionTypeFilter').addEventListener('input', updateTable);
+        document.getElementById('priceMin').addEventListener('input', updateTable);
+        document.getElementById('priceMax').addEventListener('input', updateTable);
+    </script>
+</body>
+</html>
+
