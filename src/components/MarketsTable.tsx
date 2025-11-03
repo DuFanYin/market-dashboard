@@ -62,7 +62,7 @@ export function MarketsTable({ rows, ahr }: MarketsTableProps) {
       </table>
 
 
-      <div className="py-6 sm:py-2" />
+      <div className="py-0.5 sm:py-6" />
       <div>
         <div className="rounded-md p-2 sm:p-3 bg-gray-50 border border-gray-200">
           <div className="mb-2 text-xs sm:text-sm text-gray-700 text-center">

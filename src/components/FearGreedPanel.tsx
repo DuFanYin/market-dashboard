@@ -43,7 +43,7 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-1.5 sm:p-4 lg:p-6 shadow-sm space-y-2 sm:space-y-6 order-1 sm:order-2">
       {/* Summary block */}
-      <div className="space-y-2 sm:space-y-4">
+      <div className="space-y-0 sm:space-y-4">
         {/* Score and rating */}
         <div className="flex items-center justify-center gap-2 sm:gap-3">
           <p className="text-lg sm:text-lg font-bold text-gray-900 tabular-nums">
@@ -84,7 +84,7 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
       </div>
 
       {/* Component Signals */}
-      <div className="mt-4 sm:mt-12 overflow-x-auto">
+      <div className="mt-2 sm:mt-12 overflow-x-auto">
         <table className={`w-full text-[10px] sm:text-sm min-w-[280px] sm:min-w-[400px] ${styles.tableFixed}`}>
           <colgroup>
             <col className={styles.colComponents} />
