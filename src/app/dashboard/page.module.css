@@ -123,8 +123,8 @@
 
 /* Tighter columns on mobile: narrower name, wider numbers to prevent overflow */
 @media (max-width: 640px) {
-  .colName { width: 28%; }
-  .colNum { width: 18%; }
+  .colName { width: 24%; }
+  .colNum { width: 22%; }
 }
 
 .colComponents { width: 35%; }
