@@ -5,13 +5,6 @@ function getChangeClass(value: number) {
   return value >= 0 ? styles.positive : styles.negative;
 }
 
-function getAhrZoneClass(zone?: string) {
-  if (zone === "green") return styles.ahrGreen;
-  if (zone === "yellow") return styles.ahrYellow;
-  if (zone === "red") return styles.ahrRed;
-  return styles.ahrDefault;
-}
-
 type MarketRow = { type: "row"; key: string; name: string; current?: number; prev?: number; change?: number; pct?: number };
 type MarketSpacer = { type: "spacer" };
 type MarketRows = Array<MarketRow | MarketSpacer>;
@@ -64,19 +57,44 @@ export function MarketsTable({ rows, ahr }: MarketsTableProps) {
             )
           ))}
 
-          {/* Always render AHR block with defaulted values to avoid shifts */}
-          <tr>
-            <td colSpan={5} className="py-1.5 sm:py-3" />
-          </tr>
-          <tr>
-            <td colSpan={5} className="pt-1 sm:pt-2">
-              <div className={`rounded-md p-1.5 sm:p-3 min-h-10 sm:min-h-16 flex items-center justify-center ${getAhrZoneClass(ahr.zone)}`}>
-                <p className="text-xs sm:text-lg text-center">AHR999 Index: {fmt2(ahr.ahr)}</p>
-              </div>
-            </td>
-          </tr>
+          
         </tbody>
       </table>
+
+
+      <div className="py-6 sm:py-6" />
+      <div>
+        <div className="rounded-md p-2 sm:p-3 bg-gray-50 border border-gray-200">
+          <div className="mb-2 text-xs sm:text-sm text-gray-700 text-center">AHR999 Index: {fmt2(ahr.ahr)}</div>
+          {(() => {
+            const ahrValue = Number(ahr.ahr ?? 0);
+            const pointerLeft = Math.min(100, Math.max(0, (ahrValue / 2) * 100));
+            return (
+              <>
+                <div className="relative w-full h-5 sm:h-6 rounded-md overflow-hidden border border-gray-400">
+                  <div className="flex h-full w-full">
+                    <div className="h-full" style={{ width: "22.5%", backgroundColor: "#BBF7D0" }} />
+                    <div className="h-full" style={{ width: "37.5%", backgroundColor: "#FEF08A" }} />
+                    <div className="h-full" style={{ width: "40%", backgroundColor: "#FECACA" }} />
+                  </div>
+                  {/* Separators at 0.45 and 1.2 (22.5% and 60%) */}
+                  <span className={`${styles.separator} ${styles.separatorWhite}`} style={{ left: "22.5%" }} />
+                  <span className={`${styles.separator} ${styles.separatorWhite}`} style={{ left: "60%" }} />
+                  {/* Pointer for current value */}
+                  <span className={styles.pointer} style={{ left: `${pointerLeft}%` }} />
+                </div>
+                {/* Labels */}
+                <div className="relative mt-1 h-4 text-[10px] sm:text-xs text-gray-500">
+                  <span className="absolute left-0">0</span>
+                  <span className="absolute -translate-x-1/2" style={{ left: "22.5%" }}>0.45</span>
+                  <span className="absolute -translate-x-1/2" style={{ left: "60%" }}>1.2</span>
+                  <span className="absolute right-0">2</span>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      </div>
     </section>
   );
 }

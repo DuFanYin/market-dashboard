@@ -1,0 +1,1274 @@
+{
+  "finance": {
+    "error": null,
+    "result": {
+      "economicEvents": [
+        {
+          "count": 5,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1761696000000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761696000000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1761696000000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "actual": "0.9",
+              "countryCode": "RU",
+              "description": " A region's gross domestic product, or GDP, is one of the ways for measuring the size of its economy. The GDP of a country is defined as the market value of all final goods and services produced within a country in a given period of time. It is also considered the sum of value added at every stage of production of all final goods and services produced within a country in a given period of time ",
+              "economicEvents": true,
+              "event": "GDP YY Monthly*",
+              "eventTime": 1761696000000,
+              "period": "Sep",
+              "prior": "0.4"
+            },
+            {
+              "actual": "4",
+              "countryCode": "IN",
+              "description": "Industry is a basic category of business activity. Firms in the same industry are on the same side of the market, produce goods which are close substitutes and compete for the same customers. For statistical purposes, industries are categorized following a uniform classification code such as Standard Industrial Classification (SIC). Changes in the volume of the physical output of the nations factories, mines and utilities are meaured by the index of industrial production. The figure is calculated as a weighted aggregate of goods and reported in headlines as a percent change from previous months. It is often adjusted by season or weather conditions and thus volatile. However, it is used as a leading indicator and helps in forecasting GDP changes. Rising industrial production figures signify increasing economic growth and can positively influence the sentiment towards local currency.",
+              "economicEvents": true,
+              "event": "Industrial Output YY*",
+              "eventTime": 1761647400000,
+              "period": "Sep",
+              "prior": "4",
+              "revisedFrom": "4.1"
+            }
+          ],
+          "timestamp": 1761624000000,
+          "timestampString": "2025-10-28",
+          "timezone": "America/New_York",
+          "totalCount": 5
+        },
+        {
+          "count": 8,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1761782400000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761782400000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1761782400000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "actual": "4",
+              "countryCode": "US",
+              "description": "The federal funds rate is the interest rate at which depository institutions lend balances at the Federal Reserve to other depository institutions overnight. The Federal Reserve's objective for open market operations has varied over the years. During the 1980s, the focus gradually shifted toward attaining a specified level of the federal funds rate, a process that was largely complete by the end of the decade. Beginning in 1994, the FOMC began announcing changes in its policy stance, and in 1995 it began to explicitly state its target level for the federal funds rate. Since February 2000, the statement issued by the FOMC shortly after each of its meetings usually has included the Committee's assessment of the risks to the attainment of its long-run goals of price stability and sustainable economic growth. ",
+              "economicEvents": true,
+              "event": "Fed Funds Tgt Rate",
+              "eventTime": 1761760800000,
+              "prior": "4.12"
+            },
+            {
+              "actual": "2.2",
+              "countryCode": "RU",
+              "description": " The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761753600000,
+              "period": "Sep",
+              "prior": "2.1"
+            },
+            {
+              "actual": "74.8",
+              "countryCode": "US",
+              "description": "The Pending Home Sales Index is based on a large national sample, typically representing about 20 percent of transactions for existing-home sales. In developing the model for the index, it was demonstrated that the level of monthly sales-contract activity from 2001 through 2004 closely parallels the level of closed existing-home sales in the following two months. ",
+              "economicEvents": true,
+              "event": "Pending Homes Index",
+              "eventTime": 1761746400000,
+              "period": "Sep",
+              "prior": "74.7",
+              "revisedFrom": "74.8"
+            },
+            {
+              "actual": "2.25",
+              "countryCode": "CA",
+              "description": " THE TARGET FOR THE OVERNIGHT RATE is the main tool used by the Bank of Canada to conduct monetary policy. It tells major financial institutions the average interest rate the Bank of Canada wants to see in the marketplace where they lend each other money for one day, or \"overnight.\" When the Bank changes the Overnight Rate Target, this change usually affects other interest rates, including mortgage rates and prime rates charged by commercial banks. When the Bank changes the Overnight Rate Target, this sends a clear signal about the direction in which it wants short-term interest rates to go. These changes usually lead to moves in the prime rate at commercial banks, which serves as a benchmark for many of their loans. These changes can also indirectly affect mortgage rates, and the interest paid to consumers on bank accounts, GICs, and other savings. ",
+              "economicEvents": true,
+              "event": "BoC Rate Decision",
+              "eventTime": 1761745500000,
+              "prior": "2.5"
+            },
+            {
+              "actual": "35.8",
+              "countryCode": "JP",
+              "description": "The survey is conducted on a sample of 5040 households. One-person households, non-Japanese households and student households are excluded from the survey. Consumer perceptions of the following four categories are surveyed: overall livelihood, income growth, employment, and willingness to buy durable goods. Respondents are asked to evaluate on a scale of one to five what they consider the prospects to be for the five subjects over the next six months. Points are then allotted in accordance with the one-to-five scale for each category based on the anticipated effects on consumption. The consumer perception index is calculated by computing the weighted average of the points of the results (component ratio). The consumer confidence index (original figure) is then calculated by simply averaging the four consumer perception indexes (original figures). ",
+              "economicEvents": true,
+              "event": "Consumer Confid. Index*",
+              "eventTime": 1761714000000,
+              "period": "Oct",
+              "prior": "35.3"
+            }
+          ],
+          "timestamp": 1761710400000,
+          "timestampString": "2025-10-29",
+          "timezone": "America/New_York",
+          "totalCount": 8
+        },
+        {
+          "count": 12,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1761868800000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1761868800000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761868800000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1761868800000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1761868800000,
+              "period": "Sep",
+              "prior": "2.8"
+            },
+            {
+              "actual": "0.5",
+              "countryCode": "JP",
+              "description": "Retail sales data represents total consumer purchase from retail stores. It provides valuable information about consumer spending which makes up the consumption part of GDP. The most volatile components like autos, gas prices and food prices are often removed from the report to show more underlying demand patterns as changes in sales in these categories are frequently a result of price changes. It is not adjusted for inflation. Spending on services is not included. Rising retail sales indicate stronger economic growth. However, if the increase is larger than forecast, it may be inflationary. ",
+              "economicEvents": true,
+              "event": "Retail Sales YY",
+              "eventTime": 1761868200000,
+              "period": "Sep",
+              "prior": "-1.1",
+              "revisedFrom": "-0.9"
+            },
+            {
+              "actual": "2.6",
+              "countryCode": "JP",
+              "description": " Unemployment per cent of total labour force. Labour force status: Population 15 years old and over is classified as follows according to the activity in which each person was engaged during the survey week. Unemployed: Persons who did not work at all during the survey week, but were currently available for work and were actively seeking a job or were waiting for the results of the past job-seeking activity. Labour force: The employed plus the unemployed. Ratio of unemployed in labour force: (Unemployed) / (Labour Force) * 100 ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761867000000,
+              "period": "Sep",
+              "prior": "2.6"
+            },
+            {
+              "actual": "2.15",
+              "countryCode": "EU",
+              "description": "On 8 June 2000 the ECB announced that, starting from the operation to be settled on 28 June 2000, the main refinancing operations of the Eurosystem would be conducted as variable rate tenders. The minimum bid rate refers to the minimum interest rate at which counterparties may place their bids. For the purpose of signalling the monetary policy stance the minimum bid rate plays the role previously performed by the rate in fixed tenders (Refinancing Tender). ",
+              "economicEvents": true,
+              "event": "ECB Refinancing Rate *",
+              "eventTime": 1761830100000,
+              "period": "Oct",
+              "prior": "2.15"
+            },
+            {
+              "actual": "-0.36",
+              "countryCode": "BR",
+              "description": "An index that measures and tracks the changes in price of goods in the stages before the retail level. Wholesale price indexes (WPIs) report monthly to show the average price changes of goods sold in bulk, and they are a group of the indicators that follow growth in the economy. Although some countries still use the WPIs as a measure of inflation, many countries, including the United States, use the producer price index (PPI) instead.",
+              "economicEvents": true,
+              "event": "IGP-M Inflation Index*",
+              "eventTime": 1761822000000,
+              "period": "Oct",
+              "prior": "0.42"
+            },
+            {
+              "actual": "-14.2",
+              "countryCode": "EU",
+              "description": "The indicator represents the arithmetic average of the following questions: - Financial situation over the next 12 months - General economic situation over the next 12 months - Unemployment expectations over the next 12 months - Savings over the next 12 months. - Balances: i.e. differences between the percentages of respondents giving positive and negative replies. ",
+              "economicEvents": true,
+              "event": "Consumer Confid. Final *",
+              "eventTime": 1761818400000,
+              "period": "Oct",
+              "prior": "-14.2"
+            },
+            {
+              "actual": "6.3",
+              "countryCode": "EU",
+              "description": "Unemployment rates represent unemployed persons as a percentage of the labour force. The labour force is the total number of people employed and unemployed. Unemployed persons comprise persons aged 15 to 74 who were: a. Without work during the reference week, b. Currently available for work, i.e. were available for paid employment or self-employment before the end of the two weeks following the reference week, c. Actively seeking work, i.e. had taken specific steps in the four weeks period ending with the reference week to seek paid employment or self-employment or who found a job to start later, i.e. within a period of at most three months. This series covers euro area with 13 Member States (Belgium, Germany, Spain, France, Ireland, Italy, Luxembourg, Netherlands, Austria, Portugal, Slovenia, Finland. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761818400000,
+              "period": "Sep",
+              "prior": "6.3"
+            },
+            {
+              "actual": "101.3",
+              "countryCode": "CH",
+              "description": "The previous KOF economic barometer has been published on monthly basis. Following a period of reappraisal and development, this is now being replaced with immediate effect by a new KOF economic barometer with a multi- sectoral design. The new KOF economic barometer will also be published monthly. In the new version, economic patterns in individual sectors (banking, construction and other sectors) will be recorded separately using specific indicators, and then compiled to create the new KOF barometer. In addition to the new design, a new filter method is also being used. ",
+              "economicEvents": true,
+              "event": "KOF Indicator",
+              "eventTime": 1761811200000,
+              "period": "Oct",
+              "prior": "98"
+            }
+          ],
+          "timestamp": 1761796800000,
+          "timestampString": "2025-10-30",
+          "timezone": "America/New_York",
+          "totalCount": 12
+        },
+        {
+          "count": 7,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1761955200000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1761955200000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1761955200000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1761955200000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1761955200000,
+              "period": "Sep",
+              "prior": "2.8"
+            },
+            {
+              "actual": "-0.3",
+              "countryCode": "CA",
+              "description": "All industries. Gross domestic product (GDP) by industry according to the 1997 North American Industrial Classification System (NAICS). Gross Domestic Product (GDP) measures summary value of goods and services generated in a relevant country or region. A region's GDP is one of the ways for measuring the size of its economy. There are three main approaches for calculating Gross Domestic Product: - Production approach - The sum of the value added created through the production of goods and services within the economy. - Income approach - Total income generated by the production of goods and services within the economy. - Expenditure approach - Total expenditures on all finished goods and services produced within the economy. ",
+              "economicEvents": true,
+              "event": "GDP MM",
+              "eventTime": 1761913800000,
+              "period": "Aug",
+              "prior": "0.2",
+              "revisedFrom": "0.3"
+            },
+            {
+              "actual": "-7.3",
+              "countryCode": "JP",
+              "description": "Data refer to the number of new dwellings started with a floor area of more than 10 square meters, which are intended, for habitation by a household. ",
+              "economicEvents": true,
+              "event": "Housing Starts YY*",
+              "eventTime": 1761886800000,
+              "period": "Sep",
+              "prior": "-9.8"
+            }
+          ],
+          "timestamp": 1761883200000,
+          "timestampString": "2025-10-31",
+          "timezone": "America/New_York",
+          "totalCount": 7
+        },
+        {
+          "count": 5,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1762041600000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1762041600000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1762041600000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1762041600000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1762041600000,
+              "period": "Sep",
+              "prior": "2.8"
+            }
+          ],
+          "timestamp": 1761969600000,
+          "timestampString": "2025-11-01",
+          "timezone": "America/New_York",
+          "totalCount": 5
+        },
+        {
+          "count": 5,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1762128000000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1762128000000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1762128000000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1762128000000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1762128000000,
+              "period": "Sep",
+              "prior": "2.8"
+            }
+          ],
+          "timestamp": 1762056000000,
+          "timestampString": "2025-11-02",
+          "timezone": "America/New_York",
+          "totalCount": 5
+        },
+        {
+          "count": 8,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1762214400000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1762214400000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1762214400000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1762214400000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1762214400000,
+              "period": "Sep",
+              "prior": "2.8"
+            },
+            {
+              "countryCode": "US",
+              "description": "Institute for Supply Management\u2122 defines supply management as the identification, acquisition,access, positioning and management of resources and related capabilities the organization needs or potentially needs in the attainment of its strategic objectives. Mission ISM exists to lead and serve the supply management profession. ",
+              "economicEvents": true,
+              "event": "ISM Manuf Employment Idx",
+              "eventTime": 1762182000000,
+              "period": "Oct",
+              "prior": "45.3"
+            },
+            {
+              "actual": "-0.3",
+              "countryCode": "CH",
+              "description": "Consumer Price index is the most frequently used indicator of inflation and reflect changes in the cost of acquiring a fixed basket of goods and services by the average consumer. The weights are usually derived from household expenditure surveys. Average measure of pure change in prices of goods and services bought for the purpose of consumption by the resident households in Switzerland. The data covers all private households residing permanently in Switzerland. The survey covers all goods and services bought by the reference population for the purposes of consumption; expenditure on direct taxes, cash gifts, gambling and illegal activities are excluded. Food, fuel and gasoline prices are collected monthly; other prices on a quarterly basis; price collection during the first eight days of the month. ",
+              "economicEvents": true,
+              "event": "CPI MM",
+              "eventTime": 1762155000000,
+              "period": "Oct",
+              "prior": "-0.2"
+            },
+            {
+              "actual": "0.1",
+              "countryCode": "CH",
+              "description": "Consumer Price index is the most frequently used indicator of inflation and reflect changes in the cost of acquiring a fixed basket of goods and services by the average consumer. The weights are usually derived from household expenditure surveys. Average measure of pure change in prices of goods and services bought for the purpose of consumption by the resident households in Switzerland. The data covers all private households residing permanently in Switzerland. The survey covers all goods and services bought by the reference population for the purposes of consumption; expenditure on direct taxes, cash gifts, gambling and illegal activities are excluded. Food, fuel and gasoline prices are collected monthly; other prices on a quarterly basis; price collection during the first eight days of the month. ",
+              "economicEvents": true,
+              "event": "CPI YY",
+              "eventTime": 1762155000000,
+              "period": "Oct",
+              "prior": "0.2"
+            }
+          ],
+          "timestamp": 1762146000000,
+          "timestampString": "2025-11-03",
+          "timezone": "America/New_York",
+          "totalCount": 8
+        },
+        {
+          "count": 7,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1762300800000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "Employees on Nonagricultural Payrolls measures the number people employed in all activities except agriculture.Employment data, except those for the Federal Government, refer to persons on establishment payrolls who received pay for any part of the pay period which includes the 12th of the month. For Federal Government establishments,employment figures represent the number of persons who occupied positions on the last day of the calendar month. Intermittent workers are counted if they performed any service during the month. The data exclude proprietors, the self-employed, unpaid volunteer or family workers, farm workers, and domestic workers. Salaried officers of corporations are included. Government employment covers only civilian employees; military personnel are excluded. Employees of the Central Intelligence Agency and the National Security Agency also are excluded. Persons on establishment payrolls who are on paid sick leave (when pay is received directly from the firm), on paid holiday, on paid vacation, or work during a part of the pay period even though they are unemployed or on strike during the rest of the period are counted as employed. ",
+              "economicEvents": true,
+              "event": "Non-Farm Payrolls",
+              "eventTime": 1762300800000,
+              "period": "Sep",
+              "prior": "22"
+            },
+            {
+              "countryCode": "US",
+              "description": "The unemployment rate represents the number of unemployed persons expressed as a percentage of the labour force. The unemployment rate for a particular age/sex group is the number of unemployed in that group expressed as a percentage of the labour force for that group. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1762300800000,
+              "period": "Sep",
+              "prior": "4.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Employment Trends Index (ETI)\u2122 aggregates eight labor-market indicators each of which has proven accurate in its own area. Aggregating individual indicators into a composite index filters out so-called \"noise\" to show underlying trends more clearly. The eight labor-market indicators aggregated into the Employment Trends Index (ETI)\u2122 include: Percentage of respondents who say they find \"Jobs Hard to Get\" (The Conference Board Consumer Confidence Survey). Initial Claims for Unemployment Insurance (U.S. Department of Labor). Percentage of Firms With Positions Not Able to Fill Right Now (National Federation of Independent Business). Number of employees hired by the temporary-help industry (U.S. Bureau of Labor Statistics). Part-time Workers for Economic Reasons (BLS). Job Openings (BLS). Industrial Production (Federal Reserve Board). Real Manufacturing and Trade Sales (U.S. Bureau of Economic Analysis). ",
+              "economicEvents": true,
+              "event": "Employment Trends*",
+              "eventTime": 1762300800000,
+              "period": "Sep",
+              "prior": "106.41"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1762300800000,
+              "period": "Sep",
+              "prior": "2.8"
+            },
+            {
+              "countryCode": "CA",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are, in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. When reporting Imports as f.o.b. you will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight. ",
+              "economicEvents": true,
+              "event": "Exports C$*",
+              "eventTime": 1762263000000,
+              "period": "Sep",
+              "prior": "60.58"
+            },
+            {
+              "countryCode": "CA",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are, in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. When reporting Imports as f.o.b. you will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight. ",
+              "economicEvents": true,
+              "event": "Imports C$*",
+              "eventTime": 1762263000000,
+              "period": "Sep",
+              "prior": "66.91"
+            }
+          ],
+          "timestamp": 1762232400000,
+          "timestampString": "2025-11-04",
+          "timezone": "America/New_York",
+          "totalCount": 7
+        },
+        {
+          "count": 7,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1762387200000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1762387200000,
+              "period": "Sep",
+              "prior": "2.8"
+            },
+            {
+              "countryCode": "US",
+              "description": "The Non-Manufacturing ISM Report On Business\u00ae is based on data compiled from purchasing and supply executives nationwide. Membership of the Non-Manufacturing Business Survey Committee is diversified by NAICS, based on each industry's contribution to gross domestic product (GDP). The Non-Manufacturing Business Survey Committee responses are divided into the following NAICS code categories: Agriculture, Forestry, Fishing & Hunting; Mining; Utilities; Construction; Wholesale Trade; Retail Trade; Transportation & Warehousing; Information; Finance & Insurance; Real Estate, Rental & Leasing; Professional, Scientific & Technical Services; Management of Companies & Support Services; Educational Services; Health Care & Social Assistance; Arts, Entertainment & Recreation; Accommodation & Food Services; Public Administration; and Other Services (services such as Equipment & Machinery Repairing; Promoting or Administering Religious Activities; Grantmaking; Advocacy; and Providing Dry-Cleaning & Laundry Services, Personal Care Services, Death Care Services, Pet Care Services, Photofinishing Services, Temporary Parking Services, and Dating Services). ",
+              "economicEvents": true,
+              "event": "ISM N-Mfg Employment Idx",
+              "eventTime": 1762351200000,
+              "period": "Oct",
+              "prior": "47.2"
+            },
+            {
+              "countryCode": "US",
+              "description": "MBA - Mortgage Bankers Association of America. The Market Index covers all mortgage applications during the week. This includes all conventional and government applications, all fixed-rate mortgages (FRMs), all adjustable-rate mortgages (ARMs), whether for a purchase or to refinance. ",
+              "economicEvents": true,
+              "event": "Mortgage Market Index",
+              "eventTime": 1762344000000,
+              "prior": "338.7"
+            },
+            {
+              "countryCode": "US",
+              "description": "United States, Mortgage Lending Rates, FRM 30-Year Contract Rate (MBA Sourced) For 80% loan-to-value Mortgage. Sourced through Mortgage Banking Association of America. ",
+              "economicEvents": true,
+              "event": "MBA 30-Yr Mortgage Rate",
+              "eventTime": 1762344000000,
+              "prior": "6.3"
+            },
+            {
+              "countryCode": "EU",
+              "description": "Total industry excluding construction The domestic output price index (or producer price index) for an economic activity measures the average price development of all goods and related services resulting from that activity and sold on the domestic market. The domestic output price index is a business cycle indicator showing the monthly development of transaction prices of economic activities. It can be an early indicator of inflationary pressures in the economy, but it also records the evolution of prices over longer periods of time. The domestic market is defined as customers resident in the same national territory as the observation unit. ",
+              "economicEvents": true,
+              "event": "Producer Prices MM",
+              "eventTime": 1762336800000,
+              "period": "Sep",
+              "prior": "-0.3"
+            },
+            {
+              "countryCode": "EU",
+              "description": "Total industry excluding construction The domestic output price index (or producer price index) for an economic activity measures the average price development of all goods and related services resulting from that activity and sold on the domestic market. The domestic output price index is a business cycle indicator showing the monthly development of transaction prices of economic activities. It can be an early indicator of inflationary pressures in the economy, but it also records the evolution of prices over longer periods of time. The domestic market is defined as customers resident in the same national territory as the observation unit. ",
+              "economicEvents": true,
+              "event": "Producer Prices YY",
+              "eventTime": 1762336800000,
+              "period": "Sep",
+              "prior": "-0.6"
+            }
+          ],
+          "timestamp": 1762318800000,
+          "timestampString": "2025-11-05",
+          "timezone": "America/New_York",
+          "totalCount": 7
+        },
+        {
+          "count": 6,
+          "records": [
+            {
+              "countryCode": "US",
+              "description": "The personal outlay account shows the uses of income of individuals, enterprises that are owned by households, and nonprofit institutions that serve households. Personal outlays is the sum of personal consumption expenditures, personal interest payments and personal current transfer payments. Personal consumption expenditures is the largest component of GDP as households are the largest consumer of U.S. final product. Personal consumption expenditures measures purchases of goods and services by households and by nonprofit institutions serving households (NPISHs) from private business. It also includes purchases of certain goods and services provided by general government and government enterprises, such as tuition payments for higher education, charges for medical care, and charges for water and other sanitary services. In addition, PCE includes imputed expenditures on items such as the services of housing by a homeowner (the equivalent of rent), financial and insurance services for which there is no explicit charge, and medical care provided to individuals and financed by government or by private insurance. The goods and services purchased by the personal sector. In the NIPA's, the personal sector consists of individuals (and nonprofit institutions serving ",
+              "economicEvents": true,
+              "event": "Core PCE Price Index YY*",
+              "eventTime": 1762473600000,
+              "period": "Sep",
+              "prior": "2.9"
+            },
+            {
+              "countryCode": "US",
+              "description": "In any given month, the rate of inflation in a price index like the Consumer Price Index or Personal Consumption Expenditures (PCE) can be thought of as a weighted average, or mean, of the rates of change in the prices of all the goods and services that make up the index. Calculating the trimmed-mean PCE inflation rate for a given month involves looking at the price changes for each of the individual components of personal consumption expenditures. The individual price changes are sorted in ascending order from fell the most to rose the most, and a certain fraction of the most extreme observations at both ends of the spectrum are like a skaters best and worst marks thrown out, or trimmed. The inflation rate is then calculated as a weighted average of the remaining components. For the series presented here, 19.4 percent of the weight from the lower tail and 25.4 percent of the weight in the upper tail are trimmed. Those proportions have been chosen, based on historical data, to give the best fit between the trimmed-mean inflation rate and proxies for the true core PCE inflation rate. The resulting inflation measure has been shown to outperform the more conventional excluding food and energy measure as a gauge of core inflation. ",
+              "economicEvents": true,
+              "event": "Dallas Fed PCE*",
+              "eventTime": 1762473600000,
+              "period": "Sep",
+              "prior": "2.8"
+            },
+            {
+              "countryCode": "US",
+              "description": "U.S Labor Department report of initial state jobless benefit claims. Unemployment insurance data for regular state programs. Initial claims - Any notice of unemployment filed: (1) to request a determination of entitlement to and eligibility for compensation or (2) to begin a second or subsequent period of eligibility within a benefit year or period of eligibility. ",
+              "economicEvents": true,
+              "event": "Initial Jobless Clm",
+              "eventTime": 1762435800000,
+              "prior": "218"
+            },
+            {
+              "countryCode": "GB",
+              "description": "Data obtained from Barclays Bank, Lloyds/TSB Bank, HSBC Bank and National Westminster Bank whose rates are used to compile this series. Where all the rates did not change on the same day an average is shown. ",
+              "economicEvents": true,
+              "event": "BOE Bank Rate",
+              "eventTime": 1762430400000,
+              "period": "Nov",
+              "prior": "4"
+            },
+            {
+              "countryCode": "CH",
+              "description": "The definition for an unemployed person is: Persons (16-65 years) who were available for work (except for temporary illness) but did not work during the survey week, and who made specific efforts to find a job within the previous 4 weeks by going to an employment agency, by applying directly to an employer, by answering a job ad, or being on a union or professional register. The percentage number is calculated unemployed / (employed + unemployed). ",
+              "economicEvents": true,
+              "event": "Unemployment Rate Adj*",
+              "eventTime": 1762416000000,
+              "period": "Oct",
+              "prior": "3"
+            },
+            {
+              "countryCode": "CH",
+              "description": "The definition for an unemployed person is: Persons (16-65 years) who were available for work (except for temporary illness) but did not work during the survey week, and who made specific efforts to find a job within the previous 4 weeks by going to an employment agency, by applying directly to an employer, by answering a job ad, or being on a union or professional register. The percentage number is calculated unemployed / (employed + unemployed). ",
+              "economicEvents": true,
+              "event": "Unemployment Rate Unadj*",
+              "eventTime": 1762416000000,
+              "period": "Oct",
+              "prior": "2.8"
+            }
+          ],
+          "timestamp": 1762405200000,
+          "timestampString": "2025-11-06",
+          "timezone": "America/New_York",
+          "totalCount": 6
+        },
+        {
+          "count": 5,
+          "records": [
+            {
+              "countryCode": "US",
+              "economicEvents": true,
+              "event": "U Mich Sentiment Prelim",
+              "eventTime": 1762527600000,
+              "period": "Nov",
+              "prior": "53.6"
+            },
+            {
+              "countryCode": "CA",
+              "description": " Employed persons are those who, during the reference week: (a) did any work at all at a job or business, that is, paid work in the context of an employer-employee relationship, or self-employment. It also includes unpaid family work, which is defined as unpaid work contributing directly to the operation of a farm, business or professional practice owned and operated by a related member of the same household, or (b) had a job but were not at work due to factors such as own illness or disability, personal or family responsibilities, vacation, labour dispute or other reasons (excluding persons on layoff, between casual jobs, and those with a job start at a future date). ",
+              "economicEvents": true,
+              "event": "Employment Change",
+              "eventTime": 1762522200000,
+              "period": "Oct",
+              "prior": "60.4"
+            },
+            {
+              "countryCode": "CA",
+              "description": "'Unemployment rate: Number of unemployed persons expressed as a percentage of the labour force. The concepts and definitions of employment and unemployment adopted by the survey are based on those endorsed by the International Labour Organisation (ILO). UNEMPLOYMENT: Given the concept of unemployment as the unutilized supply of labour, the operational definition of unemployment is based primarily on the activity of job search and the availability to take a job. In addition to being conceptually appropriate, job search activities can, in a household survey, be objectively and consistently measured over time. The definition of unemployment is therefore the following: Unemployed persons are those who, during reference week: a) were on temporary layoff during reference week with an expectation of recall and were available for work, or b) were without work, had actively looked for work in the past four weeks, and were available for work, or c) had a new job to start within four weeks from reference week, and were available for work. ",
+              "economicEvents": true,
+              "event": "Unemployment Rate",
+              "eventTime": 1762522200000,
+              "period": "Oct",
+              "prior": "7.1"
+            },
+            {
+              "countryCode": "BR",
+              "description": "An index that measures and tracks the changes in price of goods in the stages before the retail level. Wholesale price indexes (WPIs) report monthly to show the average price changes of goods sold in bulk, and they are a group of the indicators that follow growth in the economy. Although some countries still use the WPIs as a measure of inflation, many countries, including the United States, use the producer price index (PPI) instead.",
+              "economicEvents": true,
+              "event": "IGP-DI Inflation Index",
+              "eventTime": 1762513200000,
+              "period": "Oct",
+              "prior": "0.36"
+            },
+            {
+              "countryCode": "CH",
+              "description": "This index is an average of the indices Past economic situation, Past personal finances and Future personal finances. The index is calculated as the difference between positive and negative answers and ranges between plus 200 (all say strongly improved) to minus 200 (strongly worsened). ",
+              "economicEvents": true,
+              "event": "Consumer Confidence*",
+              "eventTime": 1762502400000,
+              "period": "Q4",
+              "prior": "-28"
+            }
+          ],
+          "timestamp": 1762491600000,
+          "timestampString": "2025-11-07",
+          "timezone": "America/New_York",
+          "totalCount": 5
+        },
+        {
+          "count": 2,
+          "records": [
+            {
+              "countryCode": "CN",
+              "description": "Consumer price index reflects the relative change in prices of consumer goods and services purchased by urban and rural residents, and is a composite index derived from the urban consumer price index and the rural consumer price index. Consumer price index can be used to analyse the impact of consumer price change on actual expenditure for living cost of urban and rural residents. The consumer price index (CPI) is a measure of change over a specified period of time in the general level of prices of goods and services that a given population acquires, uses or pays for consumption. It compares a household's cost for a specific basket of finished goods and services with the cost of the same basket during an earlier benchmark period.",
+              "economicEvents": true,
+              "event": "CPI MM *",
+              "eventTime": 1762651800000,
+              "period": "Oct",
+              "prior": "0.1"
+            },
+            {
+              "countryCode": "CN",
+              "description": "Consumer price index reflects the relative change in prices of consumer goods and services purchased by urban and rural residents, and is a composite index derived from the urban consumer price index and the rural consumer price index. Consumer price index can be used to analyse the impact of consumer price change on actual expenditure for living cost of urban and rural residents. The consumer price index (CPI) is a measure of change over a specified period of time in the general level of prices of goods and services that a given population acquires, uses or pays for consumption. It compares a household's cost for a specific basket of finished goods and services with the cost of the same basket during an earlier benchmark period. ",
+              "economicEvents": true,
+              "event": "CPI YY *",
+              "eventTime": 1762651800000,
+              "period": "Oct",
+              "prior": "-0.3"
+            }
+          ],
+          "timestamp": 1762578000000,
+          "timestampString": "2025-11-08",
+          "timezone": "America/New_York",
+          "totalCount": 2
+        },
+        {
+          "count": 3,
+          "records": [
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b. will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Exports - USD *",
+              "eventTime": 1762732800000,
+              "period": "Oct",
+              "prior": "36.38"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Trade balance, called also net export, is the difference between the value of country's exports and imports, over a period of time. A positive balance (trade surplus) means that exports exceed imports, a negative one means the opposite. Positive trade balance illustrates high competitiveness of country's economy. This strengthens investors' interest in the local currency, appreciating its exchange rate.",
+              "economicEvents": true,
+              "event": "Trade Def Govt -USD *",
+              "eventTime": 1762732800000,
+              "period": "Oct",
+              "prior": "32.15"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general customs statistics reported under the general trade statistics. According to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b.will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Imports - USD *",
+              "eventTime": 1762732800000,
+              "period": "Oct",
+              "prior": "68.53"
+            }
+          ],
+          "timestamp": 1762664400000,
+          "timestampString": "2025-11-09",
+          "timezone": "America/New_York",
+          "totalCount": 3
+        },
+        {
+          "count": 4,
+          "records": [
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b. will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Exports - USD *",
+              "eventTime": 1762819200000,
+              "period": "Oct",
+              "prior": "36.38"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general customs statistics reported under the general trade statistics. According to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b.will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Imports - USD *",
+              "eventTime": 1762819200000,
+              "period": "Oct",
+              "prior": "68.53"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Trade balance, called also net export, is the difference between the value of country's exports and imports, over a period of time. A positive balance (trade surplus) means that exports exceed imports, a negative one means the opposite. Positive trade balance illustrates high competitiveness of country's economy. This strengthens investors' interest in the local currency, appreciating its exchange rate.",
+              "economicEvents": true,
+              "event": "Trade Def Govt -USD *",
+              "eventTime": 1762819200000,
+              "period": "Oct",
+              "prior": "32.15"
+            },
+            {
+              "countryCode": "EU",
+              "description": "The sentix sentiment indicator is a monthly survey among 1600 financial analysts and institutional investors. Participants are asked about their opinion regarding the current economic situation and their expectations for the next six months in the Eurozone, United States, Japan, Asia excl Japan, Eastern Europe and Latin America. The sentix sentiment indicator consists of 36 differentindicators. ",
+              "economicEvents": true,
+              "event": "Sentix Index",
+              "eventTime": 1762767000000,
+              "period": "Nov",
+              "prior": "-5.4"
+            }
+          ],
+          "timestamp": 1762750800000,
+          "timestampString": "2025-11-10",
+          "timezone": "America/New_York",
+          "totalCount": 4
+        },
+        {
+          "count": 5,
+          "records": [
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general customs statistics reported under the general trade statistics. According to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b.will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Imports - USD *",
+              "eventTime": 1762905600000,
+              "period": "Oct",
+              "prior": "68.53"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b. will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Exports - USD *",
+              "eventTime": 1762905600000,
+              "period": "Oct",
+              "prior": "36.38"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Trade balance, called also net export, is the difference between the value of country's exports and imports, over a period of time. A positive balance (trade surplus) means that exports exceed imports, a negative one means the opposite. Positive trade balance illustrates high competitiveness of country's economy. This strengthens investors' interest in the local currency, appreciating its exchange rate.",
+              "economicEvents": true,
+              "event": "Trade Def Govt -USD *",
+              "eventTime": 1762905600000,
+              "period": "Oct",
+              "prior": "32.15"
+            },
+            {
+              "countryCode": "BR",
+              "description": "The consumer price index (CPI) is a measure of change in the general level of prices of goods and services bought by households over a specified period of time. It compares a household's cost for a specific basket of finished goods and services with the cost of the same basket during an earlier benchmark period. The consumer price index is used as a measurement of inflation and is a key economic figure. Likely impact: 1) Interest Rates: Larger-than-expected quarterly increase in price inflation or increasing trend is considered inflationary; this will cause bond prices to drop and yields and interest rates to rise. 2) Stock Prices: Higher than expected price inflation is bearish on the stock market as higher inflation will lead to higher interest rates. 3) Exchange Rates: High inflation has an uncertain effect. It would lead to depreciation as higher prices mean lower competitiveness. Conversely, higher inflation causes higher interest rates and a tighter monetary policy that leads to an appreciation.",
+              "economicEvents": true,
+              "event": "IPCA Inflation Index YY",
+              "eventTime": 1762862400000,
+              "period": "Oct",
+              "prior": "5.17"
+            },
+            {
+              "countryCode": "GB",
+              "description": "The ILO definition of unemployment covers people who are: not in employment, want a job, have actively sought work in the previous four weeks and are available to start work within the next fortnight or; out of work and have accepted a job which they are waiting to start next fortnight. ",
+              "economicEvents": true,
+              "event": "ILO Unemployment Rate*",
+              "eventTime": 1762844400000,
+              "period": "Sep",
+              "prior": "4.8"
+            }
+          ],
+          "timestamp": 1762837200000,
+          "timestampString": "2025-11-11",
+          "timezone": "America/New_York",
+          "totalCount": 5
+        },
+        {
+          "count": 4,
+          "records": [
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b. will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Exports - USD *",
+              "eventTime": 1762992000000,
+              "period": "Oct",
+              "prior": "36.38"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general customs statistics reported under the general trade statistics. According to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b.will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Imports - USD *",
+              "eventTime": 1762992000000,
+              "period": "Oct",
+              "prior": "68.53"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Trade balance, called also net export, is the difference between the value of country's exports and imports, over a period of time. A positive balance (trade surplus) means that exports exceed imports, a negative one means the opposite. Positive trade balance illustrates high competitiveness of country's economy. This strengthens investors' interest in the local currency, appreciating its exchange rate.",
+              "economicEvents": true,
+              "event": "Trade Def Govt -USD *",
+              "eventTime": 1762992000000,
+              "period": "Oct",
+              "prior": "32.15"
+            },
+            {
+              "countryCode": "IN",
+              "description": "The consumer price index (CPI) is a measure of change in the general level of prices of goods and services bought by households over a specified period of time. It compares a household's cost for a specific basket of finished goods and services with the cost of the same basket during an earlier benchmark period. The consumer price index is used as a measurement of inflation and is a key economic figure. Likely impact: 1) Interest Rates: Larger-than-expected quarterly increase in price inflation or increasing trend is considered inflationary; this will cause bond prices to drop and yields and interest rates to rise. 2) Stock Prices: Higher than expected price inflation is bearish on the stock market as higher inflation will lead to higher interest rates. 3) Exchange Rates: High inflation has an uncertain effect. It would lead to depreciation as higher prices mean lower competitiveness. Conversely, higher inflation causes higher interest rates and a tighter monetary policy that leads to an appreciation.",
+              "economicEvents": true,
+              "event": "CPI Inflation YY*",
+              "eventTime": 1762943400000,
+              "period": "Oct",
+              "prior": "1.54"
+            }
+          ],
+          "timestamp": 1762923600000,
+          "timestampString": "2025-11-12",
+          "timezone": "America/New_York",
+          "totalCount": 4
+        },
+        {
+          "count": 21,
+          "records": [
+            {
+              "countryCode": "CN",
+              "description": "China, Retail Sales, Total, growth rate, Current Prices, Chg Y/Y Retail sales data represents total consumer purchase from retail stores. It provides valuable information about consumer spending which makes up the consumption part of GDP.Rising retail sales indicate stronger economic growth. However, if the increase is larger than forecast, it may be inflationary. ",
+              "economicEvents": true,
+              "event": "Retail Sales YY",
+              "eventTime": 1763085600000,
+              "period": "Oct",
+              "prior": "3"
+            },
+            {
+              "countryCode": "RU",
+              "description": "The Consumers Price Index (CPI) measures the rate of price change of goods and services purchased by households. It measures changes in the average level of prices over a period of time. In other words, prices indicator of what is happening to prices consumers are paying for items purchased. With a given starting point or base period which is usually taken as 100, the CPI can be used to compare current period consumer prices with those in the base period. Consumer Price index is the most frequently used indicator of inflation and reflect changes in the cost of acquiring a fixed basket of goods and services by the average consumer. The weights are usually derived from household expenditure surveys. ",
+              "economicEvents": true,
+              "event": "CPI MM",
+              "eventTime": 1763078400000,
+              "period": "Oct",
+              "prior": "0.3"
+            },
+            {
+              "countryCode": "RU",
+              "economicEvents": true,
+              "event": "CPI YY",
+              "eventTime": 1763078400000,
+              "period": "Oct",
+              "prior": "8"
+            },
+            {
+              "countryCode": "RU",
+              "economicEvents": true,
+              "event": "GDP YY Quarterly Prelim*",
+              "eventTime": 1763078400000,
+              "period": "Q3",
+              "prior": "1.1"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Trade balance, called also net export, is the difference between the value of country's exports and imports, over a period of time. A positive balance (trade surplus) means that exports exceed imports, a negative one means the opposite. Positive trade balance illustrates high competitiveness of country's economy. This strengthens investors' interest in the local currency, appreciating its exchange rate.",
+              "economicEvents": true,
+              "event": "Trade Def Govt -USD *",
+              "eventTime": 1763078400000,
+              "period": "Oct",
+              "prior": "32.15"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general customs statistics reported under the general trade statistics. According to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b.will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Imports - USD *",
+              "eventTime": 1763078400000,
+              "period": "Oct",
+              "prior": "68.53"
+            },
+            {
+              "countryCode": "IN",
+              "description": "Exports free on board (f.o.b.) and Imports cost insurance freight (c.i.f.) are in general, customs statistics reported under the general trade statistics according to the recommendations of the UN International Trade Statistics. For some countries Imports are reported as f.o.b. instead of c.i.f. which is generally accepted. Reporting Imports as f.o.b. will have the effect of reducing the value of Imports by the amount of the cost of insurance and freight.",
+              "economicEvents": true,
+              "event": "Exports - USD *",
+              "eventTime": 1763078400000,
+              "period": "Oct",
+              "prior": "36.38"
+            },
+            {
+              "countryCode": "US",
+              "description": " The consumer price index (CPI) is a measure of the average change in the prices paid by urban consumers for a fixed market basket of goods and services. The CPI is based on prices of food, clothing, shelter, fuel, drugs, transportation fares, doctors and dentists fees, and other goods and services that people buy for day-to-day living. The quantity and quality of these items are kept essentially unchanged between major revisions so that only price changes will be measured. All taxes directly associated with the purchase and use of items are included in the index. ",
+              "economicEvents": true,
+              "event": "Core CPI MM, SA",
+              "eventTime": 1763040600000,
+              "period": "Oct",
+              "prior": "0.2"
+            },
+            {
+              "countryCode": "US",
+              "description": "CPI for all urban consumers The consumer price index (CPI) is a measure of the average change in the prices paid by urban consumers for a fixed market basket of goods and services. The CPI is based on prices of food, clothing, shelter, fuel, drugs, transportation fares, doctors_ and dentists_ fees, and other goods and services that people buy for day-to-day living. The quantity and quality of these items are kept essentially unchanged between major revisions so that only price changes will be measured. All taxes directly associated with the purchase and use of items are included in the index. dkbhgdi;gb ",
+              "economicEvents": true,
+              "event": "CPI MM, SA",
+              "eventTime": 1763040600000,
+              "period": "Oct",
+              "prior": "0.3"
+            },
+            {
+              "countryCode": "US",
+              "description": "The consumer price index (CPI) is a measure of the average change in the prices paid by urban consumers for a fixed market basket of goods and services. The CPI is based on prices of food, clothing, shelter, fuel, drugs, transportation fares, doctors and dentists fees, and other goods and services that people buy for day-to-day living. The quantity and quality of these items are kept essentially unchanged between major revisions so that only price changes will be measured. All taxes directly associated with the purchase and use of items are included in the index.\" ",
+              "economicEvents": true,
+              "event": "CPI Index, NSA",
+              "eventTime": 1763040600000,
+              "period": "Oct",
+              "prior": "324.8"
+            },
+            {
+              "countryCode": "US",
+              "description": "CPI for all urban consumers The consumer price index (CPI) is a measure of the average change in the prices paid by urban consumers for a fixed market basket of goods and services. The CPI is based on prices of food, clothing, shelter, fuel, drugs, transportation fares, doctors and dentists fees, and other goods and services that people buy for day-to-day living. The quantity and quality of these items are kept essentially unchanged between major revisions so that only price changes will be measured. All taxes directly associated with the purchase and use of items are included in the index. ",
+              "economicEvents": true,
+              "event": "CPI YY, NSA",
+              "eventTime": 1763040600000,
+              "period": "Oct",
+              "prior": "3"
+            },
+            {
+              "countryCode": "BR",
+              "description": "Retail sales data represents total consumer purchase from retail stores. It provides valuable information about consumer spending which makes up the consumption part of GDP. The most volatile components like autos, gas prices and food prices are often removed from the report to show more underlying demand patterns as changes in sales in these categories are frequently a result of price changes. It is not adjusted for inflation. Spending on services is not included. Rising retail sales indicate stronger economic growth. However, if the increase is larger than forecast, it may be inflationary.",
+              "economicEvents": true,
+              "event": "Retail Sales YY*",
+              "eventTime": 1763035200000,
+              "period": "Sep",
+              "prior": "0.4"
+            },
+            {
+              "countryCode": "BR",
+              "description": "Retail sales data represents total consumer purchase from retail stores. It provides valuable information about consumer spending which makes up the consumption part of GDP. The most volatile components like autos, gas prices and food prices are often removed from the report to show more underlying demand patterns as changes in sales in these categories are frequently a result of price changes. It is not adjusted for inflation. Spending on services is not included. Rising retail sales indicate stronger economic growth. However, if the increase is larger than forecast, it may be inflationary.",
+              "economicEvents": true,
+              "event": "Retail Sales MM*",
+              "eventTime": 1763035200000,
+              "period": "Sep",
+              "prior": "0.2"
+            },
+            {
+              "countryCode": "EU",
+              "description": "Total industry excluding construction The index of production measures changes in the volume of the gross value added created by industry, the branch indices being aggregated by means of a system of weighting according to gross value added at factor cost. ",
+              "economicEvents": true,
+              "event": "Industrial Production YY",
+              "eventTime": 1763028000000,
+              "period": "Sep",
+              "prior": "1.1"
+            },
+            {
+              "countryCode": "EU",
+              "description": " Total industry excluding construction The index of production measures changes in the volume of the gross value added created by industry, the branch indices being aggregated by means of a system of weighting according to gross value added at factor cost. ",
+              "economicEvents": true,
+              "event": "Industrial Production MM",
+              "eventTime": 1763028000000,
+              "period": "Sep",
+              "prior": "-1.2"
+            },
+            {
+              "countryCode": "CH",
+              "description": "Switzerland, Producer Prices, Combined index, Index ",
+              "economicEvents": true,
+              "event": "Producer/Import Price MM*",
+              "eventTime": 1763019000000,
+              "period": "Oct",
+              "prior": "-0.2"
+            },
+            {
+              "countryCode": "CH",
+              "description": "Switzerland, Producer Prices, Combined index, Index ",
+              "economicEvents": true,
+              "event": "Producer/Import Price YY*",
+              "eventTime": 1763019000000,
+              "period": "Oct",
+              "prior": "-1.8"
+            },
+            {
+              "countryCode": "GB",
+              "description": "Industry is a basic category of business activity. Firms in the same industry are on the same side of the market, produce goods which are close substitutes and compete for the same customers. For statistical purposes, industries are categorized following a uniform classification code such as Standard Industrial Classification (SIC). Changes in the volume of the physical output of the nation's factories, mines and utilities are measured by the index of industrial production. The figure is calculated as a weighted aggregate of goods and reported in headlines as a percent change from previous months. It is often adjusted by season or weather conditions and thus volatile. However, it is used as a leading indicator and helps in forecasting GDP changes. Rising industrial production figures signify increasing economic growth and can positively influence the sentiment towards local currency. ",
+              "economicEvents": true,
+              "event": "Manufacturing Output MM",
+              "eventTime": 1763017200000,
+              "period": "Sep",
+              "prior": "0.7"
+            },
+            {
+              "countryCode": "GB",
+              "description": "NACE Sections C - E; C - Mining and quarrying D - Manufacturing E - Electricity, gas and water supply Chained volume index of gross value added. The monthly Index of Production (IoP) provides a timely indicator of growth in the output of production industries, at constant prices. The IoP shares exactly the same industry coverage as the corresponding quarterly series within Gross Domestic Product (GDP). The monthly IoP is currently published for total production and three broad industry categories:Energy,Manufacturing,Mining and quarrying ",
+              "economicEvents": true,
+              "event": "Industrial Output MM",
+              "eventTime": 1763017200000,
+              "period": "Sep",
+              "prior": "0.4"
+            },
+            {
+              "countryCode": "GB",
+              "description": "Industry is a basic category of business activity. Firms in the same industry are on the same side of the market, produce goods which are close substitutes and compete for the same customers. For statistical purposes, industries are categorized following a uniform classification code such as Standard Industrial Classification (SIC). Changes in the volume of the physical output of the nation's factories, mines and utilities are measured by the index of industrial production. The figure is calculated as a weighted aggregate of goods and reported in headlines as a percent change from previous months. It is often adjusted by season or weather conditions and thus volatile. However, it is used as a leading indicator and helps in forecasting GDP changes. Rising industrial production figures signify increasing economic growth and can positively influence the sentiment towards local currency. ",
+              "economicEvents": true,
+              "event": "Manufacturing Output YY",
+              "eventTime": 1763017200000,
+              "period": "Sep",
+              "prior": "-0.8"
+            },
+            {
+              "countryCode": "GB",
+              "description": "NACE Sections C - E; C - Mining and quarrying D - Manufacturing E - Electricity, gas and water supply Chained volume index of gross value added. The monthly Index of Production (IoP) provides a timely indicator of growth in the output of production industries, at constant prices. The IoP shares exactly the same industry coverage as the corresponding quarterly series within Gross Domestic Product (GDP). The monthly IoP is currently published for total production and three broad industry categories:Energy,Manufacturing , Mining and quarrying. ",
+              "economicEvents": true,
+              "event": "Industrial Output YY",
+              "eventTime": 1763017200000,
+              "period": "Sep",
+              "prior": "-0.7"
+            }
+          ],
+          "timestamp": 1763010000000,
+          "timestampString": "2025-11-13",
+          "timezone": "America/New_York",
+          "totalCount": 21
+        },
+        {
+          "count": 4,
+          "records": [
+            {
+              "countryCode": "EU",
+              "description": "Trade balance, called also net export, is the difference between the value of country's exports and imports, over a period of time. A positive balance (trade surplus) means that exports exceed imports, a negative one means the opposite. Positive trade balance illustrates high competitiveness of country's economy. This strengthens investors' interest in the local currency, appreciating its exchange rate. Extra-Euro Zone13 trade is trade with all countries outside the Euro Zone13, including the Member States not in Euro Zone13. Data prior to 1999 refer to Euro Zone12. External trade in goods are compiled by the European Commission (Eurostat) on a monthly basis following a harmonised methodology set out in European Regulations. ",
+              "economicEvents": true,
+              "event": "Eurostat Trade NSA, Eur  *",
+              "eventTime": 1763114400000,
+              "period": "Sep",
+              "prior": "1"
+            },
+            {
+              "countryCode": "EU",
+              "description": "Gross domestic product at market prices is the final result of the production activity of resident producer units. (ESA 1995, 8.89) It corresponds to the economy&apos;s output of goods and services less intermediate consumption, plus VAT on products and net taxes (i.e. taxes less subsidies) linked to imports. Valuation at constant prices means valuing the flows and stocks in an accounting period at the prices of the reference period. (ESA 1995. 1.56) ",
+              "economicEvents": true,
+              "event": "GDP Flash Estimate QQ",
+              "eventTime": 1763114400000,
+              "period": "Q3",
+              "prior": "0.2"
+            },
+            {
+              "countryCode": "EU",
+              "description": "Gross domestic product at market prices is the final result of the production activity of resident producer units. (ESA 1995, 8.89) It corresponds to the economy's output of goods and services less intermediate consumption, plus VAT on products and net taxes (i.e. taxes less subsidies) linked to imports. Valuation at constant prices means valuing the flows and stocks in an accounting period at the prices of the reference period. (ESA 1995. 1.56) Data refer to Euro Zone13. ",
+              "economicEvents": true,
+              "event": "GDP Flash Estimate YY",
+              "eventTime": 1763114400000,
+              "period": "Q3",
+              "prior": "1.3"
+            },
+            {
+              "countryCode": "IN",
+              "description": "An index that measures and tracks the changes in price of goods in the stages before the retail level. Wholesale price indexes (WPIs) report monthly to show the average price changes of goods sold in bulk, and they are a group of the indicators that follow growth in the economy. Although some countries still use the WPIs as a measure of inflation",
+              "economicEvents": true,
+              "event": "WPI Fuel YY*",
+              "eventTime": 1763101800000,
+              "period": "Oct",
+              "prior": "-2.58"
+            }
+          ],
+          "timestamp": 1763096400000,
+          "timestampString": "2025-11-14",
+          "timezone": "America/New_York",
+          "totalCount": 4
+        },
+        {
+          "count": 2,
+          "records": [
+            {
+              "countryCode": "JP",
+              "description": "Gross National Product and Gross Domestic Product is the total value of the finished goods and services produced in the economy. It is not a precise measure of national economic well-being but expressed in volume (adjusted for inflation) it is the closest single number we have got to such a measure. It is the sum of final expenditures; Export of goods and services, Imports of goods and services, Private Consumption, Government Consumption, Gross Fixed Capital Formation and Increases/Decreases(-) in stocks. The difference between Gross National Product and Gross Domestic Product is the Net Factor Income/Payments abroad. ",
+              "economicEvents": true,
+              "event": "GDP QQ Capital Expend.",
+              "eventTime": 1763337000000,
+              "period": "Q3",
+              "prior": "0.6"
+            },
+            {
+              "countryCode": "JP",
+              "description": "Gross National Product and Gross Domestic Product is the total value of the finished goods and services produced in the economy. It is not a precise measure of national economic well-being but expressed in volume (adjusted for inflation) it is the closest single number we have got to such a measure. It is the sum of final expenditures; Export of goods and services, Imports of goods and services, Private Consumption, Government Consumption, Gross Fixed Capital Formation and Increases/Decreases(-) in stocks. The difference between Gross National Product and Gross Domestic Product is the Net Factor Income/Payments abroad. ",
+              "economicEvents": true,
+              "event": "GDP QQ",
+              "eventTime": 1763337000000,
+              "period": "Q3",
+              "prior": "0.5"
+            }
+          ],
+          "timestamp": 1763269200000,
+          "timestampString": "2025-11-16",
+          "timezone": "America/New_York",
+          "totalCount": 2
+        }
+      ]
+    }
+  }
+}

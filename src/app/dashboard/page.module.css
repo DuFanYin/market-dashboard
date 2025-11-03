@@ -50,6 +50,13 @@
   background: rgba(255, 255, 255, 0.7);
 }
 
+/* Solid white separator used on segmented AHR bar */
+.separatorWhite {
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+}
+
 .sep25 { left: 25%; }
 .sep45 { left: 45%; }
 .sep55 { left: 55%; }
