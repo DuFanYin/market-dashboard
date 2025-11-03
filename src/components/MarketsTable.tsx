@@ -23,7 +23,7 @@ interface MarketsTableProps {
 export function MarketsTable({ rows, ahr }: MarketsTableProps) {
   return (
     <section className="bg-white border border-gray-200 rounded-lg p-1.5 sm:p-4 lg:p-6 shadow-sm overflow-x-auto order-2 sm:order-1">
-      <div className="py-1 sm:py-5" />
+      <div className="py-0 sm:py-5" />
 
       <table className={`w-full text-[10px] sm:text-sm min-w-[320px] sm:min-w-[500px] ${styles.tableFixed}`}>
         <colgroup>

@@ -121,6 +121,12 @@
 .colName { width: 36%; }
 .colNum { width: 16%; }
 
+/* Tighter columns on mobile: narrower name, wider numbers to prevent overflow */
+@media (max-width: 640px) {
+  .colName { width: 28%; }
+  .colNum { width: 18%; }
+}
+
 .colComponents { width: 35%; }
 .colScore { width: 18%; }
 .colValue { width: 20%; }
