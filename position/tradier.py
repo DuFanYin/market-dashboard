@@ -1,13 +1,32 @@
 import yaml
+import json
+import math
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, Response, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 
+app = FastAPI()
+
+# Get the directory where this script is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/templates", StaticFiles(directory=TEMPLATES_DIR), name="templates")
+
 TRADIER_TOKEN = os.getenv("TRADIER_TOKEN")
 TRADIER_BASE_URL = os.getenv("TRADIER_BASE_URL", "https://api.tradier.com/v1/").rstrip("/") + "/"
+
+if not TRADIER_TOKEN:
+    raise ValueError("TRADIER_TOKEN not found in environment variables. Please set it in your .env file.")
 
 HEADERS = {
     "Authorization": f"Bearer {TRADIER_TOKEN}",
@@ -24,7 +43,7 @@ def get_quotes(symbols):
     if not symbols:
         return {}
     url = TRADIER_BASE_URL + "markets/quotes"
-    resp = requests.get(url, headers=HEADERS, params={"symbols": ",".join(symbols)})
+    resp = requests.get(url, headers=HEADERS, params={"symbols": ",".join(symbols), "greeks": "true"})
     resp.raise_for_status()
     raw = resp.json().get("quotes", {}).get("quote", [])
 
@@ -34,16 +53,7 @@ def get_quotes(symbols):
     return {q["symbol"]: q for q in raw}
 
 
-def mid_price(q):
-    bid = q.get("bid")
-    ask = q.get("ask")
-    last = q.get("last")
 
-    if isinstance(bid, (int, float)) and isinstance(ask, (int, float)):
-        return (bid + ask) / 2
-    if isinstance(last, (int, float)):
-        return float(last)
-    return None
 
 
 # ============================================================
@@ -64,6 +74,9 @@ class Position:
         # Will be filled in later
         self.price = None
         self.upnl = None
+        self.delta = 0.0
+        self.gamma = 0.0
+        self.theta = 0.0
 
     @property
     def is_option(self):
@@ -75,28 +88,41 @@ class Position:
             return None
         return to_occ(self.symbol, self.expiry, self.right, self.strike)
 
-    def update_market_price(self, q):
-        self.price = mid_price(q) or 0
+    def _convert_greek(self, value):
+        """Convert Greek value: float conversion, multiply by 100 and position size, round to 2dp"""
+        return round(float(value or 0) * 100 * self.qty, 2)
 
-        # compute PnL
-        if not self.is_option:
-            self.upnl = (self.price - self.cost) * self.qty
-        else:
-            self.upnl = (self.price * 100 - self.cost) * self.qty
+    def update_market_price(self, q):
+
+        bid = q.get("bid")
+        ask = q.get("ask")
+
+        base_price = (bid + ask) / 2
+
+        # For options, multiply price by 100 (per contract price)
+        self.price = base_price * (100 if self.is_option else 1)
+
+        # Extract Greeks for options
+        if self.is_option:
+            greeks = q.get("greeks", {})
+            self.delta = self._convert_greek(greeks.get("delta"))
+            self.gamma = self._convert_greek(greeks.get("gamma"))
+            self.theta = self._convert_greek(greeks.get("theta"))
+
+        # compute PnL (same formula for stocks and options now)
+        self.upnl = (self.price - self.cost) * self.qty
 
     def market_value(self):
-        if self.price is None:
-            return 0
-        if not self.is_option:
-            return self.price * self.qty
-        return self.price * 100 * self.qty
+        """Calculate market value: price * quantity (price already per-contract for options)"""
+        return (self.price or 0) * self.qty
 
 
 
 # ============================================================
-# ✅ Main
+# ✅ Data Processing
 # ============================================================
-def main():
+def get_portfolio_data():
+    """Load and process portfolio data"""
     # --- load YAML ---
     with open("positions.yaml") as f:
         data = yaml.safe_load(f)
@@ -120,43 +146,100 @@ def main():
     total_stock_mv = sum(p.market_value() for p in pos_objs if not p.is_option)
     total_option_mv = sum(p.market_value() for p in pos_objs if p.is_option)
     total_upnl = sum(p.upnl for p in pos_objs)
+    total_theta = sum(p.theta for p in pos_objs if p.is_option)
     net_liquidation = cash + total_stock_mv + total_option_mv
     utilization = (net_liquidation - cash) / net_liquidation if net_liquidation != 0 else 0
 
-    # --- print account summary first ---
-    print("\n===== ACCOUNT SUMMARY =====")
-    print(f"Net Liquidation:        ${net_liquidation:,.2f}")
-    print(f"Cash:                   ${cash:,.2f}")
-    print(f"Stock Market Value:     ${total_stock_mv:,.2f}")
-    print(f"Option Market Value:    ${total_option_mv:,.2f}")
-    print(f"Unrealized PnL:         ${total_upnl:,.2f}")
-    print(f"Utilization:            {utilization:.2%}")
+    # Calculate pie chart data
+    chart_segments = []
+    if net_liquidation > 0:
+        circumference = 2 * math.pi * 80
+        pcts = {
+            "cash": (cash / net_liquidation) * 100,
+            "stock": (total_stock_mv / net_liquidation) * 100,
+            "option": (total_option_mv / net_liquidation) * 100
+        }
+        
+        offset = 0
+        segments_data = [
+            {"name": "cash", "pct": pcts["cash"], "color": "#d4d4d4", "value": cash},
+            {"name": "stock", "pct": pcts["stock"], "color": "#a3a3a3", "value": total_stock_mv},
+            {"name": "option", "pct": pcts["option"], "color": "#737373", "value": total_option_mv}
+        ]
+        
+        for seg in segments_data:
+            if seg["pct"] > 0:
+                arc = (seg["pct"] / 100) * circumference
+                chart_segments.append({
+                    "name": seg["name"],
+                    "pct": seg["pct"],
+                    "color": seg["color"],
+                    "arc": arc,
+                    "offset": offset,
+                    "value": seg["value"]
+                })
+                offset += arc
 
-    # --- print positions table (stocks before options) ---
-    print("\n===== POSITIONS =====")
-    print(f"{'Type':<6} {'Symbol':<8} {'Qty':<10} {'Cost':<12} {'Mid Price':<12} "
-          f"{'UPnL':<12} {'Right':<6} {'Strike':<10} {'Expiry':<12}")
-    print("-" * 106)
-    
-    # Sort: stocks first (not p.is_option), then options
-    sorted_positions = sorted(pos_objs, key=lambda p: p.is_option)
-    
+    # Sort: stocks first, then options by expiry date (nearest to farthest)
+    sorted_positions = sorted(pos_objs, key=lambda p: (p.is_option, p.expiry or ""))
+
+    # Convert Position objects to dictionaries for JSON serialization
+    positions_dict = []
     for p in sorted_positions:
-        if not p.is_option:
-            # Stock positions - no values for right, strike, expiry
-            print(
-                f"{'STOCK':<6} {p.symbol:<8} {p.qty:<10.2f} ${p.cost:<11.2f} "
-                f"${p.price:<11.2f} ${p.upnl:<11.2f} {'-':<6} {'-':<10} {'-':<12}"
-            )
-        else:
-            # Option positions
-            expiry_fmt = f"{p.expiry[:4]}-{p.expiry[4:6]}-{p.expiry[6:]}"
-            cp = "CALL" if p.right == "C" else "PUT"
-            print(
-                f"{'OPT':<6} {p.symbol:<8} {p.qty:<10.2f} ${p.cost:<11.2f} "
-                f"${p.price:<11.2f} ${p.upnl:<11.2f} {cp:<6} ${p.strike:<9.2f} {expiry_fmt:<12}"
-            )
+        pos_dict = {
+            "symbol": p.symbol,
+            "secType": p.secType,
+            "qty": p.qty,
+            "cost": p.cost,
+            "price": p.price or 0,
+            "upnl": p.upnl or 0,
+            "is_option": p.is_option,
+            "delta": p.delta,
+            "gamma": p.gamma,
+            "theta": p.theta
+        }
+        if p.is_option:
+            pos_dict["right"] = p.right
+            pos_dict["strike"] = p.strike
+            pos_dict["expiry"] = p.expiry
+        positions_dict.append(pos_dict)
+
+    return {
+        "cash": cash,
+        "net_liquidation": net_liquidation,
+        "total_stock_mv": total_stock_mv,
+        "total_option_mv": total_option_mv,
+        "total_upnl": total_upnl,
+        "total_theta": total_theta,
+        "utilization": utilization,
+        "positions": positions_dict,
+        "chart_segments": chart_segments,
+        "circumference": 2 * math.pi * 80 if net_liquidation > 0 else 0
+    }
+
+
+# ============================================================
+# ✅ FastAPI Routes
+# ============================================================
+@app.get("/favicon.ico")
+async def favicon():
+    """Return 204 No Content for favicon requests"""
+    return Response(status_code=204)
+
+@app.get("/api/portfolio")
+async def get_portfolio():
+    """API endpoint to get portfolio data"""
+    data = get_portfolio_data()
+    return JSONResponse(content=data)
+
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    """Serve the dashboard HTML file"""
+    html_path = os.path.join(TEMPLATES_DIR, "dashboard.html")
+    with open(html_path, "r") as f:
+        return HTMLResponse(content=f.read())
 
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

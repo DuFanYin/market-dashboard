@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portfolio Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Portfolio Dashboard</h1>
+            <button class="refresh-btn" onclick="loadPortfolioData()">Refresh</button>
+        </div>
+        
+        <h2>Account Summary</h2>
+        <div class="chart-container">
+            <div class="summary-stack">
+                <div class="summary-item">
+                    <div class="summary-label">Net Liquidation</div>
+                    <div class="summary-value" id="net-liquidation">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Unrealized PnL</div>
+                    <div class="summary-value" id="total-upnl">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Total Theta</div>
+                    <div class="summary-value" id="total-theta">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Utilization</div>
+                    <div class="summary-value" id="utilization">-</div>
+                </div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-wrapper">
+                    <svg id="donut-chart" width="200" height="200" viewBox="0 0 200 200"></svg>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #d4d4d4;"></div>
+                        <span class="legend-label">Cash</span>
+                        <span class="legend-value" id="cash-value">-</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #a3a3a3;"></div>
+                        <span class="legend-label">Stock</span>
+                        <span class="legend-value" id="stock-value">-</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #737373;"></div>
+                        <span class="legend-label">Option</span>
+                        <span class="legend-value" id="option-value">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h2>Positions</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Symbol</th>
+                    <th>Qty</th>
+                    <th>Cost</th>
+                    <th>Mid Price</th>
+                    <th>UPnL</th>
+                    <th>Right</th>
+                    <th>Strike</th>
+                    <th>Expiry</th>
+                    <th>Delta</th>
+                    <th>Gamma</th>
+                    <th>Theta</th>
+                </tr>
+            </thead>
+            <tbody id="positions-tbody"></tbody>
+        </table>
+    </div>
+    
+    <script>
+        const formatMoney = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formatPercent = v => (v * 100).toFixed(2) + '%';
+        const formatNumber = (v, d = 2) => v.toFixed(d);
+        const formatExpiry = e => e ? `${e.substring(0,4)}-${e.substring(4,6)}-${e.substring(6)}` : '-';
+        
+        async function loadPortfolioData() {
+            try {
+                const data = await (await fetch('/api/portfolio')).json();
+                updateSummary(data);
+                createDonutChart(data);
+                renderPositions(data);
+            } catch (e) {
+                console.error('Error loading portfolio data:', e);
+            }
+        }
+        
+        function updateSummary(data) {
+            document.getElementById('net-liquidation').textContent = formatMoney(data.net_liquidation);
+            const upnlEl = document.getElementById('total-upnl');
+            upnlEl.textContent = formatMoney(data.total_upnl);
+            upnlEl.className = data.total_upnl >= 0 ? 'summary-value positive' : 'summary-value negative';
+            document.getElementById('total-theta').textContent = formatMoney(data.total_theta);
+            document.getElementById('utilization').textContent = formatPercent(data.utilization);
+        }
+        
+        function renderPositions(data) {
+            document.getElementById('positions-tbody').innerHTML = (data.positions || []).map(p => {
+                if (!p.is_option) {
+                    return `<tr>
+                        <td>STOCK</td><td>${p.symbol}</td><td>${formatNumber(p.qty)}</td>
+                        <td>${formatMoney(p.cost)}</td><td>${formatMoney(p.price)}</td>
+                        <td class="${p.upnl >= 0 ? 'positive' : 'negative'}">${formatMoney(p.upnl)}</td>
+                        <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                    </tr>`;
+                }
+                return `<tr>
+                    <td>OPT</td><td>${p.symbol}</td><td>${formatNumber(p.qty)}</td>
+                    <td>${formatMoney(p.cost)}</td><td>${formatMoney(p.price)}</td>
+                    <td class="${p.upnl >= 0 ? 'positive' : 'negative'}">${formatMoney(p.upnl)}</td>
+                    <td>${p.right === 'C' ? 'CALL' : 'PUT'}</td><td>${formatMoney(p.strike)}</td>
+                    <td>${formatExpiry(p.expiry)}</td>
+                    <td>${formatNumber(p.delta)}</td><td>${formatNumber(p.gamma)}</td><td>${formatNumber(p.theta)}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function createDonutChart(data) {
+            const svg = document.getElementById('donut-chart');
+            svg.innerHTML = '';
+            
+            const segments = data.chart_segments || [];
+            const circumference = data.circumference || 0;
+            
+            segments.forEach(seg => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', 100);
+                circle.setAttribute('cy', 100);
+                circle.setAttribute('r', 80);
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', seg.color);
+                circle.setAttribute('stroke-width', 30);
+                circle.setAttribute('stroke-dasharray', `${seg.arc} ${circumference}`);
+                circle.setAttribute('stroke-dashoffset', -seg.offset);
+                circle.setAttribute('transform', 'rotate(-90 100 100)');
+                svg.appendChild(circle);
+            });
+            
+            // Update legend values
+            const cashSeg = segments.find(s => s.name === 'cash');
+            const stockSeg = segments.find(s => s.name === 'stock');
+            const optionSeg = segments.find(s => s.name === 'option');
+            
+            if (cashSeg) document.getElementById('cash-value').textContent = `${formatMoney(cashSeg.value)} (${cashSeg.pct.toFixed(2)}%)`;
+            if (stockSeg) document.getElementById('stock-value').textContent = `${formatMoney(stockSeg.value)} (${stockSeg.pct.toFixed(2)}%)`;
+            if (optionSeg) document.getElementById('option-value').textContent = `${formatMoney(optionSeg.value)} (${optionSeg.pct.toFixed(2)}%)`;
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadPortfolioData);
+    </script>
+</body>
+</html>
+
