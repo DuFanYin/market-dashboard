@@ -6,6 +6,10 @@ from ib_insync import IB
 
 load_dotenv()
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(ROOT_DIR, "data")
+YAML_PATH = os.path.join(DATA_DIR, "positions.yaml")
+
 IB_HOST = os.getenv("IB_HOST", "127.0.0.1")
 IB_PORT = int(os.getenv("IB_PORT", "7497"))
 IB_CLIENT_ID = int(os.getenv("IB_CLIENT_ID", "1"))
@@ -55,9 +59,10 @@ def main():
     ib = ib_connect()
     try:
         data = pull_ibkr_data(ib)
-        with open("positions.yaml", "w") as f:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(YAML_PATH, "w") as f:
             yaml.dump(data, f, sort_keys=False)
-        print("✅ Saved to positions.yaml")
+        print(f"✅ Saved to {YAML_PATH}")
     finally:
         ib.disconnect()
 

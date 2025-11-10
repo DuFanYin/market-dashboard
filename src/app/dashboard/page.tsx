@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useMemo } from "react";
 import styles from "./page.module.css";
 import { useMarketData } from "@/hooks/useMarketData";
@@ -48,11 +49,17 @@ export default function Page() {
       <div className="mx-auto max-w-7xl space-y-2 sm:space-y-6">
 
         {/* Header */}
-        <header className="flex flex-col items-center justify-center gap-2 text-center">
+        <header className="flex flex-col items-center justify-center gap-3 text-center">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Market Dashboard</h1>
             <p className="text-xs sm:text-sm text-gray-500">Macro · Crypto · Sentiment</p>
           </div>
+          <Link
+            href="/portfolio"
+            className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-white/60 transition"
+          >
+            View Portfolio (password required)
+          </Link>
         </header>
 
         {/* US Stock Market status banner */}
