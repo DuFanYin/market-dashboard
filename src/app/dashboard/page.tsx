@@ -58,7 +58,7 @@ export default function Page() {
             href="/portfolio"
             className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-white/60 transition"
           >
-            View Portfolio (password required)
+            Switch to Portfolio
           </Link>
         </header>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import styles from "./page.module.css";
 
@@ -164,9 +165,17 @@ export default function PortfolioPage() {
       <div className={styles.container}>
         <header className={styles.header}>
           <h1 className={styles.title}>Portfolio Dashboard</h1>
-          <button className={styles.refreshButton} onClick={handleRefresh} disabled={isLoading}>
-            {isLoading ? "Refreshing..." : "Refresh"}
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-white/60 transition"
+            >
+              Switch to Dashboard
+            </Link>
+            <button className={styles.refreshButton} onClick={handleRefresh} disabled={isLoading}>
+              {isLoading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
         </header>
 
         <section className={styles.chartContainer}>
