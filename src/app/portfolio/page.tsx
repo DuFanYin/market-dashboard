@@ -26,6 +26,7 @@ export default function PortfolioPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isIncognito, setIsIncognito] = useState(false);
 
   const fetchPortfolio = useCallback(async (isRefresh = false) => {
     setIsLoading(true);
@@ -71,21 +72,29 @@ export default function PortfolioPage() {
     await fetchPortfolio(true);
   }, [fetchPortfolio]);
 
+  const maskValue = useCallback(
+    (value: string): string => {
+      if (isIncognito) return "*";
+      return value;
+    },
+    [isIncognito],
+  );
+
   const summaryItems = useMemo<SummaryItem[]>(() => {
     if (!data) return [];
     return [
-      { label: "Net Liquidation", display: `$${formatMoney(data.net_liquidation)}` },
+      { label: "Net Liquidation", display: maskValue(`$${formatMoney(data.net_liquidation)}`) },
       {
         label: "Unrealized PnL",
-        display: `$${formatMoney(data.total_upnl)}`,
+        display: maskValue(`$${formatMoney(data.total_upnl)}`),
         isUpnl: true as const,
         numericValue: data.total_upnl,
       },
-      { label: "Total Theta", display: `${formatMoney(data.total_theta)}` },
+      { label: "Total Theta", display: maskValue(`${formatMoney(data.total_theta)}`) },
       { label: "Utilization", display: formatPercent(data.utilization * 100) },
       {
         label: "Account PnL",
-        display: `$${formatMoney(data.account_pnl)}`,
+        display: maskValue(`$${formatMoney(data.account_pnl)}`),
         isUpnl: true as const,
         numericValue: data.account_pnl,
       },
@@ -96,7 +105,7 @@ export default function PortfolioPage() {
         numericValue: data.account_pnl_percent,
       },
     ];
-  }, [data]);
+  }, [data, maskValue]);
 
   const segmentsByName = useMemo(() => {
     if (!data) return new Map<string, ChartSegment>();
@@ -139,6 +148,13 @@ export default function PortfolioPage() {
             >
               Switch to Dashboard
             </Link>
+            <button
+              className={styles.refreshButton}
+              onClick={() => setIsIncognito(!isIncognito)}
+              style={{ backgroundColor: isIncognito ? "#4a5568" : "#e9ecef", color: isIncognito ? "#fff" : "#000" }}
+            >
+              {isIncognito ? "Show Values" : "Incognito"}
+            </button>
             <button className={styles.refreshButton} onClick={handleRefresh} disabled={isLoading}>
               {isLoading ? "Refreshing..." : "Refresh"}
             </button>
@@ -199,7 +215,7 @@ export default function PortfolioPage() {
                     {formatPercent((segmentsByName.get("cash")?.pct ?? 0))}
                   </td>
                   <td className={styles.legendAmount}>
-                    {formatMoney(segmentsByName.get("cash")?.value ?? 0)}
+                    {maskValue(formatMoney(segmentsByName.get("cash")?.value ?? 0))}
                   </td>
                 </tr>
                 <tr className={styles.legendRow}>
@@ -211,7 +227,7 @@ export default function PortfolioPage() {
                     {formatPercent((segmentsByName.get("stock")?.pct ?? 0))}
                   </td>
                   <td className={styles.legendAmount}>
-                    {formatMoney(segmentsByName.get("stock")?.value ?? 0)}
+                    {maskValue(formatMoney(segmentsByName.get("stock")?.value ?? 0))}
                   </td>
                 </tr>
                 <tr className={styles.legendRow}>
@@ -223,7 +239,7 @@ export default function PortfolioPage() {
                     {formatPercent((segmentsByName.get("option")?.pct ?? 0))}
                   </td>
                   <td className={styles.legendAmount}>
-                    {formatMoney(segmentsByName.get("option")?.value ?? 0)}
+                    {maskValue(formatMoney(segmentsByName.get("option")?.value ?? 0))}
                   </td>
                 </tr>
               </tbody>
@@ -240,11 +256,12 @@ export default function PortfolioPage() {
                 <th>Type</th>
                 <th>Symbol</th>
                 <th>Qty</th>
-                <th>Cost</th>
                 <th>Mid Price</th>
-                <th>% Change</th>
-                <th>UPnL</th>
+                <th>Cost</th>
+                <th>Total Cost</th>
                 <th>Market Value</th>
+                <th>UPnL</th>
+                <th>% Change</th>
                 <th>Position %</th>
                 <th>Right</th>
                 <th>Strike</th>
@@ -260,25 +277,26 @@ export default function PortfolioPage() {
                   <td>{index + 1}</td>
                   <td>{pos.is_option ? "OPT" : "STOCK"}</td>
                   <td>{pos.symbol}</td>
-                  <td>{formatNumber(pos.qty, 0)}</td>
-                  <td>{formatMoney(pos.cost)}</td>
-                  <td>{formatMoney(pos.price)}</td>
+                  <td>{maskValue(formatNumber(pos.qty, 0))}</td>
+                  <td>{maskValue(formatMoney(pos.price))}</td>
+                  <td>{maskValue(formatMoney(pos.cost))}</td>
+                  <td>{maskValue(formatMoney(pos.cost * pos.qty))}</td>
+                  <td>{maskValue(formatMoney(pos.price * pos.qty))}</td>
+                  <td className={pos.upnl >= 0 ? styles.positive : styles.negative}>{maskValue(formatMoney(pos.upnl))}</td>
                   <td className={pos.percent_change >= 0 ? styles.positive : styles.negative}>
                     {formatNumber(pos.percent_change)}%
                   </td>
-                  <td className={pos.upnl >= 0 ? styles.positive : styles.negative}>{formatMoney(pos.upnl)}</td>
-                  <td>{formatMoney(pos.price * pos.qty)}</td>
                   <td>
                     {data.net_liquidation > 0
                       ? formatPercent((pos.price * pos.qty) / data.net_liquidation * 100)
                       : "0.00%"}
                   </td>
                   <td>{pos.is_option ? (pos.right === "C" ? "CALL" : "PUT") : "-"}</td>
-                  <td>{pos.is_option && pos.strike ? formatMoney(pos.strike) : "-"}</td>
+                  <td>{pos.is_option && pos.strike ? maskValue(formatMoney(pos.strike)) : "-"}</td>
                   <td>{pos.is_option ? formatExpiry(pos.expiry) : "-"}</td>
-                  <td>{formatNumber(pos.delta)}</td>
-                  <td>{formatNumber(pos.gamma)}</td>
-                  <td>{formatNumber(pos.theta)}</td>
+                  <td>{maskValue(formatNumber(pos.delta))}</td>
+                  <td>{maskValue(formatNumber(pos.gamma))}</td>
+                  <td>{maskValue(formatNumber(pos.theta))}</td>
                 </tr>
               ))}
             </tbody>
