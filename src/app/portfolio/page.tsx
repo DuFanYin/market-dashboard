@@ -1,47 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-
-type Position = {
-  symbol: string;
-  secType: "STK" | "OPT";
-  qty: number;
-  cost: number;
-  price: number;
-  upnl: number;
-  is_option: boolean;
-  delta: number;
-  gamma: number;
-  theta: number;
-  percent_change: number;
-  right?: "C" | "P";
-  strike?: number;
-  expiry?: string;
-};
-
-type ChartSegment = {
-  name: string;
-  pct: number;
-  color: string;
-  arc: number;
-  offset: number;
-  value: number;
-};
-
-type PortfolioData = {
-  cash: number;
-  net_liquidation: number;
-  total_stock_mv: number;
-  total_option_mv: number;
-  total_upnl: number;
-  total_theta: number;
-  utilization: number;
-  positions: Position[];
-  chart_segments: ChartSegment[];
-  circumference: number;
-};
+import type { ChartSegment, PortfolioData, SummaryItem } from "@/types/portfolio";
 
 const formatMoney = (value: number) =>
   value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -57,67 +20,58 @@ const formatExpiry = (expiry?: string) => {
   return `${expiry.slice(0, 4)}-${expiry.slice(4, 6)}-${expiry.slice(6, 8)}`;
 };
 
-const buildAuthHeader = (password: string) => {
-  const token = typeof window !== "undefined" ? window.btoa(`portfolio:${password}`) : Buffer.from(`portfolio:${password}`).toString("base64");
-  return `Basic ${token}`;
-};
-
 export default function PortfolioPage() {
-  const [passwordInput, setPasswordInput] = useState("");
-  const [password, setPassword] = useState<string | null>(null);
+  const router = useRouter();
   const [data, setData] = useState<PortfolioData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const fetchPortfolio = useCallback(
-    async (pw: string) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/portfolio", {
-          headers: {
-            Authorization: buildAuthHeader(pw),
-          },
-        });
+  const fetchPortfolio = useCallback(async (isRefresh = false) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/portfolio");
 
-        if (response.status === 401) {
-          throw new Error("Incorrect password. Please try again.");
+      if (response.status === 404) {
+        // Data file doesn't exist
+        if (isInitialLoad && !isRefresh) {
+          // Only redirect on initial load, not on refresh
+          router.push("/dashboard");
+          return;
         }
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(text || "Failed to load portfolio data.");
-        }
-
-        const payload = (await response.json()) as PortfolioData;
-        setData(payload);
-        setPassword(pw);
-      } catch (err) {
-        setData(null);
-        setPassword(null);
-        setError(err instanceof Error ? err.message : "Unknown error occurred.");
-      } finally {
-        setIsLoading(false);
+        // On refresh, show error instead of redirecting
+        throw new Error("Portfolio data file not found");
       }
-    },
-    []
-  );
 
-  const handleSubmit = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (!passwordInput) return;
-      await fetchPortfolio(passwordInput);
-    },
-    [fetchPortfolio, passwordInput]
-  );
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to load portfolio data.");
+      }
+
+      const payload = (await response.json()) as PortfolioData;
+      setData(payload);
+      setIsInitialLoad(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred.");
+      // Don't clear data on refresh errors, keep showing previous data
+      if (isInitialLoad && !isRefresh) {
+        setData(null);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router, isInitialLoad]);
+
+  useEffect(() => {
+    fetchPortfolio(false);
+  }, [fetchPortfolio]);
 
   const handleRefresh = useCallback(async () => {
-    if (!password) return;
-    await fetchPortfolio(password);
-  }, [fetchPortfolio, password]);
+    await fetchPortfolio(true);
+  }, [fetchPortfolio]);
 
-  const summaryItems = useMemo(() => {
+  const summaryItems = useMemo<SummaryItem[]>(() => {
     if (!data) return [];
     return [
       { label: "Net Liquidation", display: `$${formatMoney(data.net_liquidation)}` },
@@ -127,8 +81,20 @@ export default function PortfolioPage() {
         isUpnl: true as const,
         numericValue: data.total_upnl,
       },
-      { label: "Total Theta", display: `$${formatMoney(data.total_theta)}` },
+      { label: "Total Theta", display: `${formatMoney(data.total_theta)}` },
       { label: "Utilization", display: formatPercent(data.utilization * 100) },
+      {
+        label: "Account PnL",
+        display: `$${formatMoney(data.account_pnl)}`,
+        isUpnl: true as const,
+        numericValue: data.account_pnl,
+      },
+      {
+        label: "Account PnL %",
+        display: formatPercent(data.account_pnl_percent),
+        isUpnl: true as const,
+        numericValue: data.account_pnl_percent,
+      },
     ];
   }, [data]);
 
@@ -137,27 +103,28 @@ export default function PortfolioPage() {
     return new Map(data.chart_segments.map((segment) => [segment.name, segment]));
   }, [data]);
 
-  if (!password || !data) {
+  if (isLoading && isInitialLoad && !data) {
     return (
       <main className={styles.page}>
-        <form className={styles.authCard} onSubmit={handleSubmit}>
-          <h1 className={styles.authTitle}>Portfolio Access</h1>
-          <p className={styles.authHint}>Enter the portfolio password to continue.</p>
-          <input
-            type="password"
-            value={passwordInput}
-            onChange={(event) => setPasswordInput(event.target.value)}
-            placeholder="Password"
-            className={styles.authInput}
-            disabled={isLoading}
-          />
-          {error && <div className={styles.authError}>{error}</div>}
-          <button type="submit" className={styles.authButton} disabled={isLoading || !passwordInput}>
-            {isLoading ? "Verifying..." : "Unlock Portfolio"}
-          </button>
-        </form>
+        <div className={styles.container} style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+          <p>Loading portfolio data...</p>
+        </div>
       </main>
     );
+  }
+
+  if (!data && !isLoading) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.container} style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+          <p>Error: {error || "Failed to load portfolio data"}</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!data) {
+    return null;
   }
 
   return (
@@ -177,7 +144,13 @@ export default function PortfolioPage() {
             </button>
           </div>
         </header>
+        {error && (
+          <div style={{ padding: "8px", marginBottom: "8px", backgroundColor: "#fee", color: "#c00", borderRadius: "4px", fontSize: "14px" }}>
+            Error refreshing: {error}
+          </div>
+        )}
 
+        <h2 className={styles.positionsTitle}>Account Summary</h2>
         <section className={styles.chartContainer}>
           <div className={styles.summaryStack}>
             {summaryItems.map((item) => {
@@ -271,6 +244,8 @@ export default function PortfolioPage() {
                 <th>Mid Price</th>
                 <th>% Change</th>
                 <th>UPnL</th>
+                <th>Market Value</th>
+                <th>Position %</th>
                 <th>Right</th>
                 <th>Strike</th>
                 <th>Expiry</th>
@@ -292,6 +267,12 @@ export default function PortfolioPage() {
                     {formatNumber(pos.percent_change)}%
                   </td>
                   <td className={pos.upnl >= 0 ? styles.positive : styles.negative}>{formatMoney(pos.upnl)}</td>
+                  <td>{formatMoney(pos.price * pos.qty)}</td>
+                  <td>
+                    {data.net_liquidation > 0
+                      ? formatPercent((pos.price * pos.qty) / data.net_liquidation * 100)
+                      : "0.00%"}
+                  </td>
                   <td>{pos.is_option ? (pos.right === "C" ? "CALL" : "PUT") : "-"}</td>
                   <td>{pos.is_option && pos.strike ? formatMoney(pos.strike) : "-"}</td>
                   <td>{pos.is_option ? formatExpiry(pos.expiry) : "-"}</td>

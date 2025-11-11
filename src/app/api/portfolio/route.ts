@@ -1,98 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { load } from "js-yaml";
+import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
 
 const yamlPath = path.join(process.cwd(), "data", "positions.yaml");
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
-const portfolioPassword = process.env.PORTFOLIO_PASSWORD;
-
-type RawPosition = {
-  symbol: string;
-  secType: "STK" | "OPT";
-  position: number;
-  avgCost: number;
-  right?: "C" | "P";
-  strike?: number;
-  expiry?: string;
-};
-
-type PortfolioYaml = {
-  timestamp: string;
-  cash: number;
-  positions: RawPosition[];
-};
-
-type Quote = {
-  symbol: string;
-  bid?: number;
-  ask?: number;
-  greeks?: {
-    delta?: number;
-    gamma?: number;
-    theta?: number;
-  };
-};
-
-type PositionOutput = {
-  symbol: string;
-  secType: "STK" | "OPT";
-  qty: number;
-  cost: number;
-  price: number;
-  upnl: number;
-  is_option: boolean;
-  delta: number;
-  gamma: number;
-  theta: number;
-  percent_change: number;
-  right?: "C" | "P";
-  strike?: number;
-  expiry?: string;
-};
-
-type ChartSegment = {
-  name: string;
-  pct: number;
-  color: string;
-  arc: number;
-  offset: number;
-  value: number;
-};
-
-type PortfolioResponse = {
-  cash: number;
-  net_liquidation: number;
-  total_stock_mv: number;
-  total_option_mv: number;
-  total_upnl: number;
-  total_theta: number;
-  utilization: number;
-  positions: PositionOutput[];
-  chart_segments: ChartSegment[];
-  circumference: number;
-};
 
 export const dynamic = "force-dynamic";
-
-function unauthorizedResponse(): NextResponse {
-  return new NextResponse("Unauthorized", {
-    status: 401,
-    headers: { "WWW-Authenticate": "Basic realm=\"Portfolio\"" },
-  });
-}
-
-function parseAuthorizationHeader(header: string | null): string | null {
-  if (!header || !header.startsWith("Basic ")) {
-    return null;
-  }
-  const decoded = Buffer.from(header.slice(6), "base64").toString("utf8");
-  const separatorIndex = decoded.indexOf(":");
-  if (separatorIndex < 0) {
-    return null;
-  }
-  return decoded.slice(separatorIndex + 1);
-}
 
 function toOccSymbol(pos: RawPosition): string | null {
   if (pos.secType !== "OPT" || !pos.expiry || !pos.right || pos.strike === undefined) {
@@ -132,12 +47,58 @@ function ensureArray<T>(item: T | T[] | undefined): T[] {
 }
 
 async function loadPortfolioYaml(): Promise<PortfolioYaml> {
+  try {
+    await fs.access(yamlPath);
+  } catch {
+    throw new Error("Portfolio data file not found");
+  }
   const raw = await fs.readFile(yamlPath, "utf8");
   const parsed = load(raw) as PortfolioYaml;
   if (!parsed || typeof parsed !== "object") {
     throw new Error("Failed to parse portfolio YAML file.");
   }
   return parsed;
+}
+
+async function fetchUsdSgdRate(): Promise<number> {
+  try {
+    const url = "https://query2.finance.yahoo.com/v8/finance/chart/SGD=X";
+    const params = new URLSearchParams({
+      period1: Math.floor(Date.now() / 1000 - 86400).toString(),
+      period2: Math.floor(Date.now() / 1000).toString(),
+      interval: "1d",
+      includePrePost: "true",
+      events: "div|split|earn",
+      lang: "en-SG",
+      region: "SG",
+      source: "cosaic",
+    });
+
+    const response = await fetch(`${url}?${params.toString()}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Accept: "*/*",
+        Origin: "https://sg.finance.yahoo.com",
+        Referer: "https://sg.finance.yahoo.com/quote/SGD%3DX/",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Yahoo Finance API error (${response.status})`);
+    }
+
+    const data = (await response.json()) as {
+      chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> };
+    };
+    const rate = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (typeof rate !== "number" || rate <= 0) {
+      throw new Error("Invalid USD/SGD rate from Yahoo Finance");
+    }
+    return rate;
+  } catch (error) {
+    console.error("[portfolio API] Failed to fetch USD/SGD rate:", error);
+    throw error;
+  }
 }
 
 async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
@@ -175,8 +136,8 @@ async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
   return map;
 }
 
-function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>): PortfolioResponse {
-  const positionsOutput: PositionOutput[] = [];
+function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usdSgdRate: number): PortfolioData {
+  const positionsOutput: Position[] = [];
   let totalStockMV = 0;
   let totalOptionMV = 0;
   let totalUpnl = 0;
@@ -218,6 +179,9 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>): Po
       gamma = convertGreek(quote?.greeks?.gamma, qty);
       theta = convertGreek(quote?.greeks?.theta, qty);
       totalTheta += theta;
+    } else {
+      // For stocks, delta = quantity (stocks have delta of 1 per share)
+      delta = qty;
     }
 
     const marketValue = price * qty;
@@ -276,6 +240,11 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>): Po
     }
   }
 
+  const originalAmountSgd = Number(process.env.ORIGINAL_AMOUNT_SGD);
+  const originalAmountUsd = originalAmountSgd / usdSgdRate;
+  const accountPnl = netLiquidation - originalAmountUsd;
+  const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
+
   return {
     cash: portfolio.cash,
     net_liquidation: netLiquidation,
@@ -287,27 +256,17 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>): Po
     positions: positionsOutput,
     chart_segments: chartSegments,
     circumference,
+    account_pnl: accountPnl,
+    account_pnl_percent: accountPnlPercent,
   };
 }
 
-export async function GET(req: NextRequest) {
-  if (!portfolioPassword) {
-    return NextResponse.json(
-      { error: "PORTFOLIO_PASSWORD not configured" },
-      { status: 500 }
-    );
-  }
-
+export async function GET() {
   if (!process.env.TRADIER_TOKEN) {
     return NextResponse.json(
       { error: "TRADIER_TOKEN not configured" },
       { status: 500 }
     );
-  }
-
-  const providedPassword = parseAuthorizationHeader(req.headers.get("authorization"));
-  if (providedPassword === null || providedPassword !== portfolioPassword) {
-    return unauthorizedResponse();
   }
 
   try {
@@ -316,14 +275,21 @@ export async function GET(req: NextRequest) {
       .map((pos) => (pos.secType === "OPT" ? toOccSymbol(pos) : pos.symbol))
       .filter((s): s is string => Boolean(s));
 
-    const quotes = await fetchQuotes(symbols);
-    const response = buildResponse(portfolio, quotes);
+    const [quotes, usdSgdRate] = await Promise.all([fetchQuotes(symbols), fetchUsdSgdRate()]);
+    const response = buildResponse(portfolio, quotes, usdSgdRate);
 
     return NextResponse.json(response);
   } catch (error) {
     console.error("[portfolio API] error", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    if (errorMessage.includes("not found")) {
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 404 }
+      );
+    }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

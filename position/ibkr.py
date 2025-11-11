@@ -11,7 +11,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data")
 YAML_PATH = os.path.join(DATA_DIR, "positions.yaml")
 
 IB_HOST = os.getenv("IB_HOST", "127.0.0.1")
-IB_PORT = int(os.getenv("IB_PORT", "7497"))
+IB_PORT = int(os.getenv("IB_PORT", "7496"))
 IB_CLIENT_ID = int(os.getenv("IB_CLIENT_ID", "1"))
 
 # --- connect ---
