@@ -20,6 +20,46 @@ const formatExpiry = (expiry?: string) => {
   return `${expiry.slice(0, 4)}-${expiry.slice(4, 6)}-${expiry.slice(6, 8)}`;
 };
 
+const CHART_RADIUS = 77.5;
+const CHART_STROKE_WIDTH = 35;
+const GAIN_COLOR = "rgba(46, 125, 50, 0.6)";
+const LOSS_COLOR = "rgba(198, 40, 40, 0.4)";
+
+const buildSegments = (segmentsData: Array<{ name: string; value: number; color: string }>, total: number, circumference: number): ChartSegment[] => {
+  const segments: ChartSegment[] = [];
+  let offset = 0;
+  for (const segment of segmentsData) {
+    const pct = (segment.value / total) * 100;
+    if (pct <= 0) continue;
+    const arc = (pct / 100) * circumference;
+    segments.push({ name: segment.name, value: segment.value, pct, color: segment.color, arc, offset });
+    offset += arc;
+  }
+  if (segments.length > 0) {
+    const totalArc = segments.reduce((sum, s) => sum + s.arc, 0);
+    const remaining = circumference - totalArc;
+    if (remaining > 0 && remaining < 1) segments[segments.length - 1].arc += remaining;
+  }
+  return segments;
+};
+
+const calculateSeparators = (segments: ChartSegment[]): number[] => {
+  const separators: number[] = [];
+  for (let i = 0; i < segments.length; i++) {
+    if (i > 0) separators.push(segments[i].offset);
+    separators.push(segments[i].offset + segments[i].arc);
+  }
+  return separators;
+};
+
+const addLossOverlay = (pnlOverlays: Array<{ name: string; offset: number; arc: number; color: string }>, cost: number, pnl: number, segment: ChartSegment | undefined) => {
+  if (cost > 0 && pnl < 0 && segment) {
+    const lossRatio = Math.abs(pnl) / cost;
+    const lossArc = Math.min(segment.arc * lossRatio, segment.arc);
+    pnlOverlays.push({ name: `${segment.name}_pnl`, offset: segment.offset, arc: lossArc, color: LOSS_COLOR });
+  }
+};
+
 export default function PortfolioPage() {
   const router = useRouter();
   const [data, setData] = useState<PortfolioData | null>(null);
@@ -107,10 +147,98 @@ export default function PortfolioPage() {
     ];
   }, [data, maskValue]);
 
-  const segmentsByName = useMemo(() => {
-    if (!data) return new Map<string, ChartSegment>();
-    return new Map(data.chart_segments.map((segment) => [segment.name, segment]));
+  const costBasedValues = useMemo(() => {
+    if (!data) {
+      return { cash: 0, stockCost: 0, optionCost: 0, totalCost: 0, stockMarketValue: 0, optionMarketValue: 0, totalMarketValue: 0, stockPnL: 0, optionPnL: 0 };
+    }
+    const cash = data.cash;
+    let stockCost = 0, optionCost = 0, stockMarketValue = 0, optionMarketValue = 0, stockPnL = 0, optionPnL = 0;
+    for (const pos of data.positions) {
+      if (pos.is_option) {
+        optionCost += pos.cost * pos.qty;
+        optionMarketValue += pos.price * pos.qty;
+        optionPnL += pos.upnl;
+      } else {
+        stockCost += pos.cost * pos.qty;
+        stockMarketValue += pos.price * pos.qty;
+        stockPnL += pos.upnl;
+      }
+    }
+    const totalCost = cash + stockCost + optionCost;
+    const totalMarketValue = cash + stockMarketValue + optionMarketValue;
+    return { cash, stockCost, optionCost, totalCost, stockMarketValue, optionMarketValue, totalMarketValue, stockPnL, optionPnL };
   }, [data]);
+
+  const costChartData = useMemo(() => {
+    if (!data) {
+      const circumference = 2 * Math.PI * CHART_RADIUS;
+      return { segments: [], circumference, total: 0, pnlOverlays: [], separators: [], stockMarketValue: 0, optionMarketValue: 0, stockPnL: 0, optionPnL: 0, totalMarketValue: 0 };
+    }
+    const { cash, stockCost, optionCost, stockMarketValue, optionMarketValue, stockPnL, optionPnL, totalMarketValue } = costBasedValues;
+    const total = cash + stockCost + optionCost;
+    const circumference = total > 0 ? 2 * Math.PI * CHART_RADIUS : 0;
+    if (total === 0) {
+      return { segments: [], circumference, total: 0, pnlOverlays: [], separators: [], stockMarketValue, optionMarketValue, stockPnL, optionPnL, totalMarketValue };
+    }
+
+    const segmentsData = [
+      { name: "cash" as const, value: cash, color: "#d4d4d4" },
+      { name: "stock_cost" as const, value: stockCost, color: "#a3a3a3" },
+      { name: "option_cost" as const, value: optionCost, color: "#737373" },
+    ];
+    const segments = buildSegments(segmentsData, total, circumference);
+    const pnlOverlays: Array<{ name: string; offset: number; arc: number; color: string }> = [];
+    const totalWithGains = total + Math.max(0, stockPnL) + Math.max(0, optionPnL);
+    const newCircumference = totalWithGains > 0 ? 2 * Math.PI * CHART_RADIUS : circumference;
+
+    if (totalWithGains > total) {
+      const newSegments: ChartSegment[] = [];
+      let newOffset = 0;
+      for (const seg of segmentsData) {
+        const pct = (seg.value / totalWithGains) * 100;
+        if (pct > 0) {
+        const arc = (pct / 100) * newCircumference;
+          newSegments.push({ name: seg.name, value: seg.value, pct, color: seg.color, arc, offset: newOffset });
+        newOffset += arc;
+        }
+        if (seg.name === "stock_cost" && stockPnL > 0) {
+          const gainPct = (stockPnL / totalWithGains) * 100;
+          const gainArc = (gainPct / 100) * newCircumference;
+          newSegments.push({ name: "stock_gain", value: stockPnL, pct: gainPct, color: GAIN_COLOR, arc: gainArc, offset: newOffset });
+          newOffset += gainArc;
+        } else if (seg.name === "option_cost" && optionPnL > 0) {
+          const gainPct = (optionPnL / totalWithGains) * 100;
+          const gainArc = (gainPct / 100) * newCircumference;
+          newSegments.push({ name: "option_gain", value: optionPnL, pct: gainPct, color: GAIN_COLOR, arc: gainArc, offset: newOffset });
+          newOffset += gainArc;
+        }
+      }
+      addLossOverlay(pnlOverlays, stockCost, stockPnL, newSegments.find((s) => s.name === "stock_cost"));
+      addLossOverlay(pnlOverlays, optionCost, optionPnL, newSegments.find((s) => s.name === "option_cost"));
+      return { segments: newSegments, circumference: newCircumference, total: totalWithGains, pnlOverlays, separators: calculateSeparators(newSegments), stockMarketValue, optionMarketValue, stockPnL, optionPnL, totalMarketValue };
+    }
+
+    addLossOverlay(pnlOverlays, stockCost, stockPnL, segments.find((s) => s.name === "stock_cost"));
+    addLossOverlay(pnlOverlays, optionCost, optionPnL, segments.find((s) => s.name === "option_cost"));
+    return { segments, circumference, total, pnlOverlays, separators: calculateSeparators(segments), stockMarketValue, optionMarketValue, stockPnL, optionPnL, totalMarketValue };
+  }, [data, costBasedValues]);
+
+  const marketChartData = useMemo(() => {
+    if (!data) {
+      return { segments: [], circumference: 2 * Math.PI * CHART_RADIUS, total: 0, separators: [] };
+    }
+    const { cash, stockMarketValue, optionMarketValue, totalMarketValue } = costBasedValues;
+    const total = totalMarketValue;
+    const circumference = total > 0 ? 2 * Math.PI * CHART_RADIUS : 0;
+    if (total === 0) return { segments: [], circumference, total: 0, separators: [] };
+    const segmentsData = [
+      { name: "cash" as const, value: cash, color: "#d4d4d4" },
+      { name: "stock_cost" as const, value: stockMarketValue, color: "#a3a3a3" },
+      { name: "option_cost" as const, value: optionMarketValue, color: "#737373" },
+    ];
+    const segments = buildSegments(segmentsData, total, circumference);
+    return { segments, circumference, total, separators: calculateSeparators(segments) };
+  }, [data, costBasedValues]);
 
   if (isLoading && isInitialLoad && !data) {
     return (
@@ -169,78 +297,133 @@ export default function PortfolioPage() {
         <h2 className={styles.positionsTitle}>Account Summary</h2>
         <section className={styles.chartContainer}>
           <div className={styles.summaryStack}>
-            {summaryItems.map((item) => {
-              const className =
-                item.isUpnl && typeof item.numericValue === "number"
-                  ? `${styles.summaryValue} ${item.numericValue >= 0 ? styles.positive : styles.negative}`
-                  : styles.summaryValue;
-              const displayValue = item.display;
-              return (
-                <div key={item.label} className={styles.summaryItem}>
-                  <div className={styles.summaryLabel}>{item.label}</div>
-                  <div className={className}>{displayValue}</div>
-                </div>
-              );
-            })}
+            <table className={styles.summaryTable}>
+              <tbody>
+                {summaryItems.map((item) => {
+                  const className =
+                    item.isUpnl && typeof item.numericValue === "number"
+                      ? `${styles.summaryValue} ${item.numericValue >= 0 ? styles.positive : styles.negative}`
+                      : styles.summaryValue;
+                  return (
+                    <tr key={item.label} className={styles.summaryRow}>
+                      <td className={styles.summaryLabel}>{item.label}</td>
+                      <td className={className}>{item.display}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div className={styles.chartSection}>
             <div className={styles.chartWrapper}>
               <svg width={200} height={200} viewBox="0 0 200 200">
-                {data.chart_segments.map((segment) => (
+                {/* Base segments */}
+                {costChartData.segments.map((segment) => (
                   <circle
                     key={segment.name}
                     cx={100}
                     cy={100}
-                    r={80}
+                    r={CHART_RADIUS}
                     fill="none"
                     stroke={segment.color}
-                    strokeWidth={30}
-                    strokeDasharray={`${segment.arc} ${data.circumference}`}
+                    strokeWidth={CHART_STROKE_WIDTH}
+                    strokeDasharray={`${segment.arc} ${costChartData.circumference}`}
+                    strokeDashoffset={-segment.offset}
+                    transform="rotate(-90 100 100)"
+                  />
+                ))}
+                {/* PnL overlays */}
+                {costChartData.pnlOverlays?.map((overlay) => (
+                  <circle
+                    key={overlay.name}
+                    cx={100}
+                    cy={100}
+                    r={CHART_RADIUS}
+                    fill="none"
+                    stroke={overlay.color}
+                    strokeWidth={CHART_STROKE_WIDTH}
+                    strokeDasharray={`${overlay.arc} ${costChartData.circumference}`}
+                    strokeDashoffset={-overlay.offset}
+                    transform="rotate(-90 100 100)"
+                  />
+                ))}
+              </svg>
+            </div>
+          </div>
+
+          <div className={styles.chartSection}>
+            <div className={styles.chartWrapper}>
+              <svg width={200} height={200} viewBox="0 0 200 200">
+                {/* Base segments */}
+                {marketChartData.segments.map((segment) => (
+                  <circle
+                    key={segment.name}
+                    cx={100}
+                    cy={100}
+                    r={CHART_RADIUS}
+                    fill="none"
+                    stroke={segment.color}
+                    strokeWidth={CHART_STROKE_WIDTH}
+                    strokeDasharray={`${segment.arc} ${marketChartData.circumference}`}
                     strokeDashoffset={-segment.offset}
                     transform="rotate(-90 100 100)"
                   />
                 ))}
               </svg>
             </div>
+          </div>
 
+          <div className={styles.legendSection}>
             <table className={styles.chartLegend}>
+              <thead>
+                <tr>
+                  <th className={styles.legendColorCell}></th>
+                  <th className={styles.legendLabel}>Label</th>
+                  <th className={styles.legendAmount}>Cost</th>
+                  <th className={styles.legendPercent}>Cost %</th>
+                  <th className={styles.legendAmount}>PnL</th>
+                  <th className={styles.legendPercent}>PnL %</th>
+                  <th className={styles.legendAmount}>Market Value</th>
+                  <th className={styles.legendPercent}>Value %</th>
+                </tr>
+              </thead>
               <tbody>
+                {[
+                  { key: "cash", label: "Cash", color: "#d4d4d4", cost: costBasedValues.cash, pnl: 0, marketValue: costBasedValues.cash, show: costBasedValues.cash > 0, isCash: true },
+                  { key: "stock", label: "Stock", color: "#a3a3a3", cost: costBasedValues.stockCost, pnl: costBasedValues.stockPnL, marketValue: costBasedValues.stockMarketValue, show: costBasedValues.stockCost > 0, isCash: false },
+                  { key: "option", label: "Option", color: "#737373", cost: costBasedValues.optionCost, pnl: costBasedValues.optionPnL, marketValue: costBasedValues.optionMarketValue, show: costBasedValues.optionCost > 0, isCash: false },
+                ].filter((row) => row.show).map((row) => (
+                  <tr key={row.key} className={styles.legendRow}>
+                    <td className={styles.legendColorCell}>
+                      <span className={styles.legendColor} style={{ backgroundColor: row.color }} />
+                    </td>
+                    <td className={styles.legendLabel}>{row.label}</td>
+                    <td className={styles.legendAmount}>{maskValue(`$${formatMoney(row.cost)}`)}</td>
+                    <td className={styles.legendPercent}>
+                      {costBasedValues.totalCost > 0 ? formatPercent((row.cost / costBasedValues.totalCost) * 100) : "0.00%"}
+                    </td>
+                    <td className={`${styles.legendAmount} ${row.isCash ? styles.center : ""}`} style={row.pnl !== 0 && !row.isCash ? { color: row.pnl >= 0 ? "#2e7d32" : "#c62828" } : undefined}>
+                      {row.isCash ? "-" : maskValue(`${row.pnl >= 0 ? "+" : ""}$${formatMoney(row.pnl)}`)}
+                    </td>
+                    <td className={`${styles.legendPercent} ${row.isCash ? styles.center : ""}`} style={row.pnl !== 0 && !row.isCash ? { color: row.pnl >= 0 ? "#2e7d32" : "#c62828" } : undefined}>
+                      {row.isCash ? "-" : (row.cost > 0 ? `${row.pnl >= 0 ? "+" : ""}${formatPercent((row.pnl / row.cost) * 100)}` : "0.00%")}
+                    </td>
+                    <td className={styles.legendAmount}>{maskValue(`$${formatMoney(row.marketValue)}`)}</td>
+                    <td className={styles.legendPercent}>
+                      {costBasedValues.totalMarketValue > 0 ? formatPercent((row.marketValue / costBasedValues.totalMarketValue) * 100) : "0.00%"}
+                    </td>
+                  </tr>
+                ))}
                 <tr className={styles.legendRow}>
-                  <td className={styles.legendColorCell}>
-                    <span className={styles.legendColor} style={{ backgroundColor: "#d4d4d4" }} />
-                  </td>
-                  <td className={styles.legendLabel}>Cash</td>
-                  <td className={styles.legendPercent}>
-                    {formatPercent((segmentsByName.get("cash")?.pct ?? 0))}
-                  </td>
-                  <td className={styles.legendAmount}>
-                    {maskValue(formatMoney(segmentsByName.get("cash")?.value ?? 0))}
-                  </td>
-                </tr>
-                <tr className={styles.legendRow}>
-                  <td className={styles.legendColorCell}>
-                    <span className={styles.legendColor} style={{ backgroundColor: "#a3a3a3" }} />
-                  </td>
-                  <td className={styles.legendLabel}>Stock</td>
-                  <td className={styles.legendPercent}>
-                    {formatPercent((segmentsByName.get("stock")?.pct ?? 0))}
-                  </td>
-                  <td className={styles.legendAmount}>
-                    {maskValue(formatMoney(segmentsByName.get("stock")?.value ?? 0))}
-                  </td>
-                </tr>
-                <tr className={styles.legendRow}>
-                  <td className={styles.legendColorCell}>
-                    <span className={styles.legendColor} style={{ backgroundColor: "#737373" }} />
-                  </td>
-                  <td className={styles.legendLabel}>Option</td>
-                  <td className={styles.legendPercent}>
-                    {formatPercent((segmentsByName.get("option")?.pct ?? 0))}
-                  </td>
-                  <td className={styles.legendAmount}>
-                    {maskValue(formatMoney(segmentsByName.get("option")?.value ?? 0))}
-                  </td>
+                  <td className={styles.legendColorCell}></td>
+                  <td className={styles.legendLabel} style={{ fontWeight: 600 }}>Total</td>
+                  <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{maskValue(`$${formatMoney(costBasedValues.totalCost)}`)}</td>
+                  <td className={`${styles.legendPercent} ${styles.center}`} style={{ fontWeight: 600 }}>-</td>
+                  <td className={`${styles.legendAmount} ${styles.center}`} style={{ fontWeight: 600 }}>-</td>
+                  <td className={`${styles.legendPercent} ${styles.center}`} style={{ fontWeight: 600 }}>-</td>
+                  <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{maskValue(`$${formatMoney(costBasedValues.totalMarketValue)}`)}</td>
+                  <td className={`${styles.legendPercent} ${styles.center}`} style={{ fontWeight: 600 }}>-</td>
                 </tr>
               </tbody>
             </table>
@@ -287,13 +470,11 @@ export default function PortfolioPage() {
                     {formatNumber(pos.percent_change)}%
                   </td>
                   <td>
-                    {data.net_liquidation > 0
-                      ? formatPercent((pos.price * pos.qty) / data.net_liquidation * 100)
-                      : "0.00%"}
+                    {data.net_liquidation > 0 ? formatPercent((pos.price * pos.qty) / data.net_liquidation * 100) : "0.00%"}
                   </td>
-                  <td>{pos.is_option ? (pos.right === "C" ? "CALL" : "PUT") : "-"}</td>
-                  <td>{pos.is_option && pos.strike ? maskValue(formatMoney(pos.strike)) : "-"}</td>
-                  <td>{pos.is_option ? formatExpiry(pos.expiry) : "-"}</td>
+                  <td className={!pos.is_option ? styles.center : ""}>{pos.is_option ? (pos.right === "C" ? "CALL" : "PUT") : "-"}</td>
+                  <td className={!(pos.is_option && pos.strike) ? styles.center : ""}>{pos.is_option && pos.strike ? maskValue(formatMoney(pos.strike)) : "-"}</td>
+                  <td className={!pos.is_option || !pos.expiry || pos.expiry.length !== 8 ? styles.center : ""}>{pos.is_option ? formatExpiry(pos.expiry) : "-"}</td>
                   <td>{maskValue(formatNumber(pos.delta))}</td>
                   <td>{maskValue(formatNumber(pos.gamma))}</td>
                   <td>{maskValue(formatNumber(pos.theta))}</td>
@@ -306,4 +487,3 @@ export default function PortfolioPage() {
     </main>
   );
 }
-
