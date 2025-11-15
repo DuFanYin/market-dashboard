@@ -3,8 +3,8 @@ import Link from "next/link";
 import { useMemo } from "react";
 import styles from "./page.module.css";
 import { useMarketData } from "@/hooks/useMarketData";
-import { MarketsTable } from "@/components/MarketsTable";
-import { FearGreedPanel } from "@/components/FearGreedPanel";
+import { MarketsTable } from "@/components/dashboard/MarketsTable";
+import { FearGreedPanel } from "@/components/dashboard/FearGreedPanel";
 
 export default function Page() {
   const { data, isUsMarketOpen, nyTimeLabel, next5In, handleRefresh } = useMarketData();
