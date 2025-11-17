@@ -36,6 +36,22 @@ function percentChange(price: number, cost: number): number {
   return ((price - cost) / cost) * 100;
 }
 
+function calculateDteDays(expiry?: string): number | undefined {
+  if (!expiry || expiry.length !== 8) {
+    return undefined;
+  }
+  const expiryDate = new Date(
+    Number(expiry.slice(0, 4)),
+    Number(expiry.slice(4, 6)) - 1,
+    Number(expiry.slice(6, 8))
+  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffMs = expiryDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return Number.isFinite(diffDays) ? diffDays : undefined;
+}
+
 function asNumber(value: unknown): number {
   const num = Number(value ?? 0);
   return Number.isFinite(num) ? num : 0;
@@ -158,16 +174,49 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
 
   const orderedPositions = [...stockPositions, ...optionPositions];
 
+  const stockSymbols = new Set(stockPositions.map((pos) => pos.symbol));
+  const placeholderAdded = new Set<string>();
+
   for (const rawPos of orderedPositions) {
+    if (rawPos.secType === "OPT" && !stockSymbols.has(rawPos.symbol) && !placeholderAdded.has(rawPos.symbol)) {
+      const underlyingQuote = quotes.get(rawPos.symbol);
+      const underlyingBid = asNumber(underlyingQuote?.bid);
+      const underlyingAsk = asNumber(underlyingQuote?.ask);
+      const underlyingMid = (underlyingBid + underlyingAsk) / 2 || 0;
+
+      positionsOutput.push({
+        symbol: rawPos.symbol,
+        secType: "STK",
+        qty: 0,
+        cost: 0,
+        price: underlyingMid,
+        underlyingPrice: underlyingMid,
+        upnl: 0,
+        is_option: false,
+        isPlaceholder: true,
+        delta: 0,
+        gamma: 0,
+        theta: 0,
+        percent_change: 0,
+        dteDays: undefined,
+      });
+
+      placeholderAdded.add(rawPos.symbol);
+    }
+
     const qty = asNumber(rawPos.position);
     const cost = asNumber(rawPos.avgCost);
 
     const symbolKey = rawPos.secType === "OPT" ? toOccSymbol(rawPos) : rawPos.symbol;
     const quote = symbolKey ? quotes.get(symbolKey) : undefined;
+    const underlyingQuote = rawPos.secType === "OPT" ? quotes.get(rawPos.symbol) : quote;
     const bid = asNumber(quote?.bid);
     const ask = asNumber(quote?.ask);
     const midPrice = (bid + ask) / 2 || 0;
     const price = rawPos.secType === "OPT" ? midPrice * 100 : midPrice;
+    const underlyingBid = asNumber(underlyingQuote?.bid);
+    const underlyingAsk = asNumber(underlyingQuote?.ask);
+    const underlyingMid = (underlyingBid + underlyingAsk) / 2 || 0;
 
     const upnl = (price - cost) * qty;
 
@@ -198,8 +247,10 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
       qty,
       cost,
       price,
+      underlyingPrice: rawPos.secType === "OPT" ? underlyingMid : price,
       upnl,
       is_option: rawPos.secType === "OPT",
+      dteDays: rawPos.secType === "OPT" ? calculateDteDays(rawPos.expiry) : undefined,
       delta,
       gamma,
       theta,
@@ -271,9 +322,21 @@ export async function GET() {
 
   try {
     const portfolio = await loadPortfolioYaml();
-    const symbols = portfolio.positions
-      .map((pos) => (pos.secType === "OPT" ? toOccSymbol(pos) : pos.symbol))
-      .filter((s): s is string => Boolean(s));
+    const symbolSet = new Set<string>();
+    for (const pos of portfolio.positions) {
+      if (pos.secType === "OPT") {
+        const optionSymbol = toOccSymbol(pos);
+        if (optionSymbol) {
+          symbolSet.add(optionSymbol);
+        }
+        if (pos.symbol) {
+          symbolSet.add(pos.symbol);
+        }
+      } else if (pos.symbol) {
+        symbolSet.add(pos.symbol);
+      }
+    }
+    const symbols = Array.from(symbolSet);
 
     const [quotes, usdSgdRate] = await Promise.all([fetchQuotes(symbols), fetchUsdSgdRate()]);
     const response = buildResponse(portfolio, quotes, usdSgdRate);

@@ -35,12 +35,15 @@ export type Position = {
   qty: number;
   cost: number;
   price: number;
+  underlyingPrice?: number;
   upnl: number;
   is_option: boolean;
+  isPlaceholder?: boolean;
   delta: number;
   gamma: number;
   theta: number;
   percent_change: number;
+  dteDays?: number;
   right?: "C" | "P";
   strike?: number;
   expiry?: string;

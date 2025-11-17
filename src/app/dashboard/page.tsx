@@ -45,7 +45,7 @@ export default function Page() {
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-gray-100 px-2 sm:px-4 py-2 sm:py-6">
+    <main className={`${styles.page} min-h-screen bg-gray-100 px-2 sm:px-4 py-2 sm:py-6`}>
       <div className="mx-auto max-w-7xl space-y-2 sm:space-y-6">
 
         {/* Header */}

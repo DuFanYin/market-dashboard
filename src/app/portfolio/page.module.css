@@ -1,9 +1,10 @@
 .page {
   min-height: 100vh;
+  height: 100vh;
   background-color: #f8f9fb;
   color: #1a1a1a;
   padding: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden;
 }
 
 .container {
@@ -11,6 +12,10 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .header {
@@ -54,6 +59,9 @@
   color: #666;
   padding: 8px 14px;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .summaryValue {
@@ -62,6 +70,9 @@
   color: #111;
   padding: 8px 14px;
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chartContainer {
@@ -248,33 +259,45 @@
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background-color: #fff;
+  margin-top: 12px;
+  overflow: auto;
+  scrollbar-gutter: stable both-edges;
 }
 
 .positionsTable {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 12px;
-  font-size: 12px;
-  background-color: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-  overflow: hidden;
+  font-size: 11px;
+  table-layout: auto;
 }
+.positionsSection {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  align-self: flex-start;
+  margin-right: auto;
+}
+
+.positionsTableContainer {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 
 .positionsTable th,
 .positionsTable td {
-  padding: 8px 10px;
-  text-align: right;
+  padding: 6px 8px;
   border-bottom: 1px solid #f0f0f0;
   white-space: nowrap;
-}
-
-.positionsTable th:first-child,
-.positionsTable td:first-child,
-.positionsTable th:nth-child(2),
-.positionsTable td:nth-child(2) {
-  text-align: left;
+  text-align: right;
 }
 
 .positionsTable th {
@@ -282,16 +305,32 @@
   font-weight: 600;
   font-size: 11px;
   color: #333;
-  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .positionsTable th:first-child,
-.positionsTable th:nth-child(2) {
+.positionsTable td:first-child {
   text-align: left;
 }
 
-.positionsTable td.center {
+.positionsTable th:nth-child(2),
+.positionsTable td:nth-child(2) {
   text-align: center;
+}
+
+.positionsTable th:nth-child(13),
+.positionsTable td:nth-child(13),
+.positionsTable th:nth-child(15),
+.positionsTable td:nth-child(15),
+.positionsTable th:nth-child(16),
+.positionsTable td:nth-child(16) {
+  text-align: center;
+}
+
+.optionRow td:first-child {
+  padding-left: 24px;
 }
 
 .positionsTable tbody tr:hover {

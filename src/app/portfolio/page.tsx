@@ -119,8 +119,12 @@ export default function PortfolioPage() {
           applyMask={applyMask}
         />
 
-        <h2 className={styles.positionsTitle}>Positions</h2>
-        <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
+        <div className={styles.positionsSection}>
+          <h2 className={styles.positionsTitle}>Positions</h2>
+          <div className={styles.positionsTableContainer}>
+            <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
+          </div>
+        </div>
       </div>
     </main>
   );
