@@ -258,6 +258,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
       right: rawPos.right,
       strike: rawPos.strike,
       expiry: rawPos.expiry,
+      underlyingKey: rawPos.symbol,
     });
   }
 

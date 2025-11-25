@@ -276,19 +276,84 @@
   table-layout: auto;
 }
 .positionsSection {
-  width: 70%;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   min-height: 0;
-  align-self: flex-start;
-  margin-right: auto;
+}
+
+.positionsContent {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  min-height: 0;
 }
 
 .positionsTableContainer {
-  flex: 1;
-  min-height: 0;
+  flex: 2;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+
+.positionsChartContainer {
+  flex: 0 0 32%;
+  min-width: 240px;
+  background-color: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.positionsChartTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.positionsChartWrapper {
+  width: 180px;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.positionsChartLegend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.positionsChartLegend li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #555;
+  gap: 6px;
+}
+
+.positionsChartLegendColor {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.positionsChartLegendLabel {
+  flex: 1;
 }
 
 

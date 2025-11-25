@@ -7,6 +7,7 @@ import { usePortfolioCalculations } from "@/hooks/usePortfolioCalculations";
 import { PortfolioHeader } from "@/components/portfolio/PortfolioHeader";
 import { AccountSummary } from "@/components/portfolio/AccountSummary";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
+import { PositionsChart } from "@/components/portfolio/PositionsChart";
 import styles from "./page.module.css";
 
 export default function PortfolioPage() {
@@ -19,35 +20,35 @@ export default function PortfolioPage() {
 
   const fetchPortfolio = useCallback(
     async (isRefresh = false) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/portfolio");
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/portfolio");
 
-        if (response.status === 404) {
-          if (isInitialLoad && !isRefresh) {
-            router.push("/dashboard");
-            return;
-          }
-          throw new Error("Portfolio data file not found");
-        }
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(text || "Failed to load portfolio data.");
-        }
-
-        const payload = (await response.json()) as PortfolioData;
-        setData(payload);
-        setIsInitialLoad(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error occurred.");
+      if (response.status === 404) {
         if (isInitialLoad && !isRefresh) {
-          setData(null);
+          router.push("/dashboard");
+          return;
         }
-      } finally {
-        setIsLoading(false);
+        throw new Error("Portfolio data file not found");
       }
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Failed to load portfolio data.");
+      }
+
+      const payload = (await response.json()) as PortfolioData;
+      setData(payload);
+      setIsInitialLoad(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error occurred.");
+      if (isInitialLoad && !isRefresh) {
+        setData(null);
+      }
+    } finally {
+      setIsLoading(false);
+    }
     },
     [router, isInitialLoad]
   );
@@ -68,7 +69,15 @@ export default function PortfolioPage() {
     [isIncognito]
   );
 
-  const { assetBreakdown, summaryItems, assetAllocation, costBasisChart, marketValueChart } = usePortfolioCalculations(data, applyMask);
+  const {
+    assetBreakdown,
+    summaryItems,
+    assetAllocation,
+    costBasisChart,
+    marketValueChart,
+    positionsChart,
+    positionsLegend,
+  } = usePortfolioCalculations(data, applyMask);
 
   if (isLoading && isInitialLoad && !data) {
     return (
@@ -121,8 +130,11 @@ export default function PortfolioPage() {
 
         <div className={styles.positionsSection}>
           <h2 className={styles.positionsTitle}>Positions</h2>
-          <div className={styles.positionsTableContainer}>
-            <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
+          <div className={styles.positionsContent}>
+            <div className={styles.positionsTableContainer}>
+              <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
+            </div>
+            <PositionsChart chartData={positionsChart} legendItems={positionsLegend} />
           </div>
         </div>
       </div>

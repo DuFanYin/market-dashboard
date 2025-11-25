@@ -44,6 +44,7 @@ export type Position = {
   theta: number;
   percent_change: number;
   dteDays?: number;
+  underlyingKey?: string;
   right?: "C" | "P";
   strike?: number;
   expiry?: string;

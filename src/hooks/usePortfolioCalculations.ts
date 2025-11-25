@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { PortfolioData, SummaryItem } from "@/types/portfolio";
 import { formatMoney, formatPercent } from "@/lib/format";
-import { buildChartFromLegendData } from "@/lib/chartCalculations";
+import { buildChartFromLegendData, buildPositionChartData, type PositionGroup } from "@/lib/chartCalculations";
 import { SEGMENT_COLORS } from "@/lib/portfolioConfig";
 
 export type AssetBreakdown = {
@@ -129,6 +129,11 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
     return allocation;
   }, [assetBreakdown, data]);
 
+  const realizedPnl = useMemo(() => {
+    if (!data) return 0;
+    return data.account_pnl - data.total_upnl;
+  }, [data]);
+
   const summaryItems = useMemo<SummaryItem[]>(() => {
     if (!data) return [];
     return [
@@ -141,13 +146,19 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
         numericValue: data.account_pnl,
       },
       {
+        label: "Realized PnL",
+        display: applyMask(`$${formatMoney(realizedPnl)}`),
+        isUpnl: true as const,
+        numericValue: realizedPnl,
+      },
+      {
         label: "Account PnL %",
         display: formatPercent(data.account_pnl_percent),
         isUpnl: true as const,
         numericValue: data.account_pnl_percent,
       },
     ];
-  }, [data, applyMask]);
+  }, [data, applyMask, realizedPnl]);
 
   const costBasisChart = useMemo(() => {
     if (!data || assetAllocation.length === 0) {
@@ -163,12 +174,55 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
     return buildChartFromLegendData(assetAllocation, assetBreakdown, "market");
   }, [data, assetAllocation, assetBreakdown]);
 
+  const positionGroups = useMemo<PositionGroup[]>(() => {
+    if (!data) return [];
+    const groups = new Map<
+      string,
+      { key: string; label: string; color: string; cost: number; marketValue: number; unrealizedPnL: number; isCash?: boolean }
+    >();
+
+    for (const position of data.positions) {
+      const key = position.underlyingKey ?? position.symbol;
+      const isCash = key.toLowerCase().includes("cash");
+      const entry = groups.get(key) ?? {
+        key,
+        label: key,
+        color: isCash ? SEGMENT_COLORS.cash : SEGMENT_COLORS.stock,
+        cost: 0,
+        marketValue: 0,
+        unrealizedPnL: 0,
+        isCash,
+      };
+
+      entry.cost += position.cost * position.qty;
+      entry.marketValue += position.price * position.qty;
+      entry.unrealizedPnL += position.upnl;
+      groups.set(key, entry);
+    }
+
+    return Array.from(groups.values()).filter((group) => group.cost !== 0 || group.marketValue !== 0);
+  }, [data]);
+
+  const positionsChart = useMemo(() => buildPositionChartData(positionGroups), [positionGroups]);
+
+  const positionsLegend = useMemo(
+    () =>
+      positionGroups.map((group) => ({
+        key: group.key,
+        label: group.label,
+        color: group.isCash ? SEGMENT_COLORS.cash : SEGMENT_COLORS.stock,
+      })),
+    [positionGroups]
+  );
+
   return {
     assetBreakdown,
     summaryItems,
     assetAllocation,
     costBasisChart,
     marketValueChart,
+    positionsChart,
+    positionsLegend,
   };
 };
 

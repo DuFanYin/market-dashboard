@@ -1,5 +1,5 @@
 import type { Position } from "@/types/portfolio";
-import { formatMoney, formatPercent, formatNumber, formatExpiry } from "@/lib/format";
+import { formatMoney, formatPercent, formatNumber } from "@/lib/format";
 import styles from "@/app/portfolio/page.module.css";
 
 interface PositionsTableProps {
@@ -26,9 +26,6 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
             <th>Delta</th>
             <th>Gamma</th>
             <th>Theta</th>
-            <th>Type</th>
-            <th>Strike</th>
-            <th>Expiry</th>
             <th>DTE</th>
           </tr>
         </thead>
@@ -69,9 +66,6 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
                 <td>{isPlaceholder ? "-" : applyMask(formatNumber(pos.delta))}</td>
                 <td>{isPlaceholder || !pos.is_option ? "-" : applyMask(formatNumber(pos.gamma))}</td>
                 <td>{isPlaceholder || !pos.is_option ? "-" : applyMask(formatNumber(pos.theta))}</td>
-                <td className={!pos.is_option ? styles.center : ""}>{pos.is_option ? (pos.right === "C" ? "CALL" : "PUT") : "-"}</td>
-                <td>{pos.is_option && pos.strike ? applyMask(formatMoney(pos.strike)) : "-"}</td>
-                <td className={!pos.is_option || !pos.expiry || pos.expiry.length !== 8 ? styles.center : ""}>{pos.is_option ? formatExpiry(pos.expiry) : "-"}</td>
                 <td className={styles.center}>
                   {pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0 ? `${pos.dteDays}` : "-"}
                 </td>

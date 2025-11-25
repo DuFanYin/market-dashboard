@@ -6,9 +6,19 @@ interface PortfolioChartProps {
   segments: ChartSegment[];
   circumference: number;
   pnlOverlays?: Array<{ name: string; offset: number; arc: number; color: string }>;
+  separators?: number[];
+  separatorColor?: string;
+  separatorWidth?: number;
 }
 
-export function PortfolioChart({ segments, circumference, pnlOverlays }: PortfolioChartProps) {
+export function PortfolioChart({
+  segments,
+  circumference,
+  pnlOverlays,
+  separators,
+  separatorColor = "#ffffff",
+  separatorWidth = 1,
+}: PortfolioChartProps) {
   return (
     <div className={styles.chartSection}>
       <div className={styles.chartWrapper}>
@@ -38,6 +48,20 @@ export function PortfolioChart({ segments, circumference, pnlOverlays }: Portfol
               strokeWidth={CHART_STROKE_WIDTH}
               strokeDasharray={`${overlay.arc} ${circumference}`}
               strokeDashoffset={-overlay.offset}
+              transform="rotate(-90 100 100)"
+            />
+          ))}
+          {separators?.map((separator, index) => (
+            <circle
+              key={`sep-${index}`}
+              cx={100}
+              cy={100}
+              r={CHART_RADIUS}
+              fill="none"
+              stroke={separatorColor}
+              strokeWidth={separatorWidth}
+              strokeDasharray={`1 ${circumference}`}
+              strokeDashoffset={-separator}
               transform="rotate(-90 100 100)"
             />
           ))}
