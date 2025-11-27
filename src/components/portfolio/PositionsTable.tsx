@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import type { Position } from "@/types/portfolio";
 import { formatMoney, formatPercent, formatNumber } from "@/lib/format";
 import styles from "@/app/portfolio/page.module.css";
@@ -9,6 +11,36 @@ interface PositionsTableProps {
 }
 
 export function PositionsTable({ positions, netLiquidation, applyMask }: PositionsTableProps) {
+  const orderedPositions = useMemo(() => {
+    const groupOrder: string[] = [];
+    const groups = new Map<
+      string,
+      {
+        stock: Position[];
+        options: Position[];
+      }
+    >();
+
+    for (const pos of positions) {
+      const key = pos.underlyingKey ?? pos.symbol;
+      if (!groups.has(key)) {
+        groupOrder.push(key);
+        groups.set(key, { stock: [], options: [] });
+      }
+      const entry = groups.get(key)!;
+      if (pos.is_option) {
+        entry.options.push(pos);
+      } else {
+        entry.stock.push(pos);
+      }
+    }
+
+    return groupOrder.flatMap((key) => {
+      const entry = groups.get(key)!;
+      return [...entry.stock, ...entry.options];
+    });
+  }, [positions]);
+
   return (
     <div className={styles.tableWrapper}>
       <table className={styles.positionsTable}>
@@ -30,7 +62,7 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
           </tr>
         </thead>
         <tbody>
-          {positions.map((pos, index) => {
+          {orderedPositions.map((pos, index) => {
             const isPlaceholder = Boolean(pos.isPlaceholder);
             const optionSymbol = pos.is_option && pos.strike && pos.expiry
               ? `${(pos.right ?? "").toUpperCase()}-${pos.expiry.slice(4, 6)}/${pos.expiry.slice(6, 8)}/${pos.expiry.slice(2, 4)}-${pos.strike.toFixed(2)}`

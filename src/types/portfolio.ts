@@ -82,5 +82,7 @@ export type SummaryItem = {
   display: string;
   isUpnl?: boolean;
   numericValue?: number;
+  percentDisplay?: string;
+  percentValue?: number;
 };
 

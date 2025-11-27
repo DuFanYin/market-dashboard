@@ -136,26 +136,42 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
 
   const summaryItems = useMemo<SummaryItem[]>(() => {
     if (!data) return [];
+
+    const inferredOriginalAmount =
+      data.account_pnl_percent !== 0 ? data.account_pnl / (data.account_pnl_percent / 100) : null;
+
+    const unrealizedPercentValue =
+      inferredOriginalAmount && inferredOriginalAmount !== 0 ? (data.total_upnl / inferredOriginalAmount) * 100 : null;
+
+    const realizedPercentValue =
+      inferredOriginalAmount && inferredOriginalAmount !== 0 ? (realizedPnl / inferredOriginalAmount) * 100 : null;
+
     return [
       { label: "Total Theta", display: applyMask(`${formatMoney(data.total_theta)}`) },
       { label: "Utilization", display: formatPercent(data.utilization * 100) },
+      {
+        label: "uPnL",
+        display: applyMask(`$${formatMoney(data.total_upnl)}`),
+        isUpnl: true as const,
+        numericValue: data.total_upnl,
+        percentDisplay: typeof unrealizedPercentValue === "number" ? formatPercent(unrealizedPercentValue) : undefined,
+        percentValue: unrealizedPercentValue ?? undefined,
+      },
+      {
+        label: "rPnL",
+        display: applyMask(`$${formatMoney(realizedPnl)}`),
+        isUpnl: true as const,
+        numericValue: realizedPnl,
+        percentDisplay: typeof realizedPercentValue === "number" ? formatPercent(realizedPercentValue) : undefined,
+        percentValue: realizedPercentValue ?? undefined,
+      },
       {
         label: "Account PnL",
         display: applyMask(`$${formatMoney(data.account_pnl)}`),
         isUpnl: true as const,
         numericValue: data.account_pnl,
-      },
-      {
-        label: "Realized PnL",
-        display: applyMask(`$${formatMoney(realizedPnl)}`),
-        isUpnl: true as const,
-        numericValue: realizedPnl,
-      },
-      {
-        label: "Account PnL %",
-        display: formatPercent(data.account_pnl_percent),
-        isUpnl: true as const,
-        numericValue: data.account_pnl_percent,
+        percentDisplay: formatPercent(data.account_pnl_percent),
+        percentValue: data.account_pnl_percent,
       },
     ];
   }, [data, applyMask, realizedPnl]);

@@ -7,7 +7,6 @@ import { usePortfolioCalculations } from "@/hooks/usePortfolioCalculations";
 import { PortfolioHeader } from "@/components/portfolio/PortfolioHeader";
 import { AccountSummary } from "@/components/portfolio/AccountSummary";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
-import { PositionsChart } from "@/components/portfolio/PositionsChart";
 import styles from "./page.module.css";
 
 export default function PortfolioPage() {
@@ -75,8 +74,6 @@ export default function PortfolioPage() {
     assetAllocation,
     costBasisChart,
     marketValueChart,
-    positionsChart,
-    positionsLegend,
   } = usePortfolioCalculations(data, applyMask);
 
   if (isLoading && isInitialLoad && !data) {
@@ -134,7 +131,6 @@ export default function PortfolioPage() {
             <div className={styles.positionsTableContainer}>
               <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
             </div>
-            <PositionsChart chartData={positionsChart} legendItems={positionsLegend} />
           </div>
         </div>
       </div>

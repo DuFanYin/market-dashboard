@@ -20,10 +20,10 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
           <tr>
             <th className={styles.legendColorCell}></th>
             <th className={styles.legendLabel}>Label</th>
-            <th className={styles.legendAmount}>Cost</th>
-            <th className={styles.legendPercent}>Cost %</th>
+            <th className={styles.legendAmount}>Worth</th>
+            <th className={styles.legendPercent}>%</th>
             <th className={styles.legendAmount}>uPnL</th>
-            <th className={styles.legendPercent}>uPnL %</th>
+            <th className={styles.legendPercent}>%</th>
             <th className={styles.legendAmount}>Value uPnl</th>
             <th className={styles.legendAmount}>Market Value</th>
             <th className={styles.legendPercent}>Value %</th>

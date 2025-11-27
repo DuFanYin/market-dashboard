@@ -33,8 +33,18 @@ export function AccountSummary({
   return (
     <section className={styles.chartContainer}>
       <SummaryTable items={summaryItems} />
-      <PortfolioChart segments={costBasisChart.segments} circumference={costBasisChart.circumference} pnlOverlays={costBasisChart.pnlOverlays} />
-      <PortfolioChart segments={marketValueChart.segments} circumference={marketValueChart.circumference} />
+      <div className={styles.chartSection}>
+        <PortfolioChart
+          segments={costBasisChart.segments}
+          circumference={costBasisChart.circumference}
+          pnlOverlays={costBasisChart.pnlOverlays}
+        />
+      </div>
+      <div className={styles.chartSection}>
+        <PortfolioChart 
+          segments={marketValueChart.segments} 
+          circumference={marketValueChart.circumference} />
+      </div>
       <LegendTable assetAllocation={assetAllocation} assetBreakdown={assetBreakdown} applyMask={applyMask} />
     </section>
   );
