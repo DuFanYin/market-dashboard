@@ -176,13 +176,6 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
     ];
   }, [data, applyMask, realizedPnl]);
 
-  const costBasisChart = useMemo(() => {
-    if (!data || assetAllocation.length === 0) {
-      return { segments: [], circumference: 0, total: 0, pnlOverlays: [], separators: [] };
-    }
-    return buildChartFromLegendData(assetAllocation, assetBreakdown, "cost");
-  }, [data, assetAllocation, assetBreakdown]);
-
   const marketValueChart = useMemo(() => {
     if (!data || assetAllocation.length === 0) {
       return { segments: [], circumference: 0, total: 0, separators: [] };
@@ -235,7 +228,6 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
     assetBreakdown,
     summaryItems,
     assetAllocation,
-    costBasisChart,
     marketValueChart,
     positionsChart,
     positionsLegend,

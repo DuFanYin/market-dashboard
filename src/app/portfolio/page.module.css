@@ -129,12 +129,12 @@
   overflow: hidden;
 }
 
-/* Layout ratio: Summary 15% | Chart 1 15% | Chart 2 15% | Legend 50% */
+/* Layout ratio: Summary 20% | Chart 20% | Legend 60% */
 .chartSection {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 15%;
+  flex: 0 0 20%;
   min-width: 0;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -150,7 +150,7 @@
 .legendSection {
   display: flex;
   flex-direction: column;
-  flex: 0 0 50%;
+  flex: 0 0 60%;
   min-width: 0;
   box-sizing: border-box;
   flex-shrink: 1;
@@ -318,19 +318,19 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .positionsTable th,
 .positionsTable td {
-  padding: 9px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid #f0f0f0;
   white-space: nowrap;
   text-align: right;
 }
 
 .positionsTable th {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: #333;
   background-color: #f9f9f9;

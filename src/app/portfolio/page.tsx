@@ -72,7 +72,6 @@ export default function PortfolioPage() {
     assetBreakdown,
     summaryItems,
     assetAllocation,
-    costBasisChart,
     marketValueChart,
   } = usePortfolioCalculations(data, applyMask);
 
@@ -118,7 +117,6 @@ export default function PortfolioPage() {
         <h2 className={styles.positionsTitle}>Account Summary</h2>
         <AccountSummary
           summaryItems={summaryItems}
-          costBasisChart={costBasisChart}
           marketValueChart={marketValueChart}
           assetAllocation={assetAllocation}
           assetBreakdown={assetBreakdown}

@@ -1,6 +1,6 @@
 import type { ChartSegment } from "@/types/portfolio";
 import type { AssetBreakdown, AssetAllocation } from "@/hooks/usePortfolioCalculations";
-import { CHART_RADIUS, GAIN_COLOR, LOSS_COLOR, SEGMENT_COLORS } from "./portfolioConfig";
+import { CHART_RADIUS, GAIN_COLOR, SEGMENT_COLORS } from "./portfolioConfig";
 
 const buildSegmentsFromPercent = (
   segmentsData: Array<{ name: string; value: number; color: string; percent: number }>,
@@ -31,24 +31,10 @@ export const calculateSeparators = (segments: ChartSegment[]): number[] => {
   return separators;
 };
 
-export const addLossOverlay = (
-  pnlOverlays: Array<{ name: string; offset: number; arc: number; color: string }>,
-  cost: number,
-  unrealizedPnL: number,
-  segment: ChartSegment | undefined
-) => {
-  if (cost > 0 && unrealizedPnL < 0 && segment) {
-    const lossRatio = Math.abs(unrealizedPnL) / cost;
-    const lossArc = Math.min(segment.arc * lossRatio, segment.arc);
-    pnlOverlays.push({ name: `${segment.name}_pnl`, offset: segment.offset, arc: lossArc, color: LOSS_COLOR });
-  }
-};
-
 export type ChartData = {
   segments: ChartSegment[];
   circumference: number;
   total: number;
-  pnlOverlays?: Array<{ name: string; offset: number; arc: number; color: string }>;
   separators?: number[];
 };
 
@@ -59,79 +45,24 @@ export const buildChartFromLegendData = (
 ): ChartData => {
   const visibleAssets = assetAllocation.filter((asset) => asset.isVisible);
   if (visibleAssets.length === 0) {
-    return { segments: [], circumference: 0, total: 0, pnlOverlays: [], separators: [] };
+    return { segments: [], circumference: 0, total: 0, separators: [] };
   }
 
-  const total = mode === "cost" ? assetBreakdown.totalCost : assetBreakdown.totalMarketValue;
+  const total = assetBreakdown.totalMarketValue;
   const circumference = total > 0 ? 2 * Math.PI * CHART_RADIUS : 0;
   
   if (total === 0) {
-    return { segments: [], circumference, total: 0, pnlOverlays: [], separators: [] };
+    return { segments: [], circumference, total: 0, separators: [] };
   }
 
-  if (mode === "market") {
-    const segmentsData = visibleAssets.map((asset) => ({
-      name: asset.key === "cash" ? "cash" : asset.key === "stock" ? "stock_cost" : "option_cost",
-      value: asset.marketValue,
-      color: asset.color,
-      percent: asset.valueAllocationPercent,
-    }));
-    const segments = buildSegmentsFromPercent(segmentsData, circumference);
-    return { segments, circumference, total, separators: calculateSeparators(segments) };
-  }
-
-  // Cost chart: use costAllocationPercent from allocation, handle gains/losses
   const segmentsData = visibleAssets.map((asset) => ({
     name: asset.key === "cash" ? "cash" : asset.key === "stock" ? "stock_cost" : "option_cost",
-    value: asset.cost,
+    value: asset.marketValue,
     color: asset.color,
-    percent: asset.costAllocationPercent,
-    unrealizedPnL: asset.unrealizedPnL,
+    percent: asset.valueAllocationPercent,
   }));
-
   const segments = buildSegmentsFromPercent(segmentsData, circumference);
-
-  const pnlOverlays: Array<{ name: string; offset: number; arc: number; color: string }> = [];
-  const totalWithGains = total + Math.max(0, assetBreakdown.stockUnrealizedPnL) + Math.max(0, assetBreakdown.optionUnrealizedPnL);
-  const newCircumference = totalWithGains > 0 ? 2 * Math.PI * CHART_RADIUS : circumference;
-
-  if (totalWithGains > total) {
-    const newSegments: ChartSegment[] = [];
-    let newOffset = 0;
-    
-    for (const segmentData of segmentsData) {
-      const newPercent = (segmentData.value / totalWithGains) * 100;
-      if (newPercent > 0) {
-        const arc = (newPercent / 100) * newCircumference;
-        newSegments.push({ name: segmentData.name, value: segmentData.value, pct: newPercent, color: segmentData.color, arc, offset: newOffset });
-        newOffset += arc;
-      }
-      
-      if ((segmentData.name === "stock_cost" || segmentData.name === "option_cost") && segmentData.unrealizedPnL > 0) {
-        const gainPercent = (segmentData.unrealizedPnL / totalWithGains) * 100;
-        const gainArc = (gainPercent / 100) * newCircumference;
-        newSegments.push({ name: `${segmentData.name.replace("_cost", "")}_gain`, value: segmentData.unrealizedPnL, pct: gainPercent, color: GAIN_COLOR, arc: gainArc, offset: newOffset });
-        newOffset += gainArc;
-      }
-    }
-    
-    addLossOverlay(pnlOverlays, assetBreakdown.stockCost, assetBreakdown.stockUnrealizedPnL, newSegments.find((s) => s.name === "stock_cost"));
-    addLossOverlay(pnlOverlays, assetBreakdown.optionCost, assetBreakdown.optionUnrealizedPnL, newSegments.find((s) => s.name === "option_cost"));
-    
-    return { segments: newSegments, circumference: newCircumference, total: totalWithGains, pnlOverlays, separators: calculateSeparators(newSegments) };
-  }
-
-  // No gains, just losses
-  addLossOverlay(pnlOverlays, assetBreakdown.stockCost, assetBreakdown.stockUnrealizedPnL, segments.find((s) => s.name === "stock_cost"));
-  addLossOverlay(pnlOverlays, assetBreakdown.optionCost, assetBreakdown.optionUnrealizedPnL, segments.find((s) => s.name === "option_cost"));
-  
-  return {
-    segments,
-    circumference,
-    total,
-    pnlOverlays,
-    separators: calculateSeparators(segments),
-  };
+  return { segments, circumference, total, separators: calculateSeparators(segments) };
 };
 
 export type PositionGroup = {
@@ -146,7 +77,7 @@ export type PositionGroup = {
 
 export const buildPositionChartData = (groups: PositionGroup[]): ChartData => {
   if (groups.length === 0) {
-    return { segments: [], circumference: 0, total: 0, pnlOverlays: [], separators: [] };
+    return { segments: [], circumference: 0, total: 0, separators: [] };
   }
 
   const totalCost = groups.reduce((sum, group) => sum + Math.abs(group.cost), 0);
@@ -156,10 +87,9 @@ export const buildPositionChartData = (groups: PositionGroup[]): ChartData => {
   const circumference = totalWithGains > 0 ? 2 * Math.PI * CHART_RADIUS : 0;
 
   if (totalWithGains === 0) {
-    return { segments: [], circumference, total: 0, pnlOverlays: [], separators: [] };
+    return { segments: [], circumference, total: 0, separators: [] };
   }
 
-  const pnlOverlays: Array<{ name: string; offset: number; arc: number; color: string }> = [];
   const segments: ChartSegment[] = [];
   let offset = 0;
 
@@ -170,7 +100,6 @@ export const buildPositionChartData = (groups: PositionGroup[]): ChartData => {
       const arc = (basePercent / 100) * circumference;
       const segment = { name: group.key, value: group.cost, pct: basePercent, color: baseColor, arc, offset };
       segments.push(segment);
-      addLossOverlay(pnlOverlays, group.cost, group.unrealizedPnL, segment);
       offset += arc;
     }
 
@@ -189,6 +118,6 @@ export const buildPositionChartData = (groups: PositionGroup[]): ChartData => {
     }
   }
 
-  return { segments, circumference, total: totalWithGains, pnlOverlays, separators: calculateSeparators(segments) };
+  return { segments, circumference, total: totalWithGains, separators: calculateSeparators(segments) };
 };
 

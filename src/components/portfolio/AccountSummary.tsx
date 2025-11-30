@@ -8,11 +8,6 @@ import styles from "@/app/portfolio/page.module.css";
 
 interface AccountSummaryProps {
   summaryItems: SummaryItem[];
-  costBasisChart: {
-    segments: ChartSegment[];
-    circumference: number;
-    pnlOverlays?: Array<{ name: string; offset: number; arc: number; color: string }>;
-  };
   marketValueChart: {
     segments: ChartSegment[];
     circumference: number;
@@ -24,7 +19,6 @@ interface AccountSummaryProps {
 
 export function AccountSummary({
   summaryItems,
-  costBasisChart,
   marketValueChart,
   assetAllocation,
   assetBreakdown,
@@ -33,13 +27,6 @@ export function AccountSummary({
   return (
     <section className={styles.chartContainer}>
       <SummaryTable items={summaryItems} />
-      <div className={styles.chartSection}>
-        <PortfolioChart
-          segments={costBasisChart.segments}
-          circumference={costBasisChart.circumference}
-          pnlOverlays={costBasisChart.pnlOverlays}
-        />
-      </div>
       <div className={styles.chartSection}>
         <PortfolioChart 
           segments={marketValueChart.segments} 
