@@ -74,6 +74,9 @@ export type PortfolioData = {
   circumference: number;
   account_pnl: number;
   account_pnl_percent: number;
+  usd_sgd_rate: number;
+  original_amount_sgd: number;
+  original_amount_usd: number;
 };
 
 // Summary item for display

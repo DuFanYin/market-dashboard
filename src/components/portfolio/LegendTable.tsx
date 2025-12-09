@@ -24,7 +24,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
             <th className={styles.legendPercent}>%</th>
             <th className={styles.legendAmount}>uPnL</th>
             <th className={styles.legendPercent}>%</th>
-            <th className={styles.legendAmount}>Value uPnl</th>
             <th className={styles.legendAmount}>Market Value</th>
             <th className={styles.legendPercent}>Value %</th>
           </tr>
@@ -38,20 +37,17 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
                   <span className={styles.legendColor} style={{ backgroundColor: asset.color }} />
                 </td>
                 <td className={styles.legendLabel}>{asset.label}</td>
-                <td className={styles.legendAmount}>{applyMask(`$${formatMoney(asset.cost)}`)}</td>
+                <td className={styles.legendAmount}>{applyMask(formatMoney(asset.cost))}</td>
                 <td className={styles.legendPercent}>
                   {formatPercent(asset.costAllocationPercent)}
                 </td>
                 <td className={`${styles.legendAmount} ${asset.isCash ? styles.center : ""}`} style={asset.unrealizedPnL !== 0 && !asset.isCash ? { color: asset.unrealizedPnL >= 0 ? "#2e7d32" : "#c62828" } : undefined}>
-                  {asset.isCash ? "-" : applyMask(`${asset.unrealizedPnL >= 0 ? "+" : ""}$${formatMoney(asset.unrealizedPnL)}`)}
+                  {asset.isCash ? "-" : applyMask(`${asset.unrealizedPnL >= 0 ? "+" : ""}${formatMoney(asset.unrealizedPnL)}`)}
                 </td>
                 <td className={`${styles.legendPercent} ${asset.isCash ? styles.center : ""}`} style={asset.unrealizedPnL !== 0 && !asset.isCash ? { color: asset.unrealizedPnL >= 0 ? "#2e7d32" : "#c62828" } : undefined}>
                   {asset.isCash ? "-" : formatPercent(Math.abs(asset.profitLossPercent))}
                 </td>
-                <td className={styles.legendPercent}>
-                  {formatPercent(asset.costAllocationPercent * (1 - Math.abs(asset.profitLossPercent) / 100))}
-                </td>
-                <td className={styles.legendAmount}>{applyMask(`$${formatMoney(asset.marketValue)}`)}</td>
+                <td className={styles.legendAmount}>{applyMask(formatMoney(asset.marketValue))}</td>
                 <td className={styles.legendPercent}>
                   {formatPercent(asset.valueAllocationPercent)}
                 </td>
@@ -60,18 +56,15 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
           <tr className={styles.legendRow}>
             <td className={styles.legendColorCell}></td>
             <td className={styles.legendLabel} style={{ fontWeight: 600 }}>Total</td>
-            <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{applyMask(`$${formatMoney(assetBreakdown.totalCost)}`)}</td>
+            <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{applyMask(formatMoney(assetBreakdown.totalCost))}</td>
             <td className={`${styles.legendPercent} ${styles.center}`} style={{ fontWeight: 600 }}>-</td>
             <td className={styles.legendAmount} style={{ fontWeight: 600, color: totalPnL !== 0 ? (totalPnL >= 0 ? "#2e7d32" : "#c62828") : undefined }}>
-              {applyMask(`${totalPnL >= 0 ? "+" : ""}$${formatMoney(totalPnL)}`)}
+              {applyMask(`${totalPnL >= 0 ? "+" : ""}${formatMoney(totalPnL)}`)}
             </td>
             <td className={styles.legendPercent} style={{ fontWeight: 600, color: totalPnL !== 0 ? (totalPnL >= 0 ? "#2e7d32" : "#c62828") : undefined }}>
               {formatPercent(Math.abs(totalPnLPercent))}
             </td>
-            <td className={styles.legendPercent} style={{ fontWeight: 600 }}>
-              {formatPercent(assetAllocation.reduce((sum, asset) => sum + asset.costAllocationPercent * (1 - Math.abs(asset.profitLossPercent) / 100), 0))}
-            </td>
-            <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{applyMask(`$${formatMoney(assetBreakdown.totalMarketValue)}`)}</td>
+            <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{applyMask(formatMoney(assetBreakdown.totalMarketValue))}</td>
             <td className={`${styles.legendPercent} ${styles.center}`} style={{ fontWeight: 600 }}>-</td>
           </tr>
         </tbody>

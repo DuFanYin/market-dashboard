@@ -11,7 +11,7 @@ interface PositionsTableProps {
 }
 
 export function PositionsTable({ positions, netLiquidation, applyMask }: PositionsTableProps) {
-  const orderedPositions = useMemo(() => {
+  const { orderedPositions, maxUpnl, minUpnl, maxChangePercent, minChangePercent, maxMarketValue, minMarketValue } = useMemo(() => {
     const groupOrder: string[] = [];
     const groups = new Map<
       string,
@@ -35,10 +35,24 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
       }
     }
 
-    return groupOrder.flatMap((key) => {
+    const ordered = groupOrder.flatMap((key) => {
       const entry = groups.get(key)!;
       return [...entry.stock, ...entry.options];
     });
+
+    // Calculate max and min values
+    const upnlValues = ordered.filter(p => !p.isPlaceholder).map(p => p.upnl);
+    const changePercentValues = ordered.filter(p => !p.isPlaceholder).map(p => p.percent_change);
+    const marketValues = ordered.filter(p => !p.isPlaceholder).map(p => p.price * p.qty);
+
+    const maxUpnl = upnlValues.length > 0 ? Math.max(...upnlValues) : null;
+    const minUpnl = upnlValues.length > 0 ? Math.min(...upnlValues) : null;
+    const maxChangePercent = changePercentValues.length > 0 ? Math.max(...changePercentValues) : null;
+    const minChangePercent = changePercentValues.length > 0 ? Math.min(...changePercentValues) : null;
+    const maxMarketValue = marketValues.length > 0 ? Math.max(...marketValues) : null;
+    const minMarketValue = marketValues.length > 0 ? Math.min(...marketValues) : null;
+
+    return { orderedPositions: ordered, maxUpnl, minUpnl, maxChangePercent, minChangePercent, maxMarketValue, minMarketValue };
   }, [positions]);
 
   return (
@@ -47,13 +61,13 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
         <thead>
           <tr>
             <th>Symbol</th>
-            <th>Qty</th>
+            <th>Quantity</th>
             <th>Price</th>
-            <th>Cost</th>
-            <th>Total</th>
+            <th>Avg. Cost</th>
+            <th>Total Cost</th>
             <th>Market</th>
             <th>UPnL</th>
-            <th>Change</th>
+            <th>Change %</th>
             <th>Pos %</th>
             <th>Delta</th>
             <th>Gamma</th>
@@ -65,41 +79,55 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
           {orderedPositions.map((pos, index) => {
             const isPlaceholder = Boolean(pos.isPlaceholder);
             const optionSymbol = pos.is_option && pos.strike && pos.expiry
-              ? `${(pos.right ?? "").toUpperCase()}-${pos.expiry.slice(4, 6)}/${pos.expiry.slice(6, 8)}/${pos.expiry.slice(2, 4)}-${pos.strike.toFixed(2)}`
+              ? `${(pos.right ?? "").toUpperCase()}-${pos.expiry.slice(2, 4)}'${pos.expiry.slice(4, 6)}'${pos.expiry.slice(6, 8)}-${pos.strike.toFixed(2)}`
               : pos.symbol;
 
             return (
               <tr key={`${pos.symbol}-${index}`} className={pos.is_option ? styles.optionRow : undefined}>
                 <td>{pos.is_option ? optionSymbol : pos.symbol}</td>
-                <td>{isPlaceholder ? "-" : applyMask(formatNumber(pos.qty, 0))}</td>
+                <td>{isPlaceholder ? "" : applyMask(formatNumber(pos.qty, 0))}</td>
                 <td>
                   {isPlaceholder
                     ? pos.price
                       ? applyMask(formatMoney(pos.price))
-                      : "-"
+                      : ""
                     : applyMask(formatMoney(pos.price))}
                 </td>
-                <td>{isPlaceholder ? "-" : applyMask(formatMoney(pos.cost))}</td>
-                <td>{isPlaceholder ? "-" : applyMask(formatMoney(pos.cost * pos.qty))}</td>
-                <td>{isPlaceholder ? "-" : applyMask(formatMoney(pos.price * pos.qty))}</td>
-                <td className={pos.upnl >= 0 ? styles.positive : styles.negative}>
-                  {isPlaceholder ? "-" : applyMask(formatMoney(pos.upnl))}
+                <td>{isPlaceholder ? "" : applyMask(formatMoney(pos.cost))}</td>
+                <td>{isPlaceholder ? "" : applyMask(formatMoney(pos.cost * pos.qty))}</td>
+                <td className={`${
+                  !isPlaceholder && maxMarketValue !== null && pos.price * pos.qty === maxMarketValue ? styles.maxValue : ""
+                } ${
+                  !isPlaceholder && minMarketValue !== null && pos.price * pos.qty === minMarketValue ? styles.minValue : ""
+                }`}>
+                  {isPlaceholder ? "" : applyMask(formatMoney(pos.price * pos.qty))}
                 </td>
-                <td className={pos.percent_change >= 0 ? styles.positive : styles.negative}>
-                  {isPlaceholder ? "-" : `${formatNumber(pos.percent_change)}%`}
+                <td className={`${pos.upnl >= 0 ? styles.positive : styles.negative} ${
+                  !isPlaceholder && maxUpnl !== null && pos.upnl === maxUpnl ? styles.maxValue : ""
+                } ${
+                  !isPlaceholder && minUpnl !== null && pos.upnl === minUpnl ? styles.minValue : ""
+                }`}>
+                  {isPlaceholder ? "" : applyMask(formatMoney(pos.upnl))}
+                </td>
+                <td className={`${pos.percent_change >= 0 ? styles.positive : styles.negative} ${
+                  !isPlaceholder && maxChangePercent !== null && pos.percent_change === maxChangePercent ? styles.maxValue : ""
+                } ${
+                  !isPlaceholder && minChangePercent !== null && pos.percent_change === minChangePercent ? styles.minValue : ""
+                }`}>
+                  {isPlaceholder ? "" : `${formatNumber(pos.percent_change)}%`}
                 </td>
                 <td>
                   {isPlaceholder
-                    ? "-"
+                    ? ""
                     : netLiquidation > 0
                       ? formatPercent(((pos.price * pos.qty) / netLiquidation) * 100)
                       : "0.00%"}
                 </td>
-                <td>{isPlaceholder ? "-" : applyMask(formatNumber(pos.delta))}</td>
-                <td>{isPlaceholder || !pos.is_option ? "-" : applyMask(formatNumber(pos.gamma))}</td>
-                <td>{isPlaceholder || !pos.is_option ? "-" : applyMask(formatNumber(pos.theta))}</td>
+                <td>{isPlaceholder ? "" : applyMask(formatNumber(pos.delta))}</td>
+                <td>{isPlaceholder || !pos.is_option ? "" : applyMask(formatNumber(pos.gamma))}</td>
+                <td>{isPlaceholder || !pos.is_option ? "" : applyMask(formatNumber(pos.theta))}</td>
                 <td className={styles.center}>
-                  {pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0 ? `${pos.dteDays}` : "-"}
+                  {pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0 ? `${pos.dteDays}` : ""}
                 </td>
               </tr>
             );

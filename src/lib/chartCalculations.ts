@@ -1,6 +1,6 @@
 import type { ChartSegment } from "@/types/portfolio";
 import type { AssetBreakdown, AssetAllocation } from "@/hooks/usePortfolioCalculations";
-import { CHART_RADIUS, GAIN_COLOR, SEGMENT_COLORS } from "./portfolioConfig";
+import { CHART_RADIUS, SEGMENT_COLORS } from "./portfolioConfig";
 
 const buildSegmentsFromPercent = (
   segmentsData: Array<{ name: string; value: number; color: string; percent: number }>,
@@ -40,8 +40,7 @@ export type ChartData = {
 
 export const buildChartFromLegendData = (
   assetAllocation: AssetAllocation[],
-  assetBreakdown: AssetBreakdown,
-  mode: "cost" | "market"
+  assetBreakdown: AssetBreakdown
 ): ChartData => {
   const visibleAssets = assetAllocation.filter((asset) => asset.isVisible);
   if (visibleAssets.length === 0) {
@@ -65,59 +64,4 @@ export const buildChartFromLegendData = (
   return { segments, circumference, total, separators: calculateSeparators(segments) };
 };
 
-export type PositionGroup = {
-  key: string;
-  label: string;
-  color: string;
-  cost: number;
-  marketValue: number;
-  unrealizedPnL: number;
-  isCash?: boolean;
-};
-
-export const buildPositionChartData = (groups: PositionGroup[]): ChartData => {
-  if (groups.length === 0) {
-    return { segments: [], circumference: 0, total: 0, separators: [] };
-  }
-
-  const totalCost = groups.reduce((sum, group) => sum + Math.abs(group.cost), 0);
-  const totalGains = groups.reduce((sum, group) => sum + Math.max(0, group.unrealizedPnL), 0);
-  const total = totalCost;
-  const totalWithGains = total + totalGains;
-  const circumference = totalWithGains > 0 ? 2 * Math.PI * CHART_RADIUS : 0;
-
-  if (totalWithGains === 0) {
-    return { segments: [], circumference, total: 0, separators: [] };
-  }
-
-  const segments: ChartSegment[] = [];
-  let offset = 0;
-
-  for (const group of groups) {
-    const baseColor = group.isCash ? SEGMENT_COLORS.cash : SEGMENT_COLORS.stock;
-    const basePercent = totalWithGains > 0 ? (group.cost / totalWithGains) * 100 : 0;
-    if (basePercent > 0) {
-      const arc = (basePercent / 100) * circumference;
-      const segment = { name: group.key, value: group.cost, pct: basePercent, color: baseColor, arc, offset };
-      segments.push(segment);
-      offset += arc;
-    }
-
-    if (!group.isCash && group.unrealizedPnL > 0) {
-      const gainPercent = (group.unrealizedPnL / totalWithGains) * 100;
-      const gainArc = (gainPercent / 100) * circumference;
-      segments.push({
-        name: `${group.key}_gain`,
-        value: group.unrealizedPnL,
-        pct: gainPercent,
-        color: GAIN_COLOR,
-        arc: gainArc,
-        offset,
-      });
-      offset += gainArc;
-    }
-  }
-
-  return { segments, circumference, total: totalWithGains, separators: calculateSeparators(segments) };
-};
 

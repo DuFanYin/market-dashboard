@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { PortfolioData, SummaryItem } from "@/types/portfolio";
 import { formatMoney, formatPercent } from "@/lib/format";
-import { buildChartFromLegendData, buildPositionChartData, type PositionGroup } from "@/lib/chartCalculations";
+import { buildChartFromLegendData } from "@/lib/chartCalculations";
 import { SEGMENT_COLORS } from "@/lib/portfolioConfig";
 
 export type AssetBreakdown = {
@@ -129,108 +129,35 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
     return allocation;
   }, [assetBreakdown, data]);
 
-  const realizedPnl = useMemo(() => {
-    if (!data) return 0;
-    return data.account_pnl - data.total_upnl;
-  }, [data]);
-
   const summaryItems = useMemo<SummaryItem[]>(() => {
     if (!data) return [];
 
-    const inferredOriginalAmount =
-      data.account_pnl_percent !== 0 ? data.account_pnl / (data.account_pnl_percent / 100) : null;
-
-    const unrealizedPercentValue =
-      inferredOriginalAmount && inferredOriginalAmount !== 0 ? (data.total_upnl / inferredOriginalAmount) * 100 : null;
-
-    const realizedPercentValue =
-      inferredOriginalAmount && inferredOriginalAmount !== 0 ? (realizedPnl / inferredOriginalAmount) * 100 : null;
-
     return [
-      { label: "Total Theta", display: applyMask(`${formatMoney(data.total_theta)}`) },
-      { label: "Utilization", display: formatPercent(data.utilization * 100) },
-      {
-        label: "uPnL",
-        display: applyMask(`$${formatMoney(data.total_upnl)}`),
-        isUpnl: true as const,
-        numericValue: data.total_upnl,
-        percentDisplay: typeof unrealizedPercentValue === "number" ? formatPercent(unrealizedPercentValue) : undefined,
-        percentValue: unrealizedPercentValue ?? undefined,
-      },
-      {
-        label: "rPnL",
-        display: applyMask(`$${formatMoney(realizedPnl)}`),
-        isUpnl: true as const,
-        numericValue: realizedPnl,
-        percentDisplay: typeof realizedPercentValue === "number" ? formatPercent(realizedPercentValue) : undefined,
-        percentValue: realizedPercentValue ?? undefined,
-      },
       {
         label: "Account PnL",
-        display: applyMask(`$${formatMoney(data.account_pnl)}`),
+        display: applyMask(formatMoney(data.account_pnl)),
         isUpnl: true as const,
         numericValue: data.account_pnl,
         percentDisplay: formatPercent(data.account_pnl_percent),
         percentValue: data.account_pnl_percent,
       },
+      { label: "Total Theta", display: applyMask(`${formatMoney(data.total_theta)}`) },
+      { label: "Utilization", display: formatPercent(data.utilization * 100) },
     ];
-  }, [data, applyMask, realizedPnl]);
+  }, [data, applyMask]);
 
   const marketValueChart = useMemo(() => {
     if (!data || assetAllocation.length === 0) {
       return { segments: [], circumference: 0, total: 0, separators: [] };
     }
-    return buildChartFromLegendData(assetAllocation, assetBreakdown, "market");
+    return buildChartFromLegendData(assetAllocation, assetBreakdown);
   }, [data, assetAllocation, assetBreakdown]);
-
-  const positionGroups = useMemo<PositionGroup[]>(() => {
-    if (!data) return [];
-    const groups = new Map<
-      string,
-      { key: string; label: string; color: string; cost: number; marketValue: number; unrealizedPnL: number; isCash?: boolean }
-    >();
-
-    for (const position of data.positions) {
-      const key = position.underlyingKey ?? position.symbol;
-      const isCash = key.toLowerCase().includes("cash");
-      const entry = groups.get(key) ?? {
-        key,
-        label: key,
-        color: isCash ? SEGMENT_COLORS.cash : SEGMENT_COLORS.stock,
-        cost: 0,
-        marketValue: 0,
-        unrealizedPnL: 0,
-        isCash,
-      };
-
-      entry.cost += position.cost * position.qty;
-      entry.marketValue += position.price * position.qty;
-      entry.unrealizedPnL += position.upnl;
-      groups.set(key, entry);
-    }
-
-    return Array.from(groups.values()).filter((group) => group.cost !== 0 || group.marketValue !== 0);
-  }, [data]);
-
-  const positionsChart = useMemo(() => buildPositionChartData(positionGroups), [positionGroups]);
-
-  const positionsLegend = useMemo(
-    () =>
-      positionGroups.map((group) => ({
-        key: group.key,
-        label: group.label,
-        color: group.isCash ? SEGMENT_COLORS.cash : SEGMENT_COLORS.stock,
-      })),
-    [positionGroups]
-  );
 
   return {
     assetBreakdown,
     summaryItems,
     assetAllocation,
     marketValueChart,
-    positionsChart,
-    positionsLegend,
   };
 };
 

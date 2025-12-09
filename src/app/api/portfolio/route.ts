@@ -310,6 +310,9 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
     circumference,
     account_pnl: accountPnl,
     account_pnl_percent: accountPnlPercent,
+    usd_sgd_rate: usdSgdRate,
+    original_amount_sgd: originalAmountSgd,
+    original_amount_usd: originalAmountUsd,
   };
 }
 

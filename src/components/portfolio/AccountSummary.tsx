@@ -15,6 +15,10 @@ interface AccountSummaryProps {
   assetAllocation: AssetAllocation[];
   assetBreakdown: AssetBreakdown;
   applyMask: (value: string) => string;
+  originalAmountSgd: number;
+  originalAmountUsd: number;
+  currentBalanceUsd: number;
+  currentBalanceSgd: number;
 }
 
 export function AccountSummary({
@@ -23,10 +27,21 @@ export function AccountSummary({
   assetAllocation,
   assetBreakdown,
   applyMask,
+  originalAmountSgd,
+  originalAmountUsd,
+  currentBalanceUsd,
+  currentBalanceSgd,
 }: AccountSummaryProps) {
   return (
     <section className={styles.chartContainer}>
-      <SummaryTable items={summaryItems} />
+      <SummaryTable 
+        items={summaryItems} 
+        originalAmountSgd={originalAmountSgd}
+        originalAmountUsd={originalAmountUsd}
+        currentBalanceUsd={currentBalanceUsd}
+        currentBalanceSgd={currentBalanceSgd}
+        applyMask={applyMask}
+      />
       <div className={styles.chartSection}>
         <PortfolioChart 
           segments={marketValueChart.segments} 

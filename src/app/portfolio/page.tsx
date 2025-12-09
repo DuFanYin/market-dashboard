@@ -102,34 +102,36 @@ export default function PortfolioPage() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        <PortfolioHeader
-          isIncognito={isIncognito}
-          onToggleIncognito={() => setIsIncognito(!isIncognito)}
-          onRefresh={handleRefresh}
-          isLoading={isLoading}
-        />
-        {error && (
-          <div style={{ padding: "8px", marginBottom: "8px", backgroundColor: "#fee", color: "#c00", borderRadius: "4px", fontSize: "14px" }}>
-            Error refreshing: {error}
-          </div>
-        )}
+        <div>
+          <PortfolioHeader
+            isIncognito={isIncognito}
+            onToggleIncognito={() => setIsIncognito(!isIncognito)}
+            onRefresh={handleRefresh}
+            isLoading={isLoading}
+          />
+          {error && (
+            <div style={{ padding: "8px", marginBottom: "8px", backgroundColor: "#fee", color: "#c00", borderRadius: "4px", fontSize: "14px" }}>
+              Error refreshing: {error}
+            </div>
+          )}
+        </div>
 
-        <h2 className={styles.positionsTitle}>Account Summary</h2>
-        <AccountSummary
-          summaryItems={summaryItems}
-          marketValueChart={marketValueChart}
-          assetAllocation={assetAllocation}
-          assetBreakdown={assetBreakdown}
-          applyMask={applyMask}
-        />
+        <div className={styles.summarySection}>
+          <AccountSummary
+            summaryItems={summaryItems}
+            marketValueChart={marketValueChart}
+            assetAllocation={assetAllocation}
+            assetBreakdown={assetBreakdown}
+            applyMask={applyMask}
+            originalAmountSgd={data.original_amount_sgd}
+            originalAmountUsd={data.original_amount_usd}
+            currentBalanceUsd={data.net_liquidation}
+            currentBalanceSgd={data.net_liquidation * data.usd_sgd_rate}
+          />
+        </div>
 
         <div className={styles.positionsSection}>
-          <h2 className={styles.positionsTitle}>Positions</h2>
-          <div className={styles.positionsContent}>
-            <div className={styles.positionsTableContainer}>
-              <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
-            </div>
-          </div>
+          <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
         </div>
       </div>
     </main>
