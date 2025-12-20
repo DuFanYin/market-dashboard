@@ -5,8 +5,8 @@
   min-height: 100vh;
   height: 100vh;
   padding: 16px;
-  color: #1a1a1a;
-  background-color: #f8f9fb;
+  color: #ffffff;
+  background-color: #000000;
   overflow: hidden;
 }
 
@@ -19,7 +19,11 @@
   margin: 0 auto;
   box-sizing: border-box;
   overflow: hidden;
-  gap: 30px;
+  gap: 15px;
+}
+
+.container > div:first-child {
+  margin-bottom: 0;
 }
 
 .summarySection {
@@ -36,11 +40,372 @@
   min-height: 0;
 }
 
+
+/* =========================================================================
+ * Portfolio Header
+ * ========================================================================= */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+.headerTop {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  position: relative;
+}
+
+
+.lastRefreshTime {
+  font-size: 12px;
+  color: #888888;
+  text-align: center;
+  padding: 0 4px;
+  margin: 0;
+  margin-top: 6px;
+  transition: outline 0.2s;
+  border-radius: 2px;
+}
+
+.lastRefreshTime:hover {
+  outline: 1px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: text-decoration 0.2s;
+  margin-top: 20px;
+  grid-column: 2;
+  justify-self: center;
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================================
+ * Market Status Banner
+ * ========================================================================= */
+.marketBanner {
+  padding: 12px;
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+  margin-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .marketBanner {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+.bannerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bannerCenter {
+  text-align: center;
+  font-size: 14px;
+}
+
+.bannerLabel {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .bannerLabel {
+    display: inline;
+  }
+}
+
+.bannerTime {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #888888;
+}
+
+.bannerOpen {
+  color: #2e7d32;
+}
+
+.bannerClosed {
+  color: #c62828;
+}
+
+.statusOpen {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.statusClosed {
+  color: #c62828;
+  font-weight: 600;
+}
+
+/* =========================================================================
+ * Download Button
+ * ========================================================================= */
+.downloadButton {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin-top: 20px;
+  grid-column: 3;
+  justify-self: end;
+}
+
+.downloadButton:hover {
+  border-color: #ffffff;
+}
+
+/* =========================================================================
+ * Modal
+ * ========================================================================= */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background-color: #000000;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #333333;
+}
+
+.modalHeader h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.modalCloseButton:hover {
+  background-color: #333333;
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.modalText {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #ffffff;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #333333;
+}
+
+.modalCancelButton {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #333333;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.modalCancelButton:hover {
+  background-color: #444444;
+  border-color: #666666;
+}
+
+.copySuccessButton {
+  background-color: #2e7d32 !important;
+  border-color: #2e7d32 !important;
+  color: #ffffff !important;
+}
+
+.copySuccessButton:hover {
+  background-color: #2e7d32 !important;
+  border-color: #2e7d32 !important;
+}
+
+
+
+/* =========================================================================
+ * Account Summary Table
+ * ========================================================================= */
+.summaryStack {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 25%;
+  min-width: 0;
+  max-width: 25%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  position: relative;
+  border: 1px solid transparent;
+  transition: border-color 0.2s;
+  z-index: 1;
+  align-self: stretch;
+}
+
+.summaryStack:hover {
+  border-color: #ffffff !important;
+  z-index: 2;
+}
+
+.summaryTable {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background-color: #000000;
+  border: 1px solid #333333;
+  border-radius: 6px;
+  box-shadow: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: table;
+}
+
+.summaryRow {
+  border-bottom: 1px solid #333333;
+}
+
+.summaryRow:last-child {
+  border-bottom: none;
+}
+
+.summaryLabel {
+  padding: 4px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summaryValue {
+  padding: 4px 14px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffffff;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summaryValue.positive {
+  color: #2e7d32;
+}
+
+.summaryValue.negative {
+  color: #c62828;
+}
+
+.summaryPercent {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffffff;
+  text-align: right;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.summaryPercent.positive {
+  color: #2e7d32;
+}
+
+.summaryPercent.negative {
+  color: #c62828;
+}
+
+/* =========================================================================
+ * Chart + Legend Container
+ * ========================================================================= */
 .chartContainer {
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: stretch;
+  justify-content: flex-start;
   width: 100%;
   max-width: 100%;
   margin-top: 0;
@@ -50,141 +415,52 @@
   overflow: hidden;
 }
 
-/* =========================================================================
- * Portfolio Header
- * ========================================================================= */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.refreshButton {
-  padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  background-color: #e9ecef;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.refreshButton:hover {
-  background-color: #dee2e6;
-}
-
-/* =========================================================================
- * Account Summary Table
- * ========================================================================= */
-.summaryStack {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 20%;
-  min-width: 0;
-  box-sizing: border-box;
-  flex-shrink: 0;
-}
-
-.summaryTable {
-  width: 100%;
-  height: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  overflow: hidden;
-}
-
-.summaryRow {
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.summaryRow:last-child {
-  border-bottom: none;
-}
-
-.summaryLabel {
-  padding: 8px 14px;
-  font-size: 12px;
-  color: #666;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.summaryValue {
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #111;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.summaryPercent {
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #444;
-  text-align: right;
-  white-space: nowrap;
-  min-width: 60px;
-}
-
-/* =========================================================================
- * Chart + Legend Container
- * ========================================================================= */
-.chartContainer {
-  display: flex;
-  align-items: stretch;
-  width: 100%;
-  max-width: 100%;
-  margin-top: 12px;
-  gap: 0;
-  flex-wrap: nowrap;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Layout ratio: Summary 20% | Chart 20% | Legend 60% */
+/* Layout ratio: Summary 25% | Chart 25% | Legend 50% */
 .chartSection {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 20%;
+  flex: 0 0 25%;
   min-width: 0;
+  max-width: 25%;
   box-sizing: border-box;
   flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
 
 .chartWrapper {
   position: relative;
-  width: 200px;
+  width: 100%;
+  max-width: 200px;
   height: 200px;
-  flex-shrink: 0;
+  max-height: 200px;
+  flex-shrink: 1;
+  margin: 0;
+  display: block;
+  box-sizing: border-box;
+}
+
+.chartWrapper svg {
+  width: 100%;
+  height: 100%;
+  max-width: 200px;
+  max-height: 200px;
 }
 
 .legendSection {
   display: flex;
   flex-direction: column;
-  flex: 0 0 60%;
+  flex: 0 0 50%;
   min-width: 0;
+  max-width: 50%;
   box-sizing: border-box;
   flex-shrink: 1;
   align-self: stretch;
   overflow: hidden;
+  padding: 0;
+  margin: 0;
 }
 
 .legendTableWrapper {
@@ -203,9 +479,9 @@
   border-collapse: collapse;
   table-layout: auto;
   font-size: 11px;
-  background-color: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
+  background-color: #000000;
+  border: none;
+  border-radius: 0;
   box-sizing: border-box;
   display: table;
 }
@@ -213,7 +489,7 @@
 .chartLegend th,
 .chartLegend td {
   padding: 8px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #333333;
   text-align: right;
   vertical-align: middle;
   white-space: nowrap;
@@ -222,34 +498,21 @@
   min-width: 0;
 }
 
+.chartLegend td.legendAmount,
+.chartLegend td.legendPercent {
+  padding-right: 20px;
+}
+
 .chartLegend th {
   padding: 10px 12px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #ffffff;
-  background-color: #a3a3a3 !important;
+  color: #ffffff !important;
+  background-color: transparent !important;
+  border-bottom: 1px solid #333333 !important;
   text-align: center;
 }
 
-/* Alternating column colors: first two white, then grey/white from third column */
-.chartLegend td:nth-child(1),
-.chartLegend td:nth-child(2) {
-  background-color: #ffffff;
-}
-
-.chartLegend td:nth-child(3),
-.chartLegend td:nth-child(5),
-.chartLegend td:nth-child(7),
-.chartLegend td:nth-child(9) {
-  background-color: #e0e0e0;
-}
-
-.chartLegend td:nth-child(4),
-.chartLegend td:nth-child(6),
-.chartLegend td:nth-child(8) {
-  background-color: #ffffff;
-}
 
 .chartLegend th:first-child,
 .chartLegend td:first-child,
@@ -259,7 +522,11 @@
 }
 
 .legendRow td {
-  border: none;
+  border-bottom: 1px solid #333333;
+}
+
+.legendRow:last-child td {
+  border-bottom: none;
 }
 
 .legendColorCell {
@@ -280,29 +547,26 @@
 
 .legendLabel {
   padding-left: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: #555;
+  color: #ffffff;
 }
 
 .legendPercent {
   padding-right: 8px;
-  font-size: 12px;
-  color: #444;
+  font-size: 11px;
+  color: #ffffff;
   text-align: right;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .legendAmount {
   padding-right: 8px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: #111;
+  color: #ffffff;
   text-align: right;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  letter-spacing: 0.01em;
 }
 
 .chartLegend td:nth-child(5) {
@@ -312,6 +576,10 @@
 .legendAmount.center,
 .legendPercent.center {
   padding-right: 0;
+  text-align: center;
+}
+
+.center {
   text-align: center;
 }
 
@@ -333,39 +601,15 @@
   flex: 1;
   min-height: 0;
   margin-top: 0;
-  background-color: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
+  background-color: #000000;
+  border: none;
+  border-radius: 0;
   overflow: auto;
   scrollbar-gutter: stable both-edges;
   display: flex;
   flex-direction: column;
 }
 
-.positionsTitle {
-  margin-top: 24px;
-  margin-bottom: 12px;
-  padding-bottom: 4px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #dcdcdc;
-}
-
-.positionsContent {
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
-  min-height: 0;
-}
-
-.positionsTableContainer {
-  display: flex;
-  flex-direction: column;
-  flex: 2;
-  min-width: 0;
-  min-height: 0;
-}
 
 
 .positionsTable {
@@ -391,37 +635,38 @@
 .positionsTable th,
 .positionsTable td {
   padding: 6px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #333333;
   white-space: nowrap;
   text-align: right;
   position: relative;
   font-size: 13px;
+  color: #ffffff;
 }
 
-.positionsTable td:not(:first-child):not(.centerDash) {
+.positionsTable td.positive {
+  color: #2e7d32 !important;
+}
+
+.positionsTable td.negative {
+  color: #c62828 !important;
+}
+
+.positionsTable td:not(:first-child):not(.center) {
   padding-right: 25px;
 }
 
 .positionsTable th {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
-  background-color: #a3a3a3 !important;
-  border-bottom: 1px solid #737373 !important;
+  color: #ffffff !important;
+  background-color: #000000 !important;
+  border-bottom: 1px solid #333333 !important;
   text-align: center !important;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-/* Alternating column colors: white, grey, white, grey... */
-.positionsTable td:nth-child(odd) {
-  background-color: #ffffff;
-}
-
-.positionsTable td:nth-child(even) {
-  background-color: #e0e0e0;
-}
 
 .positionsTable th:first-child {
   text-align: center !important;
@@ -431,18 +676,19 @@
   text-align: left;
 }
 
-.positionsTable td.centerDash {
-  text-align: center !important;
-}
 
 .positionsTable td.maxValue {
-  outline: 2px solid #c62828;
-  outline-offset: -2px;
+  border: 2px solid #c62828;
+  margin: -2px;
+  position: relative;
+  z-index: 2;
 }
 
 .positionsTable td.minValue {
-  outline: 2px solid #2e7d32;
-  outline-offset: -2px;
+  border: 2px solid #2e7d32;
+  margin: -2px;
+  position: relative;
+  z-index: 1;
 }
 
 .positionsTable th:nth-child(2),
@@ -464,87 +710,23 @@
 }
 
 .positionsTable tbody tr:hover td {
-  box-shadow: inset 0 -3px 0 0 #000000, inset 0 3px 0 0 #000000;
-}
-
-.positionsTable tbody tr:hover td:first-child {
-  box-shadow: inset 0 -3px 0 0 #000000, inset 0 3px 0 0 #000000, inset 3px 0 0 0 #000000;
-}
-
-.positionsTable tbody tr:hover td:last-child {
-  box-shadow: inset 0 -3px 0 0 #000000, inset 0 3px 0 0 #000000, inset -3px 0 0 0 #000000;
+  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00;
 }
 
 .positionsTable tbody tr:hover td.maxValue {
-  outline: 2px solid #c62828 !important;
-  outline-offset: -2px;
+  border: 2px solid #c62828 !important;
+  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00 !important;
+  margin: -2px;
+  z-index: 2;
 }
 
 .positionsTable tbody tr:hover td.minValue {
-  outline: 2px solid #2e7d32 !important;
-  outline-offset: -2px;
+  border: 2px solid #2e7d32 !important;
+  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00 !important;
+  margin: -2px;
+  z-index: 1;
 }
 
-/* =========================================================================
- * Legacy Positions Chart (still referenced in styles)
- * ========================================================================= */
-.positionsChartContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 32%;
-  min-width: 240px;
-  padding: 12px;
-  background-color: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-}
-
-.positionsChartTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-}
-
-.positionsChartWrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 180px;
-  height: 180px;
-}
-
-.positionsChartLegend {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.positionsChartLegend li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 11px;
-  color: #555;
-}
-
-.positionsChartLegendColor {
-  width: 10px;
-  height: 10px;
-  margin-right: 8px;
-  border-radius: 2px;
-  display: inline-block;
-}
-
-.positionsChartLegendLabel {
-  flex: 1;
-}
 
 /* =========================================================================
  * Utility States
@@ -557,62 +739,13 @@
   color: #c62828;
 }
 
-/* =========================================================================
- * Authentication Views
- * ========================================================================= */
-.authCard {
-  max-width: 360px;
-  margin: 80px auto;
-  padding: 24px;
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.authTitle {
-  font-size: 20px;
-  font-weight: 600;
-  text-align: center;
-  color: #222;
-}
-
-.authInput {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d0d5dd;
-  border-radius: 6px;
+.errorMessage {
+  padding: 8px;
+  margin-bottom: 8px;
+  background-color: #3a1a1a;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  border-radius: 4px;
   font-size: 14px;
-}
-
-.authButton {
-  padding: 10px 12px;
-  border: none;
-  border-radius: 6px;
-  background-color: #111;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.authButton:hover {
-  opacity: 0.85;
-}
-
-.authError {
-  font-size: 13px;
-  color: #c62828;
-  text-align: center;
-}
-
-.authHint {
-  font-size: 12px;
-  color: #667085;
-  text-align: center;
 }
 

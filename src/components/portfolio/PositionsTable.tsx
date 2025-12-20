@@ -8,9 +8,10 @@ interface PositionsTableProps {
   positions: Position[];
   netLiquidation: number;
   applyMask: (value: string) => string;
+  isIncognito: boolean;
 }
 
-export function PositionsTable({ positions, netLiquidation, applyMask }: PositionsTableProps) {
+export function PositionsTable({ positions, netLiquidation, applyMask, isIncognito }: PositionsTableProps) {
   const { orderedPositions, maxUpnl, minUpnl, maxChangePercent, minChangePercent, maxMarketValue, minMarketValue } = useMemo(() => {
     const groupOrder: string[] = [];
     const groups = new Map<
@@ -60,7 +61,7 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
       <table className={styles.positionsTable}>
         <thead>
           <tr>
-            <th>Symbol</th>
+            <th></th>
             <th>Quantity</th>
             <th>Price</th>
             <th>Avg. Cost</th>
@@ -96,23 +97,23 @@ export function PositionsTable({ positions, netLiquidation, applyMask }: Positio
                 <td>{isPlaceholder ? "" : applyMask(formatMoney(pos.cost))}</td>
                 <td>{isPlaceholder ? "" : applyMask(formatMoney(pos.cost * pos.qty))}</td>
                 <td className={`${
-                  !isPlaceholder && maxMarketValue !== null && pos.price * pos.qty === maxMarketValue ? styles.maxValue : ""
+                  !isIncognito && !isPlaceholder && maxMarketValue !== null && pos.price * pos.qty === maxMarketValue ? styles.maxValue : ""
                 } ${
-                  !isPlaceholder && minMarketValue !== null && pos.price * pos.qty === minMarketValue ? styles.minValue : ""
+                  !isIncognito && !isPlaceholder && minMarketValue !== null && pos.price * pos.qty === minMarketValue ? styles.minValue : ""
                 }`}>
                   {isPlaceholder ? "" : applyMask(formatMoney(pos.price * pos.qty))}
                 </td>
                 <td className={`${pos.upnl >= 0 ? styles.positive : styles.negative} ${
-                  !isPlaceholder && maxUpnl !== null && pos.upnl === maxUpnl ? styles.maxValue : ""
+                  !isIncognito && !isPlaceholder && maxUpnl !== null && pos.upnl === maxUpnl ? styles.maxValue : ""
                 } ${
-                  !isPlaceholder && minUpnl !== null && pos.upnl === minUpnl ? styles.minValue : ""
+                  !isIncognito && !isPlaceholder && minUpnl !== null && pos.upnl === minUpnl ? styles.minValue : ""
                 }`}>
                   {isPlaceholder ? "" : applyMask(formatMoney(pos.upnl))}
                 </td>
                 <td className={`${pos.percent_change >= 0 ? styles.positive : styles.negative} ${
-                  !isPlaceholder && maxChangePercent !== null && pos.percent_change === maxChangePercent ? styles.maxValue : ""
+                  !isIncognito && !isPlaceholder && maxChangePercent !== null && pos.percent_change === maxChangePercent ? styles.maxValue : ""
                 } ${
-                  !isPlaceholder && minChangePercent !== null && pos.percent_change === minChangePercent ? styles.minValue : ""
+                  !isIncognito && !isPlaceholder && minChangePercent !== null && pos.percent_change === minChangePercent ? styles.minValue : ""
                 }`}>
                   {isPlaceholder ? "" : `${formatNumber(pos.percent_change)}%`}
                 </td>

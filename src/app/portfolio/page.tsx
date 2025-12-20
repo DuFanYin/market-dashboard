@@ -4,9 +4,11 @@ import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { PortfolioData } from "@/types/portfolio";
 import { usePortfolioCalculations } from "@/hooks/usePortfolioCalculations";
+import { useMarketData } from "@/hooks/useMarketData";
 import { PortfolioHeader } from "@/components/portfolio/PortfolioHeader";
 import { AccountSummary } from "@/components/portfolio/AccountSummary";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
+import { DataDownloadModal } from "@/components/portfolio/DataDownloadModal";
 import styles from "./page.module.css";
 
 export default function PortfolioPage() {
@@ -16,6 +18,43 @@ export default function PortfolioPage() {
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isIncognito, setIsIncognito] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const [timeAgo, setTimeAgo] = useState<string>("");
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSeconds < 60) {
+      return `${diffSeconds} second${diffSeconds !== 1 ? "s" : ""} ago`;
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+    } else {
+      return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+    }
+  };
+
+  useEffect(() => {
+    if (!lastRefreshTime) return;
+
+    // Update immediately
+    setTimeAgo(formatTimeAgo(lastRefreshTime));
+
+    // Update every second
+    const interval = setInterval(() => {
+      setTimeAgo(formatTimeAgo(lastRefreshTime));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastRefreshTime]);
+  const { isUsMarketOpen, nyTimeLabel } = useMarketData();
 
   const fetchPortfolio = useCallback(
     async (isRefresh = false) => {
@@ -39,6 +78,7 @@ export default function PortfolioPage() {
 
       const payload = (await response.json()) as PortfolioData;
       setData(payload);
+      setLastRefreshTime(new Date());
       setIsInitialLoad(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred.");
@@ -104,16 +144,35 @@ export default function PortfolioPage() {
       <div className={styles.container}>
         <div>
           <PortfolioHeader
-            isIncognito={isIncognito}
-            onToggleIncognito={() => setIsIncognito(!isIncognito)}
-            onRefresh={handleRefresh}
             isLoading={isLoading}
+            onDownloadClick={() => setIsDownloadModalOpen(true)}
           />
           {error && (
-            <div style={{ padding: "8px", marginBottom: "8px", backgroundColor: "#fee", color: "#c00", borderRadius: "4px", fontSize: "14px" }}>
+            <div className={styles.errorMessage}>
               Error refreshing: {error}
             </div>
           )}
+          {/* Market banner with refresh time */}
+          <div className={`${styles.marketBanner} ${isUsMarketOpen ? styles.bannerOpen : styles.bannerClosed}`}>
+            <div className={styles.bannerContent}>
+              <div className={styles.bannerCenter}>
+                <span className={styles.bannerLabel}>US Stock Market: </span>
+                <span className={isUsMarketOpen ? styles.statusOpen : styles.statusClosed}>
+                  {isUsMarketOpen ? "OPEN" : "CLOSED"}
+                </span>
+                <span className={styles.bannerTime}>(NY {nyTimeLabel} ET)</span>
+              </div>
+              {lastRefreshTime && timeAgo && (
+                <div 
+                  className={styles.lastRefreshTime}
+                  onClick={handleRefresh}
+                  style={{ cursor: isLoading ? 'wait' : 'pointer' }}
+                >
+                  Last refreshed: {isLoading ? 'Refreshing...' : timeAgo}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className={styles.summarySection}>
@@ -127,13 +186,28 @@ export default function PortfolioPage() {
             originalAmountUsd={data.original_amount_usd}
             currentBalanceUsd={data.net_liquidation}
             currentBalanceSgd={data.net_liquidation * data.usd_sgd_rate}
+            isDarkMode={true}
+            onToggleIncognito={() => setIsIncognito(!isIncognito)}
           />
         </div>
 
         <div className={styles.positionsSection}>
-          <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} />
+          <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} isIncognito={isIncognito} />
         </div>
       </div>
+      <DataDownloadModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        data={data}
+        assetBreakdown={assetBreakdown}
+        assetAllocation={assetAllocation}
+        summaryItems={summaryItems}
+        originalAmountUsd={data.original_amount_usd}
+        currentBalanceUsd={data.net_liquidation}
+        isUsMarketOpen={isUsMarketOpen}
+        nyTimeLabel={nyTimeLabel}
+        lastRefreshTime={lastRefreshTime}
+      />
     </main>
   );
 }

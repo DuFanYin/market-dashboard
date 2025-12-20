@@ -41,12 +41,12 @@ interface FearGreedPanelProps {
 
 export function FearGreedPanel({ fg }: FearGreedPanelProps) {
   return (
-    <section className="bg-white border border-gray-200 rounded-lg p-1.5 sm:p-4 lg:p-6 shadow-sm space-y-2 sm:space-y-6 order-1 sm:order-2">
+    <section className="bg-black rounded-lg p-1.5 sm:p-4 lg:p-6 shadow-sm space-y-2 sm:space-y-6 order-1 sm:order-2">
       {/* Summary block */}
       <div className="space-y-0 sm:space-y-4">
         {/* Score and rating */}
         <div className="flex items-center justify-center gap-2 sm:gap-3">
-          <p className="text-lg sm:text-lg font-bold text-gray-900 tabular-nums">
+          <p className="text-lg sm:text-lg font-bold text-white tabular-nums">
             {fmt2(fg.summary?.score ?? 0)}
           </p>
 
@@ -56,7 +56,7 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
         </div>
 
         {/* Gradient bar with pointer and vertical separators */}
-        <div className="relative w-full h-5 sm:h-6 rounded-md overflow-hidden border border-gray-400">
+        <div className="relative w-full h-5 sm:h-6 rounded-md overflow-hidden border border-gray-600">
           <div className={`absolute inset-0 ${styles.fgGradient}`} />
           <div className={`${styles.separator} ${styles.sep25}`} />
           <div className={`${styles.separator} ${styles.sep45}`} />
@@ -73,8 +73,8 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
             { label: "1 Week Ago", value: fg.summary?.w1 },
             { label: "1 Year Ago", value: fg.summary?.y1 },
           ].map(({ label, value }) => (
-            <div key={label} className="flex justify-between items-center border-b pb-1">
-              <span className="text-gray-600">{label}</span>
+            <div key={label} className="flex justify-between items-center border-b border-gray-700 pb-1">
+              <span className="text-gray-400">{label}</span>
               <span className={`tabular-nums px-2 py-0.5 text-xs font-medium ${styles.noWrap} ${getFgClass(value)}`}>
                 {fmt2(value ?? 0)}
               </span>
@@ -93,7 +93,7 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
             <col className={styles.colRating} />
           </colgroup>
           <thead>
-            <tr className="text-gray-500">
+            <tr className="text-gray-400">
               <th className="text-left py-0.5 sm:py-1 px-0.5 sm:px-1 text-[10px] sm:text-xs">Components</th>
               <th className="text-right py-0.5 sm:py-1 px-0.5 sm:px-1 text-[10px] sm:text-xs">Score</th>
               <th className="text-right py-0.5 sm:py-1 px-0.5 sm:px-1 text-[10px] sm:text-xs">Value</th>
@@ -104,10 +104,10 @@ export function FearGreedPanel({ fg }: FearGreedPanelProps) {
             {INDICATORS.map((key) => {
               const v = (fg.details ?? {})[key] ?? null;
               return (
-                <tr key={key} className="border-t dark:border-gray-700">
-                  <td className="py-1 sm:py-2 text-gray-700 px-0.5 sm:px-1 text-[10px] sm:text-xs">{key}</td>
-                  <td className="text-right tabular-nums text-gray-900 font-medium px-0.5 sm:px-1">{fmt2(v?.score ?? 0)}</td>
-                  <td className={`text-right tabular-nums text-gray-500 px-0.5 sm:px-1 ${styles.noWrap}`}>{fmt2(v?.value ?? 0)}</td>
+                <tr key={key} className="border-t border-gray-700">
+                  <td className="py-1 sm:py-2 text-white px-0.5 sm:px-1 text-[10px] sm:text-xs">{key}</td>
+                  <td className="text-right tabular-nums text-white font-medium px-0.5 sm:px-1">{fmt2(v?.score ?? 0)}</td>
+                  <td className={`text-right tabular-nums text-gray-400 px-0.5 sm:px-1 ${styles.noWrap}`}>{fmt2(v?.value ?? 0)}</td>
                   <td className={`text-right text-[9px] sm:text-xs px-0.5 sm:px-1 ${styles.noWrap}`}>
                     <span className={`px-1 sm:px-2 py-0.5 rounded-md font-medium ${styles.noWrap} ${getFgClass(v?.score)}`}>
                       {v?.rating ?? "undefined"}

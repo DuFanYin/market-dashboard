@@ -1,12 +1,13 @@
 "use client";
-import Link from "next/link";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { useMarketData } from "@/hooks/useMarketData";
 import { MarketsTable } from "@/components/dashboard/MarketsTable";
 import { FearGreedPanel } from "@/components/dashboard/FearGreedPanel";
 
 export default function Page() {
+  const router = useRouter();
   const { data, isUsMarketOpen, nyTimeLabel, next5In, handleRefresh } = useMarketData();
 
   // Derived data for rendering
@@ -45,43 +46,41 @@ export default function Page() {
   }, [data]);
 
   return (
-    <main className={`${styles.page} min-h-screen bg-gray-100 px-2 sm:px-4 py-2 sm:py-6`}>
-      <div className="mx-auto max-w-7xl space-y-2 sm:space-y-6">
+    <main className={`${styles.page} min-h-screen px-2 sm:px-4 py-2 sm:py-6`}>
+      <div className={`mx-auto max-w-7xl ${styles.uniformGap}`}>
 
         {/* Header */}
-        <header className="flex flex-col items-center justify-center gap-3 text-center">
+        <header className="flex flex-col items-center justify-center text-center" style={{ marginTop: "20px" }}>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Market Dashboard</h1>
-            <p className="text-xs sm:text-sm text-gray-500">Macro · Crypto · Sentiment</p>
+            <h1 
+              className="text-2xl sm:text-3xl font-bold tracking-tight text-white cursor-pointer hover:underline transition"
+              onClick={() => router.push("/portfolio")}
+            >
+              Market Dashboard
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-400">Macro · Crypto · Sentiment</p>
           </div>
-          <Link
-            href="/portfolio"
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-white/60 transition"
-          >
-            Switch to Portfolio
-          </Link>
+          <div className="flex items-center gap-1 sm:gap-2" style={{ marginTop: "20px" }}>
+            <div className="text-[10px] sm:text-xs text-gray-400">{next5In}s</div>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="text-[10px] sm:text-xs border border-white rounded px-1.5 sm:px-2 py-0.5 sm:py-1 hover:bg-gray-800 text-white"
+            >
+              Refresh
+            </button>
+          </div>
         </header>
 
         {/* US Stock Market status banner */}
-        <div className={`rounded-md border p-1.5 sm:p-3 text-xs sm:text-sm ${isUsMarketOpen ? styles.bannerOpen : styles.bannerClosed}`}>
-          <div className="flex items-center">
-            <div className="hidden sm:block text-lg text-transparent select-none">{next5In}s</div>
-            <div className="flex-1 text-center text-md sm:text-sm">
+        <div className={`p-1.5 sm:p-3 text-xs sm:text-sm ${isUsMarketOpen ? styles.bannerOpen : styles.bannerClosed}`}>
+          <div className="flex items-center justify-center">
+            <div className="text-center text-md sm:text-sm">
               <span className="hidden sm:inline">US Stock Market: </span>
               <span className={isUsMarketOpen ? styles.statusOpen : styles.statusClosed}>
                 {isUsMarketOpen ? "OPEN" : "CLOSED"}
               </span>
-              <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs text-gray-600">(NY {nyTimeLabel} ET)</span>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <div className="text-[10px] sm:text-xs text-gray-600">{next5In}s</div>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="text-[10px] sm:text-xs border border-gray-300 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 hover:bg-white/60"
-              >
-                Refresh
-              </button>
+              <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs text-gray-400">(NY {nyTimeLabel} ET)</span>
             </div>
           </div>
         </div>

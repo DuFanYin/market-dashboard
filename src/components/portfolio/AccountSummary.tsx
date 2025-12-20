@@ -19,6 +19,8 @@ interface AccountSummaryProps {
   originalAmountUsd: number;
   currentBalanceUsd: number;
   currentBalanceSgd: number;
+  isDarkMode: boolean;
+  onToggleIncognito: () => void;
 }
 
 export function AccountSummary({
@@ -31,6 +33,8 @@ export function AccountSummary({
   originalAmountUsd,
   currentBalanceUsd,
   currentBalanceSgd,
+  isDarkMode,
+  onToggleIncognito,
 }: AccountSummaryProps) {
   return (
     <section className={styles.chartContainer}>
@@ -41,11 +45,13 @@ export function AccountSummary({
         currentBalanceUsd={currentBalanceUsd}
         currentBalanceSgd={currentBalanceSgd}
         applyMask={applyMask}
+        onToggleIncognito={onToggleIncognito}
       />
       <div className={styles.chartSection}>
         <PortfolioChart 
           segments={marketValueChart.segments} 
-          circumference={marketValueChart.circumference} />
+          circumference={marketValueChart.circumference}
+          isDarkMode={isDarkMode} />
       </div>
       <LegendTable assetAllocation={assetAllocation} assetBreakdown={assetBreakdown} applyMask={applyMask} />
     </section>

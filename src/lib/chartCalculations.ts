@@ -54,14 +54,16 @@ export const buildChartFromLegendData = (
     return { segments: [], circumference, total: 0, separators: [] };
   }
 
-  const segmentsData = visibleAssets.map((asset) => ({
-    name: asset.key === "cash" ? "cash" : asset.key === "stock" ? "stock_cost" : "option_cost",
-    value: asset.marketValue,
-    color: asset.color,
-    percent: asset.valueAllocationPercent,
-  }));
-  const segments = buildSegmentsFromPercent(segmentsData, circumference);
-  return { segments, circumference, total, separators: calculateSeparators(segments) };
+    const segmentsData = visibleAssets.map((asset) => ({
+      name: asset.key === "cash" ? "cash" : asset.key === "stock" ? "stock_cost" : "option_cost",
+      value: asset.marketValue,
+      color: asset.color,
+      percent: asset.valueAllocationPercent,
+    }));
+    // Reverse segments for chart display only (legend table keeps original order)
+    const reversedSegmentsData = [...segmentsData].reverse();
+    const segments = buildSegmentsFromPercent(reversedSegmentsData, circumference);
+    return { segments, circumference, total, separators: calculateSeparators(segments) };
 };
 
 

@@ -1,6 +1,20 @@
-/* CNN Fear & Greed custom styles */
+/* =========================================================================
+ * Layout Shell
+ * ========================================================================= */
+.page {
+  color: #ffffff;
+  background-color: #000000;
+}
 
+.uniformGap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
+/* =========================================================================
+ * CNN Fear & Greed custom styles
+ * ========================================================================= */
 .fgChip {
   border-radius: 0.375rem; /* rounded-md */
   display: inline-flex;
@@ -14,13 +28,13 @@
 }
 
 .fgGreed {
-  background-color: #a5d6a7;
-  color: #1f2937; /* gray-800 */
+  background-color: #a3a3a3;
+  color: #ffffff;
 }
 
 .fgNeutral {
-  background-color: #ffffff;
-  color: #1f2937; /* gray-800 */
+  background-color: #737373;
+  color: #ffffff;
 }
 
 .fgFear {
@@ -68,54 +82,31 @@
   top: 0;
   height: 100%;
   width: 2px;
-  background: #000000;
+  background: #ffffff;
 }
 
 /* Market status banner */
 .bannerOpen {
-  background-color: rgb(220 252 231);
-  border-color: rgb(187 247 208);
-  color: rgb(22 101 52);
+  color: #2e7d32;
 }
 
 .bannerClosed {
-  background-color: rgb(243 244 246);
-  border-color: rgb(229 231 235);
-  color: rgb(31 41 55);
+  color: #c62828;
 }
 
 .statusOpen {
-  color: rgb(21 128 61);
+  color: #2e7d32;
   font-weight: 600;
 }
 
 .statusClosed {
-  color: rgb(185 28 28);
+  color: #c62828;
   font-weight: 600;
 }
 
-/* AHR999 zone colors */
-.ahrGreen { background-color: rgb(220 252 231); }
-.ahrYellow { background-color: rgb(254 249 195); }
-.ahrRed { background-color: rgb(254 226 226); }
-.ahrDefault { background-color: rgb(249 250 251); }
-
 /* Change indicator colors */
-.positive { color: rgb(22 163 74); }
-.negative { color: rgb(220 38 38); }
-
-/* Responsive utilities */
-@media (max-width: 640px) {
-  .mobileHide {
-    display: none;
-  }
-  
-  .mobileStack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
+.positive { color: #2e7d32; }
+.negative { color: #c62828; }
 
 /* Layout stabilization */
 .tableFixed { table-layout: fixed; }
@@ -132,13 +123,6 @@
 .colScore { width: 18%; }
 .colValue { width: 20%; }
 .colRating { width: 27%; }
-
-/* Chips with consistent width to avoid shifts */
-.chipCompact {
-  display: inline-block;
-  min-width: 56px;
-  text-align: center;
-}
 
 /* Prevent text wrapping for long values/labels */
 .noWrap { white-space: nowrap; }

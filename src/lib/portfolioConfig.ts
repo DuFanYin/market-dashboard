@@ -7,3 +7,9 @@ export const SEGMENT_COLORS = {
   option: "#737373",
 } as const;
 
+export const SEGMENT_COLORS_DARK = {
+  cash: "#ffffff",      // White
+  stock: "#d4d4d4",     // Light gray
+  option: "#a3a3a3",    // Medium gray
+} as const;
+
