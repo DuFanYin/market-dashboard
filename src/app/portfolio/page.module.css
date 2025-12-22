@@ -251,7 +251,7 @@
   width: 100%;
   height: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
   background-color: #000000;
   border: 1px solid #333333;
   border-radius: 6px;
@@ -271,7 +271,7 @@
 
 .summaryLabel {
   padding: 4px 14px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff;
   text-align: left;
@@ -282,7 +282,7 @@
 
 .summaryValue {
   padding: 4px 14px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #ffffff;
   text-align: right;
@@ -301,7 +301,7 @@
 
 .summaryPercent {
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #ffffff;
   text-align: right;
@@ -398,7 +398,7 @@
   height: 100%;
   border-collapse: collapse;
   table-layout: auto;
-  font-size: 11px;
+  font-size: 13px;
   background-color: #000000;
   border: none;
   border-radius: 0;
@@ -425,7 +425,7 @@
 
 .chartLegend th {
   padding: 10px 12px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff !important;
   background-color: transparent !important;
@@ -467,14 +467,14 @@
 
 .legendLabel {
   padding-left: 4px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #ffffff;
 }
 
 .legendPercent {
   padding-right: 8px;
-  font-size: 11px;
+  font-size: 13px;
   color: #ffffff;
   text-align: right;
   white-space: nowrap;
@@ -482,7 +482,7 @@
 
 .legendAmount {
   padding-right: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff;
   text-align: right;
@@ -520,7 +520,7 @@
 .tableWrapper {
   flex: 1;
   min-height: 0;
-  margin-top: 0;
+  margin-top: 20px;
   background-color: #000000;
   border: none;
   border-radius: 0;
@@ -539,28 +539,90 @@
   font-size: 13px;
 }
 
-/* Symbol column - fixed width */
-.positionsTable th:first-child,
-.positionsTable td:first-child {
-  width: 200px;
+/* Complete column width redesign - using percentages only */
+/* Column 1: Index - 3% */
+.positionsTable thead th:nth-child(1),
+.positionsTable th:nth-child(1),
+.positionsTable td:nth-child(1) {
+  width: 3%;
+  padding-right: 10px;
 }
 
-/* All columns from Qty onwards - equal width */
-.positionsTable th:nth-child(n+2),
-.positionsTable td:nth-child(n+2) {
-  width: calc((100% - 100px) / 12);
-  min-width: 0;
+/* Column 2: Symbol - 15% */
+.positionsTable thead th:nth-child(2),
+.positionsTable th:nth-child(2),
+.positionsTable td:nth-child(2) {
+  width: 15%;
+}
+
+/* Column 3: Quantity - 4% */
+.positionsTable thead th:nth-child(3),
+.positionsTable th:nth-child(3),
+.positionsTable td:nth-child(3) {
+  width: 4%;
+}
+
+/* Columns 4-10: Price, Avg Cost, Total Cost, Market, UPnL, Change %, Pos % - 7% each */
+.positionsTable thead th:nth-child(4),
+.positionsTable thead th:nth-child(5),
+.positionsTable thead th:nth-child(6),
+.positionsTable thead th:nth-child(7),
+.positionsTable thead th:nth-child(8),
+.positionsTable thead th:nth-child(9),
+.positionsTable thead th:nth-child(10),
+.positionsTable th:nth-child(4),
+.positionsTable td:nth-child(4),
+.positionsTable th:nth-child(5),
+.positionsTable td:nth-child(5),
+.positionsTable th:nth-child(6),
+.positionsTable td:nth-child(6),
+.positionsTable th:nth-child(7),
+.positionsTable td:nth-child(7),
+.positionsTable th:nth-child(8),
+.positionsTable td:nth-child(8),
+.positionsTable th:nth-child(9),
+.positionsTable td:nth-child(9),
+.positionsTable th:nth-child(10),
+.positionsTable td:nth-child(10) {
+  width: 7%;
+}
+
+/* Columns 11-16: Delta, Gamma, Theta, DTE, Strike, Spot - 4.833% each (6 columns × 4.833% = 29%) */
+.positionsTable thead th:nth-child(11),
+.positionsTable thead th:nth-child(12),
+.positionsTable thead th:nth-child(13),
+.positionsTable thead th:nth-child(14),
+.positionsTable thead th:nth-child(15),
+.positionsTable thead th:nth-child(16),
+.positionsTable th:nth-child(11),
+.positionsTable td:nth-child(11),
+.positionsTable th:nth-child(12),
+.positionsTable td:nth-child(12),
+.positionsTable th:nth-child(13),
+.positionsTable td:nth-child(13),
+.positionsTable th:nth-child(14),
+.positionsTable td:nth-child(14),
+.positionsTable th:nth-child(15),
+.positionsTable td:nth-child(15),
+.positionsTable th:nth-child(16),
+.positionsTable td:nth-child(16) {
+  width: 4.833%;
 }
 
 .positionsTable th,
 .positionsTable td {
   padding: 6px 10px;
+  padding-right: 25px;
   border-bottom: 1px solid #333333;
   white-space: nowrap;
-  text-align: right;
   position: relative;
   font-size: 13px;
   color: #ffffff;
+  box-sizing: border-box;
+}
+
+.positionsTable td {
+  text-align: right;
 }
 
 .positionsTable td.positive {
@@ -569,10 +631,6 @@
 
 .positionsTable td.negative {
   color: #c62828 !important;
-}
-
-.positionsTable td:not(:first-child):not(.center) {
-  padding-right: 25px;
 }
 
 .positionsTable th {
@@ -593,55 +651,78 @@
 }
 
 .positionsTable td:first-child {
+  text-align: center;
+}
+
+.positionsTable th:nth-child(2) {
+  text-align: center !important;
+}
+
+.positionsTable td:nth-child(2) {
   text-align: left;
+}
+
+/* Quantity column (3rd) - center aligned */
+.positionsTable th:nth-child(3),
+.positionsTable td:nth-child(3) {
+  text-align: center !important;
+}
+
+/* All columns from 4th onwards - right aligned */
+.positionsTable th:nth-child(n+4) {
+  text-align: right !important;
+}
+
+.positionsTable td:nth-child(n+4) {
+  text-align: right !important;
+}
+
+.positionsTable th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.positionsTable th.sortable:hover {
+  background-color: #1a1a1a !important;
+}
+
+.positionsTable th .sortIndicator {
+  margin-left: 4px;
+  font-size: 12px;
+  color: #ffffff;
 }
 
 
 .positionsTable td.maxValue {
-  border: 2px solid #c62828;
+  border: 2px solid #2e7d32;
   margin: -2px;
   position: relative;
   z-index: 2;
 }
 
 .positionsTable td.minValue {
-  border: 2px solid #2e7d32;
+  border: 2px solid #c62828;
   margin: -2px;
   position: relative;
   z-index: 1;
 }
 
-.positionsTable th:nth-child(2),
-.positionsTable td:nth-child(2) {
-  text-align: center;
-}
 
-.positionsTable th:nth-child(13),
-.positionsTable td:nth-child(13),
-.positionsTable th:nth-child(15),
-.positionsTable td:nth-child(15),
-.positionsTable th:nth-child(16),
-.positionsTable td:nth-child(16) {
-  text-align: center;
-}
-
-.optionRow td:first-child {
-  padding-left: 24px;
-}
 
 .positionsTable tbody tr:hover td {
   box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00;
 }
 
 .positionsTable tbody tr:hover td.maxValue {
-  border: 2px solid #c62828 !important;
+  border: 2px solid #2e7d32 !important;
   box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00 !important;
   margin: -2px;
   z-index: 2;
 }
 
 .positionsTable tbody tr:hover td.minValue {
-  border: 2px solid #2e7d32 !important;
+  border: 2px solid #c62828 !important;
   box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00 !important;
   margin: -2px;
   z-index: 1;

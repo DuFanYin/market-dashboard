@@ -174,36 +174,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
 
   const orderedPositions = [...stockPositions, ...optionPositions];
 
-  const stockSymbols = new Set(stockPositions.map((pos) => pos.symbol));
-  const placeholderAdded = new Set<string>();
-
   for (const rawPos of orderedPositions) {
-    if (rawPos.secType === "OPT" && !stockSymbols.has(rawPos.symbol) && !placeholderAdded.has(rawPos.symbol)) {
-      const underlyingQuote = quotes.get(rawPos.symbol);
-      const underlyingBid = asNumber(underlyingQuote?.bid);
-      const underlyingAsk = asNumber(underlyingQuote?.ask);
-      const underlyingMid = (underlyingBid + underlyingAsk) / 2 || 0;
-
-      positionsOutput.push({
-        symbol: rawPos.symbol,
-        secType: "STK",
-        qty: 0,
-        cost: 0,
-        price: underlyingMid,
-        underlyingPrice: underlyingMid,
-        upnl: 0,
-        is_option: false,
-        isPlaceholder: true,
-        delta: 0,
-        gamma: 0,
-        theta: 0,
-        percent_change: 0,
-        dteDays: undefined,
-      });
-
-      placeholderAdded.add(rawPos.symbol);
-    }
-
     const qty = asNumber(rawPos.position);
     const cost = asNumber(rawPos.avgCost);
 
@@ -242,7 +213,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
     totalUpnl += upnl;
 
     positionsOutput.push({
-      symbol: rawPos.symbol,
+      symbol: rawPos.secType === "OPT" ? (symbolKey ?? rawPos.symbol) : rawPos.symbol,
       secType: rawPos.secType,
       qty,
       cost,

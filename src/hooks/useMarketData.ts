@@ -29,7 +29,7 @@ function computeUsOpen(): MarketStatusInfo {
   const day = parts.find((p) => p.type === "weekday")?.value;
   const hour = Number(parts.find((p) => p.type === "hour")?.value);
   const minute = Number(parts.find((p) => p.type === "minute")?.value);
-  
+
   // Determine if EST (Eastern Standard Time) or EDT (Eastern Daylight Time)
   // EST is UTC-5, EDT is UTC-4
   // Use Intl API to get timezone abbreviation

@@ -14,7 +14,7 @@ interface SummaryTableProps {
 }
 
 export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, applyMask, onToggleIncognito }: SummaryTableProps) {
-  const startDate = new Date(2025, 10, 20); // November 20, 2025 (month is 0-indexed, so 10 = November)
+  const startDate = new Date(2025, 9, 20); // November 20, 2025 (month is 0-indexed, so 10 = November)
   const today = new Date();
   // Calculate total calendar days (includes all days: trading and non-trading days)
   const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -34,7 +34,7 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, appl
         <tbody>
           <tr className={styles.summaryRow}>
             <td className={styles.summaryLabel}>Start Date</td>
-            <td className={styles.summaryValue}>2025 Nov 20</td>
+            <td className={styles.summaryValue}>2025 Oct 20</td>
             <td className={styles.summaryValue}>{daysDiff}d</td>
           </tr>
           {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (

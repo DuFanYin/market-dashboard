@@ -50,9 +50,6 @@ export function DataDownloadModal({
     });
     output += `INITIAL BALANCE USD: ${formatMoney(originalAmountUsd)}\n`;
     output += `CURRENT BALANCE USD: ${formatMoney(currentBalanceUsd)}\n`;
-    output += `Account PnL (raw): ${data.account_pnl.toFixed(2)}\n`;
-    output += `Account PnL % (raw): ${data.account_pnl_percent.toFixed(2)}\n`;
-    output += `Total Theta: ${data.total_theta.toFixed(2)}\n`;
     
     output += "\n";
 
