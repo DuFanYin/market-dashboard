@@ -5,10 +5,11 @@ import styles from "./page.module.css";
 import { useMarketData } from "@/hooks/useMarketData";
 import { MarketsTable } from "@/components/dashboard/MarketsTable";
 import { FearGreedPanel } from "@/components/dashboard/FearGreedPanel";
+import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
 
 export default function Page() {
   const router = useRouter();
-  const { data, isUsMarketOpen, nyTimeLabel, next5In, handleRefresh } = useMarketData();
+  const { data, marketStatus, nyTimeLabel, next5In, handleRefresh } = useMarketData();
 
   // Derived data for rendering
   const fg = data?.cnnFearGreed ?? { success: false };
@@ -73,17 +74,7 @@ export default function Page() {
         </header>
 
         {/* US Stock Market status banner */}
-        <div className={`p-1.5 sm:p-3 text-xs sm:text-sm ${isUsMarketOpen ? styles.bannerOpen : styles.bannerClosed}`}>
-          <div className="flex items-center justify-center">
-            <div className="text-center text-md sm:text-sm">
-              <span className="hidden sm:inline">US Stock Market: </span>
-              <span className={isUsMarketOpen ? styles.statusOpen : styles.statusClosed}>
-                {isUsMarketOpen ? "OPEN" : "CLOSED"}
-              </span>
-              <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs text-gray-400">(NY {nyTimeLabel} ET)</span>
-            </div>
-          </div>
-        </div>
+        <MarketStatusBanner marketStatus={marketStatus} nyTimeLabel={nyTimeLabel} />
 
         {/* Main grid */}
         <div className="grid gap-1 sm:gap-6 lg:gap-8 lg:grid-cols-2">

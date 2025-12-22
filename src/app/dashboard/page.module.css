@@ -85,25 +85,6 @@
   background: #ffffff;
 }
 
-/* Market status banner */
-.bannerOpen {
-  color: #2e7d32;
-}
-
-.bannerClosed {
-  color: #c62828;
-}
-
-.statusOpen {
-  color: #2e7d32;
-  font-weight: 600;
-}
-
-.statusClosed {
-  color: #c62828;
-  font-weight: 600;
-}
-
 /* Change indicator colors */
 .positive { color: #2e7d32; }
 .negative { color: #c62828; }

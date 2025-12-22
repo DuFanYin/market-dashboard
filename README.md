@@ -112,3 +112,19 @@ src/
 - Persist lightweight client cache between route transitions
 - Add unit tests for data parsing and AHR999 computation
 
+
+风险组（分数越高 = 风险越高）
+	1.	集中度与资产相关性风险
+	2.	下行尾部风险（极端行情敏感度）
+	3.	期权希腊暴露风险（Delta / Gamma / Theta / Vega 合成）
+	4.	资金缓冲与被动减仓风险（现金比例 / 利用率）
+	5.	收益来源集中度风险（PnL 对少数仓位的依赖）
+
+⸻
+
+非风险组（分数越高 = 表现越好）
+	6.	收益逻辑清晰度
+	7.	收益潜力（上行非线性能力）
+	8.	可管理性与执行复杂度
+	9.	流动性与退出便利度
+	10.	期限结构合理性（到期分布与操作弹性）

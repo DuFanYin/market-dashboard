@@ -9,6 +9,7 @@ import { PortfolioHeader } from "@/components/portfolio/PortfolioHeader";
 import { AccountSummary } from "@/components/portfolio/AccountSummary";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
 import { DataDownloadModal } from "@/components/portfolio/DataDownloadModal";
+import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
 import styles from "./page.module.css";
 
 export default function PortfolioPage() {
@@ -54,7 +55,7 @@ export default function PortfolioPage() {
 
     return () => clearInterval(interval);
   }, [lastRefreshTime]);
-  const { isUsMarketOpen, nyTimeLabel } = useMarketData();
+  const { marketStatus, isUsMarketOpen, nyTimeLabel } = useMarketData();
 
   const fetchPortfolio = useCallback(
     async (isRefresh = false) => {
@@ -153,26 +154,14 @@ export default function PortfolioPage() {
             </div>
           )}
           {/* Market banner with refresh time */}
-          <div className={`${styles.marketBanner} ${isUsMarketOpen ? styles.bannerOpen : styles.bannerClosed}`}>
-            <div className={styles.bannerContent}>
-              <div className={styles.bannerCenter}>
-                <span className={styles.bannerLabel}>US Stock Market: </span>
-                <span className={isUsMarketOpen ? styles.statusOpen : styles.statusClosed}>
-                  {isUsMarketOpen ? "OPEN" : "CLOSED"}
-                </span>
-                <span className={styles.bannerTime}>(NY {nyTimeLabel} ET)</span>
-              </div>
-              {lastRefreshTime && timeAgo && (
-                <div 
-                  className={styles.lastRefreshTime}
-                  onClick={handleRefresh}
-                  style={{ cursor: isLoading ? 'wait' : 'pointer' }}
-                >
-                  Last refreshed: {isLoading ? 'Refreshing...' : timeAgo}
-                </div>
-              )}
-            </div>
-          </div>
+          <MarketStatusBanner
+            marketStatus={marketStatus}
+            nyTimeLabel={nyTimeLabel}
+            lastRefreshTime={lastRefreshTime}
+            timeAgo={timeAgo}
+            isLoading={isLoading}
+            onRefresh={handleRefresh}
+          />
         </div>
 
         <div className={styles.summarySection}>
