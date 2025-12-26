@@ -27,7 +27,7 @@
 }
 
 .summarySection {
-  flex: 3;
+  flex: 3.5;
   min-height: 0;
   overflow-y: auto;
   display: flex;
@@ -226,20 +226,22 @@
 .summaryStack {
   display: flex;
   flex-direction: column;
-  flex: 0 0 25%;
+  flex: 0 0 28%;
   min-width: 0;
-  max-width: 25%;
+  max-width: 28%;
   box-sizing: border-box;
   flex-shrink: 0;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 6px;
   position: relative;
   border: 1px solid transparent;
   transition: border-color 0.2s;
   z-index: 1;
   align-self: stretch;
+  height: 100%;
+  min-height: 0;
 }
 
 .summaryStack:hover {
@@ -251,41 +253,54 @@
   width: 100%;
   height: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 13px;
   background-color: #000000;
-  border: 1px solid #333333;
+  border: none;
   border-radius: 6px;
   box-shadow: none;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   display: table;
 }
 
 .summaryRow {
   border-bottom: 1px solid #333333;
+  height: auto;
 }
 
 .summaryRow:last-child {
   border-bottom: none;
 }
 
+.summaryRow td {
+  border-bottom: 1px solid #333333;
+  min-width: 0;
+}
+
+.summaryRow:last-child td {
+  border-bottom: none;
+}
+
 .summaryLabel {
-  padding: 4px 14px;
+  padding: 5px 10px;
   font-size: 13px;
   font-weight: 600;
   color: #ffffff;
   text-align: left;
+  vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .summaryValue {
-  padding: 4px 14px;
+  padding: 5px 10px;
   font-size: 13px;
   font-weight: 500;
   color: #ffffff;
   text-align: right;
+  vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -300,11 +315,12 @@
 }
 
 .summaryPercent {
-  padding: 4px 12px;
+  padding: 5px 10px;
   font-size: 13px;
   font-weight: 500;
   color: #ffffff;
   text-align: right;
+  vertical-align: middle;
   white-space: nowrap;
   min-width: 60px;
 }
@@ -335,14 +351,14 @@
   overflow: hidden;
 }
 
-/* Layout ratio: Summary 25% | Chart 25% | Legend 50% */
+/* Layout ratio: Summary 28% | Chart 24% | Legend 48% */
 .chartSection {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 25%;
+  flex: 0 0 24%;
   min-width: 0;
-  max-width: 25%;
+  max-width: 24%;
   box-sizing: border-box;
   flex-shrink: 0;
   padding: 0;
@@ -372,9 +388,9 @@
 .legendSection {
   display: flex;
   flex-direction: column;
-  flex: 0 0 50%;
+  flex: 0 0 48%;
   min-width: 0;
-  max-width: 50%;
+  max-width: 48%;
   box-sizing: border-box;
   flex-shrink: 1;
   align-self: stretch;
@@ -408,7 +424,7 @@
 
 .chartLegend th,
 .chartLegend td {
-  padding: 8px 12px;
+  padding: 5px 10px;
   border-bottom: 1px solid #333333;
   text-align: right;
   vertical-align: middle;
@@ -424,7 +440,7 @@
 }
 
 .chartLegend th {
-  padding: 10px 12px;
+  padding: 7px 10px;
   font-size: 13px;
   font-weight: 600;
   color: #ffffff !important;
@@ -507,7 +523,7 @@
  * Positions Section
  * ========================================================================= */
 .positionsSection {
-  flex: 7;
+  flex: 6.5;
   display: flex;
   flex-direction: column;
   width: 100%;

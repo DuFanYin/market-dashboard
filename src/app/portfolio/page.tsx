@@ -167,7 +167,6 @@ export default function PortfolioPage() {
         <div className={styles.summarySection}>
           <AccountSummary
             summaryItems={summaryItems}
-            marketValueChart={marketValueChart}
             assetAllocation={assetAllocation}
             assetBreakdown={assetBreakdown}
             applyMask={applyMask}

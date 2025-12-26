@@ -13,7 +13,7 @@ interface SummaryTableProps {
   onToggleIncognito?: () => void;
 }
 
-export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, applyMask, onToggleIncognito }: SummaryTableProps) {
+export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, originalAmountSgd, currentBalanceSgd, applyMask, onToggleIncognito }: SummaryTableProps) {
   const startDate = new Date(2025, 9, 20); // November 20, 2025 (month is 0-indexed, so 10 = November)
   const today = new Date();
   // Calculate total calendar days (includes all days: trading and non-trading days)
@@ -37,6 +37,13 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, appl
             <td className={styles.summaryValue}>2025 Oct 20</td>
             <td className={styles.summaryValue}>{daysDiff}d</td>
           </tr>
+          {originalAmountSgd !== undefined && currentBalanceSgd !== undefined && applyMask && (
+            <tr className={styles.summaryRow}>
+              <td className={styles.summaryLabel}>Balance (SGD)</td>
+              <td className={styles.summaryValue}>{applyMask(`S$${formatMoney(originalAmountSgd)}`)}</td>
+              <td className={styles.summaryValue}>{applyMask(`S$${formatMoney(currentBalanceSgd)}`)}</td>
+            </tr>
+          )}
           {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
             <tr className={styles.summaryRow}>
               <td className={styles.summaryLabel}>Balance</td>
@@ -76,7 +83,7 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, appl
                   </tr>
                   {item.label === "Account PnL" && (
                     <tr className={styles.summaryRow}>
-                      <td className={styles.summaryLabel}>Annualized Return</td>
+                      <td className={styles.summaryLabel}>Annualized %</td>
                       <td className={styles.summaryValue}></td>
                       <td className={`${styles.summaryValue} ${annualizedReturn >= 0 ? styles.positive : styles.negative}`}>
                         {applyMask ? applyMask(formatPercent(annualizedReturn)) : formatPercent(annualizedReturn)}
@@ -86,6 +93,12 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, appl
                 </React.Fragment>
               );
             })}
+          {/* Add one empty row */}
+          <tr className={styles.summaryRow}>
+            <td className={styles.summaryLabel}>&nbsp;</td>
+            <td className={styles.summaryValue}>&nbsp;</td>
+            <td className={styles.summaryPercent}>&nbsp;</td>
+          </tr>
         </tbody>
       </table>
     </div>

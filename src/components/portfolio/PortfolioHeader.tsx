@@ -13,7 +13,7 @@ export function PortfolioHeader({ isLoading, onDownloadClick }: PortfolioHeaderP
     <header className={styles.header}>
       <div className={styles.headerTop}>
         <h1 className={styles.title} onClick={() => router.push("/dashboard")}>
-          Portfolio Dashboard
+          Portfolio
         </h1>
         <button className={styles.downloadButton} onClick={onDownloadClick}>
           Report

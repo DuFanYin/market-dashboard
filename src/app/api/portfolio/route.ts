@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { load } from "js-yaml";
+import { load, dump } from "js-yaml";
 import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
+import { getOkxPrices } from "@/lib/data";
 
 const yamlPath = path.join(process.cwd(), "data", "positions.yaml");
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
@@ -74,6 +75,11 @@ async function loadPortfolioYaml(): Promise<PortfolioYaml> {
     throw new Error("Failed to parse portfolio YAML file.");
   }
   return parsed;
+}
+
+async function savePortfolioYaml(portfolio: PortfolioYaml): Promise<void> {
+  const content = dump(portfolio, { noRefs: true, lineWidth: 240 });
+  await fs.writeFile(yamlPath, content, "utf8");
 }
 
 async function fetchUsdSgdRate(): Promise<number> {
@@ -152,19 +158,23 @@ async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
   return map;
 }
 
-function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usdSgdRate: number): PortfolioData {
+function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cryptoPrices: Map<string, number>, usdSgdRate: number): PortfolioData {
   const positionsOutput: Position[] = [];
   let totalStockMV = 0;
   let totalOptionMV = 0;
+  let totalCryptoMV = 0;
   let totalUpnl = 0;
   let totalTheta = 0;
 
   const optionPositions: RawPosition[] = [];
   const stockPositions: RawPosition[] = [];
+  const etfPositions: RawPosition[] = [];
 
   for (const pos of portfolio.positions) {
     if (pos.secType === "OPT") {
       optionPositions.push(pos);
+    } else if (pos.secType === "ETF") {
+      etfPositions.push(pos);
     } else {
       stockPositions.push(pos);
     }
@@ -172,7 +182,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
 
   optionPositions.sort((a, b) => (a.expiry ?? "").localeCompare(b.expiry ?? ""));
 
-  const orderedPositions = [...stockPositions, ...optionPositions];
+  const orderedPositions = [...stockPositions, ...etfPositions, ...optionPositions];
 
   for (const rawPos of orderedPositions) {
     const qty = asNumber(rawPos.position);
@@ -207,6 +217,10 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
     const marketValue = price * qty;
     if (rawPos.secType === "OPT") {
       totalOptionMV += marketValue;
+    } else if (rawPos.secType === "ETF") {
+      // ETF will be tracked separately but for now we'll include it in stock totals
+      // This can be changed later if needed
+      totalStockMV += marketValue;
     } else {
       totalStockMV += marketValue;
     }
@@ -221,6 +235,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
       underlyingPrice: rawPos.secType === "OPT" ? underlyingMid : price,
       upnl,
       is_option: rawPos.secType === "OPT",
+      is_crypto: false,
       dteDays: rawPos.secType === "OPT" ? calculateDteDays(rawPos.expiry) : undefined,
       delta,
       gamma,
@@ -233,17 +248,53 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
     });
   }
 
-  const netLiquidation = portfolio.cash + totalStockMV + totalOptionMV;
+  // Process crypto positions
+  if (portfolio.crypto && portfolio.crypto.length > 0) {
+    for (const cryptoPos of portfolio.crypto) {
+      const qty = asNumber(cryptoPos.position);
+      const totalCostSGD = asNumber(cryptoPos.totalCostSGD);
+      const totalCostUSD = totalCostSGD / usdSgdRate;
+      const cost = qty > 0 ? totalCostUSD / qty : 0;
+
+      // Map crypto symbol to OKX format (e.g., BTC -> BTC-USDT)
+      const okxSymbol = `${cryptoPos.symbol}-USDT`;
+      const price = cryptoPrices.get(okxSymbol) || cost; // Fallback to cost if price unavailable
+      
+      const upnl = (price - cost) * qty;
+      const marketValue = price * qty;
+      totalCryptoMV += marketValue;
+      totalUpnl += upnl;
+
+      positionsOutput.push({
+        symbol: cryptoPos.symbol,
+        secType: "CRYPTO",
+        qty,
+        cost,
+        price,
+        underlyingPrice: price,
+        upnl,
+        is_option: false,
+        is_crypto: true,
+        delta: qty, // Crypto has delta of 1 per unit
+        gamma: 0,
+        theta: 0,
+        percent_change: percentChange(price, cost),
+      });
+    }
+  }
+
+  const netLiquidation = portfolio.cash + totalStockMV + totalOptionMV + totalCryptoMV;
   const utilization = netLiquidation !== 0 ? (netLiquidation - portfolio.cash) / netLiquidation : 0;
 
   const chartSegments: ChartSegment[] = [];
   const radius = 80;
   const circumference = netLiquidation > 0 ? 2 * Math.PI * radius : 0;
   if (netLiquidation > 0) {
-    const segmentsData: Array<{ name: "cash" | "stock" | "option"; value: number; color: string }> = [
+    const segmentsData: Array<{ name: "cash" | "stock" | "option" | "crypto"; value: number; color: string }> = [
       { name: "cash", value: portfolio.cash, color: "#d4d4d4" },
       { name: "stock", value: totalStockMV, color: "#a3a3a3" },
       { name: "option", value: totalOptionMV, color: "#737373" },
+      { name: "crypto", value: totalCryptoMV, color: "#525252" },
     ];
 
     let offset = 0;
@@ -273,6 +324,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, usd
     net_liquidation: netLiquidation,
     total_stock_mv: totalStockMV,
     total_option_mv: totalOptionMV,
+    total_crypto_mv: totalCryptoMV,
     total_upnl: totalUpnl,
     total_theta: totalTheta,
     utilization,
@@ -313,8 +365,48 @@ export async function GET() {
     }
     const symbols = Array.from(symbolSet);
 
-    const [quotes, usdSgdRate] = await Promise.all([fetchQuotes(symbols), fetchUsdSgdRate()]);
-    const response = buildResponse(portfolio, quotes, usdSgdRate);
+    const quotesPromise = fetchQuotes(symbols);
+
+    let usdSgdRate: number | undefined = portfolio.usd_sgd_rate;
+    try {
+      const freshRate = await fetchUsdSgdRate();
+      usdSgdRate = freshRate;
+      const updatedPortfolio: PortfolioYaml = {
+        ...portfolio,
+        usd_sgd_rate: freshRate,
+        timestamp: new Date().toISOString(),
+      };
+      await savePortfolioYaml(updatedPortfolio);
+    } catch (fxError) {
+      console.error("[portfolio API] using cached USD/SGD rate from YAML due to fetch failure", fxError);
+      if (usdSgdRate === undefined) {
+        throw new Error("USD/SGD rate unavailable (API failed and no cached rate in YAML)");
+      }
+    }
+
+    const quotes = await quotesPromise;
+    if (usdSgdRate === undefined) {
+      throw new Error("USD/SGD rate unavailable (no live or cached value)");
+    }
+
+    // Fetch crypto prices
+    const cryptoPrices = new Map<string, number>();
+    if (portfolio.crypto && portfolio.crypto.length > 0) {
+      const cryptoSymbols = portfolio.crypto.map(c => `${c.symbol}-USDT`);
+      try {
+        const okxPrices = await getOkxPrices(cryptoSymbols);
+        for (const priceData of okxPrices) {
+          if (priceData.success && priceData.price !== undefined) {
+            cryptoPrices.set(priceData.inst, priceData.price);
+          }
+        }
+      } catch (cryptoError) {
+        console.error("[portfolio API] Failed to fetch crypto prices:", cryptoError);
+        // Continue without crypto prices - will use cost basis as fallback
+      }
+    }
+
+    const response = buildResponse(portfolio, quotes, cryptoPrices, usdSgdRate);
 
     return NextResponse.json(response);
   } catch (error) {

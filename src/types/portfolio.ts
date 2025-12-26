@@ -1,7 +1,7 @@
 // Raw position data from YAML file
 export type RawPosition = {
   symbol: string;
-  secType: "STK" | "OPT";
+  secType: "STK" | "OPT" | "ETF";
   position: number;
   avgCost: number;
   right?: "C" | "P";
@@ -9,11 +9,20 @@ export type RawPosition = {
   expiry?: string;
 };
 
+// Raw crypto position data from YAML file
+export type RawCryptoPosition = {
+  symbol: string;
+  position: number;
+  totalCostSGD: number;
+};
+
 // Portfolio YAML structure
 export type PortfolioYaml = {
   timestamp: string;
+  usd_sgd_rate?: number;
   cash: number;
   positions: RawPosition[];
+  crypto?: RawCryptoPosition[];
 };
 
 // Tradier API quote response
@@ -31,13 +40,14 @@ export type Quote = {
 // Processed position data
 export type Position = {
   symbol: string;
-  secType: "STK" | "OPT";
+  secType: "STK" | "OPT" | "CRYPTO" | "ETF";
   qty: number;
   cost: number;
   price: number;
   underlyingPrice?: number;
   upnl: number;
   is_option: boolean;
+  is_crypto?: boolean;
   isPlaceholder?: boolean;
   delta: number;
   gamma: number;
@@ -66,6 +76,7 @@ export type PortfolioData = {
   net_liquidation: number;
   total_stock_mv: number;
   total_option_mv: number;
+  total_crypto_mv: number;
   total_upnl: number;
   total_theta: number;
   utilization: number;

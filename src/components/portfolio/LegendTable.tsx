@@ -9,7 +9,7 @@ interface LegendTableProps {
 }
 
 export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: LegendTableProps) {
-  const totalPnL = assetBreakdown.stockUnrealizedPnL + assetBreakdown.optionUnrealizedPnL;
+  const totalPnL = assetBreakdown.stockUnrealizedPnL + assetBreakdown.optionUnrealizedPnL + assetBreakdown.cryptoUnrealizedPnL + assetBreakdown.etfUnrealizedPnL;
   const totalPnLPercent = assetBreakdown.totalCost > 0 ? (totalPnL / assetBreakdown.totalCost) * 100 : 0;
 
   return (
@@ -21,7 +21,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
             <th className={styles.legendColorCell}></th>
             <th className={styles.legendLabel}></th>
             <th className={styles.legendAmount}>Cost</th>
-            <th className={styles.legendPercent}>%</th>
             <th className={styles.legendAmount}>uPnL</th>
             <th className={styles.legendPercent}>%</th>
             <th className={styles.legendAmount}>Current</th>
@@ -38,9 +37,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
                 </td>
                 <td className={styles.legendLabel}>{asset.label}</td>
                 <td className={styles.legendAmount}>{applyMask(formatMoney(asset.cost))}</td>
-                <td className={styles.legendPercent}>
-                  {formatPercent(asset.costAllocationPercent)}
-                </td>
                 <td className={`${styles.legendAmount} ${asset.isCash ? styles.center : ""}`} style={asset.unrealizedPnL !== 0 && !asset.isCash ? { color: asset.unrealizedPnL >= 0 ? "#2e7d32" : "#c62828" } : undefined}>
                   {asset.isCash ? "" : applyMask(`${asset.unrealizedPnL >= 0 ? "+" : ""}${formatMoney(asset.unrealizedPnL)}`)}
                 </td>
@@ -57,7 +53,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask }: Lege
             <td className={styles.legendColorCell}></td>
             <td className={styles.legendLabel} style={{ fontWeight: 600 }}>Total</td>
             <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{applyMask(formatMoney(assetBreakdown.totalCost))}</td>
-            <td className={`${styles.legendPercent} ${styles.center}`} style={{ fontWeight: 600 }}></td>
             <td className={styles.legendAmount} style={{ fontWeight: 600, color: totalPnL !== 0 ? (totalPnL >= 0 ? "#2e7d32" : "#c62828") : undefined }}>
               {applyMask(`${totalPnL >= 0 ? "+" : ""}${formatMoney(totalPnL)}`)}
             </td>

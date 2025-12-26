@@ -3,15 +3,10 @@ import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalcul
 import { SummaryTable } from "./SummaryTable";
 import { PortfolioChart } from "./PortfolioChart";
 import { LegendTable } from "./LegendTable";
-import type { ChartSegment } from "@/types/portfolio";
 import styles from "@/app/portfolio/page.module.css";
 
 interface AccountSummaryProps {
   summaryItems: SummaryItem[];
-  marketValueChart: {
-    segments: ChartSegment[];
-    circumference: number;
-  };
   assetAllocation: AssetAllocation[];
   assetBreakdown: AssetBreakdown;
   applyMask: (value: string) => string;
@@ -25,7 +20,6 @@ interface AccountSummaryProps {
 
 export function AccountSummary({
   summaryItems,
-  marketValueChart,
   assetAllocation,
   assetBreakdown,
   applyMask,
@@ -49,8 +43,7 @@ export function AccountSummary({
       />
       <div className={styles.chartSection}>
         <PortfolioChart 
-          segments={marketValueChart.segments} 
-          circumference={marketValueChart.circumference}
+          assetAllocation={assetAllocation}
           isDarkMode={isDarkMode} />
       </div>
       <LegendTable assetAllocation={assetAllocation} assetBreakdown={assetBreakdown} applyMask={applyMask} />

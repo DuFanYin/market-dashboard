@@ -55,7 +55,7 @@ export const buildChartFromLegendData = (
   }
 
     const segmentsData = visibleAssets.map((asset) => ({
-      name: asset.key === "cash" ? "cash" : asset.key === "stock" ? "stock_cost" : "option_cost",
+      name: asset.key === "cash" ? "cash" : asset.key === "stock" ? "stock_cost" : asset.key === "option" ? "option_cost" : asset.key === "crypto" ? "crypto_cost" : "etf_cost",
       value: asset.marketValue,
       color: asset.color,
       percent: asset.valueAllocationPercent,

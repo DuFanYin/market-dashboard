@@ -8,12 +8,18 @@ export type AssetBreakdown = {
   cash: number;
   stockCost: number;
   optionCost: number;
+  cryptoCost: number;
+  etfCost: number;
   totalCost: number;
   stockMarketValue: number;
   optionMarketValue: number;
+  cryptoMarketValue: number;
+  etfMarketValue: number;
   totalMarketValue: number;
   stockUnrealizedPnL: number;
   optionUnrealizedPnL: number;
+  cryptoUnrealizedPnL: number;
+  etfUnrealizedPnL: number;
 };
 
 export type AssetAllocation = {
@@ -37,27 +43,47 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
         cash: 0,
         stockCost: 0,
         optionCost: 0,
+        cryptoCost: 0,
+        etfCost: 0,
         totalCost: 0,
         stockMarketValue: 0,
         optionMarketValue: 0,
+        cryptoMarketValue: 0,
+        etfMarketValue: 0,
         totalMarketValue: 0,
         stockUnrealizedPnL: 0,
         optionUnrealizedPnL: 0,
+        cryptoUnrealizedPnL: 0,
+        etfUnrealizedPnL: 0,
       };
     }
     const cash = data.cash;
     let stockCost = 0,
       optionCost = 0,
+      cryptoCost = 0,
+      etfCost = 0,
       stockMarketValue = 0,
       optionMarketValue = 0,
+      cryptoMarketValue = 0,
+      etfMarketValue = 0,
       stockUnrealizedPnL = 0,
-      optionUnrealizedPnL = 0;
+      optionUnrealizedPnL = 0,
+      cryptoUnrealizedPnL = 0,
+      etfUnrealizedPnL = 0;
     
     for (const position of data.positions) {
-      if (position.is_option) {
+      if (position.is_crypto) {
+        cryptoCost += position.cost * position.qty;
+        cryptoMarketValue += position.price * position.qty;
+        cryptoUnrealizedPnL += position.upnl;
+      } else if (position.is_option) {
         optionCost += position.cost * position.qty;
         optionMarketValue += position.price * position.qty;
         optionUnrealizedPnL += position.upnl;
+      } else if (position.secType === "ETF") {
+        etfCost += position.cost * position.qty;
+        etfMarketValue += position.price * position.qty;
+        etfUnrealizedPnL += position.upnl;
       } else {
         stockCost += position.cost * position.qty;
         stockMarketValue += position.price * position.qty;
@@ -65,19 +91,25 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
       }
     }
     
-    const totalCost = cash + stockCost + optionCost;
-    const totalMarketValue = cash + stockMarketValue + optionMarketValue;
+    const totalCost = cash + stockCost + optionCost + cryptoCost + etfCost;
+    const totalMarketValue = cash + stockMarketValue + optionMarketValue + cryptoMarketValue + etfMarketValue;
     
     return {
       cash,
       stockCost,
       optionCost,
+      cryptoCost,
+      etfCost,
       totalCost,
       stockMarketValue,
       optionMarketValue,
+      cryptoMarketValue,
+      etfMarketValue,
       totalMarketValue,
       stockUnrealizedPnL,
       optionUnrealizedPnL,
+      cryptoUnrealizedPnL,
+      etfUnrealizedPnL,
     };
   }, [data]);
 
@@ -122,6 +154,32 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
         marketValue: assetBreakdown.optionMarketValue,
         valueAllocationPercent: assetBreakdown.totalMarketValue > 0 ? (assetBreakdown.optionMarketValue / assetBreakdown.totalMarketValue) * 100 : 0,
         isVisible: assetBreakdown.optionCost > 0,
+        isCash: false,
+      },
+      {
+        key: "etf",
+        label: "ETF",
+        color: SEGMENT_COLORS.etf,
+        cost: assetBreakdown.etfCost,
+        costAllocationPercent: assetBreakdown.totalCost > 0 ? (assetBreakdown.etfCost / assetBreakdown.totalCost) * 100 : 0,
+        unrealizedPnL: assetBreakdown.etfUnrealizedPnL,
+        profitLossPercent: assetBreakdown.etfCost > 0 ? (assetBreakdown.etfUnrealizedPnL / assetBreakdown.etfCost) * 100 : 0,
+        marketValue: assetBreakdown.etfMarketValue,
+        valueAllocationPercent: assetBreakdown.totalMarketValue > 0 ? (assetBreakdown.etfMarketValue / assetBreakdown.totalMarketValue) * 100 : 0,
+        isVisible: true, // Always show ETF row even if no positions
+        isCash: false,
+      },
+      {
+        key: "crypto",
+        label: "Crypto",
+        color: SEGMENT_COLORS.crypto,
+        cost: assetBreakdown.cryptoCost,
+        costAllocationPercent: assetBreakdown.totalCost > 0 ? (assetBreakdown.cryptoCost / assetBreakdown.totalCost) * 100 : 0,
+        unrealizedPnL: assetBreakdown.cryptoUnrealizedPnL,
+        profitLossPercent: assetBreakdown.cryptoCost > 0 ? (assetBreakdown.cryptoUnrealizedPnL / assetBreakdown.cryptoCost) * 100 : 0,
+        marketValue: assetBreakdown.cryptoMarketValue,
+        valueAllocationPercent: assetBreakdown.totalMarketValue > 0 ? (assetBreakdown.cryptoMarketValue / assetBreakdown.totalMarketValue) * 100 : 0,
+        isVisible: assetBreakdown.cryptoCost > 0,
         isCash: false,
       },
     ];

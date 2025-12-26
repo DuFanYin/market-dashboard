@@ -273,7 +273,7 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
               <tr key={`${pos.symbol}-${index}`}>
                 <td className={styles.center}>{index + 1}</td>
                 <td>{pos.is_option ? `${pos.underlyingKey}-${optionSymbol}` : pos.symbol}</td>
-                <td>{applyMask(formatNumber(pos.qty, 0))}</td>
+                <td>{applyMask(formatNumber(pos.qty, pos.is_crypto ? 3 : 0))}</td>
                 <td>{applyMask(formatMoney(pos.price))}</td>
                 <td>{applyMask(formatMoney(pos.cost))}</td>
                 <td>{applyMask(formatMoney(pos.cost * pos.qty))}</td>
