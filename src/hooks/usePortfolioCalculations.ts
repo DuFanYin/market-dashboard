@@ -179,7 +179,7 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
         profitLossPercent: assetBreakdown.cryptoCost > 0 ? (assetBreakdown.cryptoUnrealizedPnL / assetBreakdown.cryptoCost) * 100 : 0,
         marketValue: assetBreakdown.cryptoMarketValue,
         valueAllocationPercent: assetBreakdown.totalMarketValue > 0 ? (assetBreakdown.cryptoMarketValue / assetBreakdown.totalMarketValue) * 100 : 0,
-        isVisible: assetBreakdown.cryptoCost > 0,
+        isVisible: true, // Always show Crypto row even if no positions
         isCash: false,
       },
     ];

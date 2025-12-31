@@ -63,7 +63,7 @@ export function DataDownloadModal({
         output += `  Unrealized PnL: ${formatMoney(asset.unrealizedPnL)} (${formatPercent(Math.abs(asset.profitLossPercent))})\n\n`;
       });
     output += `Total Market Value: ${formatMoney(assetBreakdown.totalMarketValue)}\n`;
-    output += `Total Unrealized PnL: ${formatMoney(assetBreakdown.stockUnrealizedPnL + assetBreakdown.optionUnrealizedPnL)}\n\n`;
+    output += `Total Unrealized PnL: ${formatMoney(assetBreakdown.stockUnrealizedPnL + assetBreakdown.optionUnrealizedPnL + assetBreakdown.cryptoUnrealizedPnL + assetBreakdown.etfUnrealizedPnL)}\n\n`;
 
     output += "POSITIONS\n";
     output += "-".repeat(50) + "\n";
@@ -78,7 +78,11 @@ export function DataDownloadModal({
         displaySymbol = pos.underlyingKey ? `${optionSymbol} (${pos.underlyingKey})` : optionSymbol;
       }
 
-      output += `${pos.is_option ? "Option" : "Stock"}: ${displaySymbol}\n`;
+      let positionType = "Stock";
+      if (pos.is_option) positionType = "Option";
+      else if (pos.is_crypto) positionType = "Crypto";
+      else if (pos.secType === "ETF") positionType = "ETF";
+      output += `${positionType}: ${displaySymbol}\n`;
       output += `  Symbol: ${pos.symbol}\n`;
       output += `  Quantity: ${formatNumber(pos.qty, 0)}\n`;
       output += `  Price: ${formatMoney(pos.price)}\n`;

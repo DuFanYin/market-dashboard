@@ -158,22 +158,26 @@ async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
   return map;
 }
 
+// Hardcoded ETF symbols (treat as ETF even if marked as STK in YAML)
+const ETF_SYMBOLS = ["GLDM"];
+
 function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cryptoPrices: Map<string, number>, usdSgdRate: number): PortfolioData {
   const positionsOutput: Position[] = [];
   let totalStockMV = 0;
   let totalOptionMV = 0;
   let totalCryptoMV = 0;
+  let totalEtfMV = 0;
   let totalUpnl = 0;
   let totalTheta = 0;
 
   const optionPositions: RawPosition[] = [];
   const stockPositions: RawPosition[] = [];
   const etfPositions: RawPosition[] = [];
-
+  
   for (const pos of portfolio.positions) {
     if (pos.secType === "OPT") {
       optionPositions.push(pos);
-    } else if (pos.secType === "ETF") {
+    } else if (pos.secType === "ETF" || ETF_SYMBOLS.includes(pos.symbol)) {
       etfPositions.push(pos);
     } else {
       stockPositions.push(pos);
@@ -187,6 +191,10 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
   for (const rawPos of orderedPositions) {
     const qty = asNumber(rawPos.position);
     const cost = asNumber(rawPos.avgCost);
+    
+    // Check if this is an ETF (either marked as ETF or in hardcoded list)
+    const isETF = rawPos.secType === "ETF" || ETF_SYMBOLS.includes(rawPos.symbol);
+    const effectiveSecType = isETF ? "ETF" : rawPos.secType;
 
     const symbolKey = rawPos.secType === "OPT" ? toOccSymbol(rawPos) : rawPos.symbol;
     const quote = symbolKey ? quotes.get(symbolKey) : undefined;
@@ -210,17 +218,16 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
       theta = convertGreek(quote?.greeks?.theta, qty);
       totalTheta += theta;
     } else {
-      // For stocks, delta = quantity (stocks have delta of 1 per share)
+      // For stocks and ETFs, delta = quantity (have delta of 1 per share)
       delta = qty;
     }
 
     const marketValue = price * qty;
     if (rawPos.secType === "OPT") {
       totalOptionMV += marketValue;
-    } else if (rawPos.secType === "ETF") {
-      // ETF will be tracked separately but for now we'll include it in stock totals
-      // This can be changed later if needed
-      totalStockMV += marketValue;
+    } else if (isETF) {
+      // ETF market value - tracked separately
+      totalEtfMV += marketValue;
     } else {
       totalStockMV += marketValue;
     }
@@ -228,7 +235,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
 
     positionsOutput.push({
       symbol: rawPos.secType === "OPT" ? (symbolKey ?? rawPos.symbol) : rawPos.symbol,
-      secType: rawPos.secType,
+      secType: effectiveSecType,
       qty,
       cost,
       price,
@@ -248,7 +255,40 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     });
   }
 
-  // Process crypto positions
+  // Process crypto positions from .env
+  const btcQty = Number(process.env.BTC);
+  const btcCostSGD = Number(process.env.BTC_COST_SGD);
+  if (btcQty > 0 && btcCostSGD > 0) {
+    const totalCostUSD = btcCostSGD / usdSgdRate;
+    const cost = btcQty > 0 ? totalCostUSD / btcQty : 0;
+
+    // Map crypto symbol to OKX format (BTC -> BTC-USDT)
+    const okxSymbol = "BTC-USDT";
+    const price = cryptoPrices.get(okxSymbol) || cost; // Fallback to cost if price unavailable
+    
+    const upnl = (price - cost) * btcQty;
+    const marketValue = price * btcQty;
+    totalCryptoMV += marketValue;
+    totalUpnl += upnl;
+
+    positionsOutput.push({
+      symbol: "BTC",
+      secType: "CRYPTO",
+      qty: btcQty,
+      cost,
+      price,
+      underlyingPrice: price,
+      upnl,
+      is_option: false,
+      is_crypto: true,
+      delta: btcQty, // Crypto has delta of 1 per unit
+      gamma: 0,
+      theta: 0,
+      percent_change: percentChange(price, cost),
+    });
+  }
+  
+  // Also process crypto positions from YAML (for backward compatibility)
   if (portfolio.crypto && portfolio.crypto.length > 0) {
     for (const cryptoPos of portfolio.crypto) {
       const qty = asNumber(cryptoPos.position);
@@ -283,18 +323,19 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     }
   }
 
-  const netLiquidation = portfolio.cash + totalStockMV + totalOptionMV + totalCryptoMV;
+  const netLiquidation = portfolio.cash + totalStockMV + totalOptionMV + totalCryptoMV + totalEtfMV;
   const utilization = netLiquidation !== 0 ? (netLiquidation - portfolio.cash) / netLiquidation : 0;
 
   const chartSegments: ChartSegment[] = [];
   const radius = 80;
   const circumference = netLiquidation > 0 ? 2 * Math.PI * radius : 0;
   if (netLiquidation > 0) {
-    const segmentsData: Array<{ name: "cash" | "stock" | "option" | "crypto"; value: number; color: string }> = [
+    const segmentsData: Array<{ name: "cash" | "stock" | "option" | "crypto" | "etf"; value: number; color: string }> = [
       { name: "cash", value: portfolio.cash, color: "#d4d4d4" },
       { name: "stock", value: totalStockMV, color: "#a3a3a3" },
       { name: "option", value: totalOptionMV, color: "#737373" },
       { name: "crypto", value: totalCryptoMV, color: "#525252" },
+      { name: "etf", value: totalEtfMV, color: "#404040" },
     ];
 
     let offset = 0;
@@ -325,6 +366,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     total_stock_mv: totalStockMV,
     total_option_mv: totalOptionMV,
     total_crypto_mv: totalCryptoMV,
+    total_etf_mv: totalEtfMV,
     total_upnl: totalUpnl,
     total_theta: totalTheta,
     utilization,
@@ -391,8 +433,25 @@ export async function GET() {
 
     // Fetch crypto prices
     const cryptoPrices = new Map<string, number>();
+    const cryptoSymbols: string[] = [];
+    
+    // Add BTC from .env
+    const btcQty = Number(process.env.BTC);
+    if (btcQty > 0) {
+      cryptoSymbols.push("BTC-USDT");
+    }
+    
+    // Add crypto from YAML (for backward compatibility)
     if (portfolio.crypto && portfolio.crypto.length > 0) {
-      const cryptoSymbols = portfolio.crypto.map(c => `${c.symbol}-USDT`);
+      portfolio.crypto.forEach(c => {
+        const symbol = `${c.symbol}-USDT`;
+        if (!cryptoSymbols.includes(symbol)) {
+          cryptoSymbols.push(symbol);
+        }
+      });
+    }
+    
+    if (cryptoSymbols.length > 0) {
       try {
         const okxPrices = await getOkxPrices(cryptoSymbols);
         for (const priceData of okxPrices) {

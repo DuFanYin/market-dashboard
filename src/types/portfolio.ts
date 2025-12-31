@@ -77,6 +77,7 @@ export type PortfolioData = {
   total_stock_mv: number;
   total_option_mv: number;
   total_crypto_mv: number;
+  total_etf_mv: number;
   total_upnl: number;
   total_theta: number;
   utilization: number;
