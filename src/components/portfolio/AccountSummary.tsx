@@ -16,6 +16,10 @@ interface AccountSummaryProps {
   currentBalanceSgd: number;
   isDarkMode: boolean;
   onToggleIncognito: () => void;
+  usdSgdRate: number;
+  usdCnyRate: number;
+  currencyMode: "USD" | "SGD" | "CNY";
+  onToggleCurrency: () => void;
 }
 
 export function AccountSummary({
@@ -29,6 +33,10 @@ export function AccountSummary({
   currentBalanceSgd,
   isDarkMode,
   onToggleIncognito,
+  usdSgdRate,
+  usdCnyRate,
+  currencyMode,
+  onToggleCurrency,
 }: AccountSummaryProps) {
   return (
     <section className={styles.chartContainer}>
@@ -46,7 +54,15 @@ export function AccountSummary({
           assetAllocation={assetAllocation}
           isDarkMode={isDarkMode} />
       </div>
-      <LegendTable assetAllocation={assetAllocation} assetBreakdown={assetBreakdown} applyMask={applyMask} />
+      <LegendTable 
+        assetAllocation={assetAllocation} 
+        assetBreakdown={assetBreakdown} 
+        applyMask={applyMask}
+        usdSgdRate={usdSgdRate}
+        usdCnyRate={usdCnyRate}
+        currencyMode={currencyMode}
+        onToggleCurrency={onToggleCurrency}
+      />
     </section>
   );
 }

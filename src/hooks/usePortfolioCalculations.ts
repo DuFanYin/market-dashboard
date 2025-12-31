@@ -199,7 +199,6 @@ export const usePortfolioCalculations = (data: PortfolioData | null, applyMask: 
         percentDisplay: formatPercent(data.account_pnl_percent),
         percentValue: data.account_pnl_percent,
       },
-      { label: "Total Theta", display: applyMask(`${formatMoney(data.total_theta)}`) },
       { label: "Utilization", display: formatPercent(data.utilization * 100) },
     ];
   }, [data, applyMask]);

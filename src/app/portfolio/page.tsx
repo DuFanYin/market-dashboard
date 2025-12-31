@@ -19,6 +19,8 @@ export default function PortfolioPage() {
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isIncognito, setIsIncognito] = useState(false);
+  type CurrencyMode = "USD" | "SGD" | "CNY";
+  const [currencyMode, setCurrencyMode] = useState<CurrencyMode>("USD");
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [timeAgo, setTimeAgo] = useState<string>("");
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
@@ -113,7 +115,6 @@ export default function PortfolioPage() {
     assetBreakdown,
     summaryItems,
     assetAllocation,
-    marketValueChart,
   } = usePortfolioCalculations(data, applyMask);
 
   if (isLoading && isInitialLoad && !data) {
@@ -145,7 +146,6 @@ export default function PortfolioPage() {
       <div className={styles.container}>
         <div>
           <PortfolioHeader
-            isLoading={isLoading}
             onDownloadClick={() => setIsDownloadModalOpen(true)}
           />
           {error && (
@@ -176,11 +176,26 @@ export default function PortfolioPage() {
             currentBalanceSgd={data.net_liquidation * data.usd_sgd_rate}
             isDarkMode={true}
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
+            usdSgdRate={data.usd_sgd_rate}
+            usdCnyRate={data.usd_cny_rate}
+            currencyMode={currencyMode}
+            onToggleCurrency={() => {
+              setCurrencyMode((prev) => {
+                if (prev === "USD") return "SGD";
+                if (prev === "SGD") return "CNY";
+                return "USD";
+              });
+            }}
           />
         </div>
 
         <div className={styles.positionsSection}>
-          <PositionsTable positions={data.positions} netLiquidation={data.net_liquidation} applyMask={applyMask} isIncognito={isIncognito} />
+          <PositionsTable 
+            positions={data.positions} 
+            netLiquidation={data.net_liquidation} 
+            applyMask={applyMask} 
+            isIncognito={isIncognito}
+          />
         </div>
       </div>
       <DataDownloadModal

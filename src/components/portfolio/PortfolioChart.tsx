@@ -7,8 +7,8 @@ interface PortfolioChartProps {
   isDarkMode?: boolean;
 }
 
-// Asset order: Cash, Stock, Option, Crypto, ETF (matching pentagon vertices)
-const ASSET_ORDER = ["cash", "stock", "option", "crypto", "etf"];
+// Asset order: Cash, Option, ETF, Crypto, Stock (matching pentagon vertices)
+const ASSET_ORDER = ["cash", "option", "etf", "crypto", "stock"];
 
 // Get point coordinates for a vertex at a given angle and radius
 function getPoint(centerX: number, centerY: number, angle: number, radius: number): [number, number] {
@@ -33,8 +33,8 @@ export function PortfolioChart({
   assetAllocation,
 }: PortfolioChartProps) {
   const colors = SEGMENT_COLORS_DARK;
-  const centerX = 100;
-  const centerY = 100;
+  const centerX = 125;
+  const centerY = 125;
   const maxRadius = 100;
   
   // Create a map of asset allocations by key
@@ -92,7 +92,7 @@ export function PortfolioChart({
 
   return (
     <div className={styles.chartWrapper}>
-      <svg width={200} height={200} viewBox="0 0 200 200">
+      <svg width={250} height={250} viewBox="0 0 250 250">
         {/* Draw percentage layer rings (white rings at 0%, 20%, 40%, 60%, 80%, 100%) */}
         {[0, 20, 40, 60, 80, 100].map((percent, i) => {
           const radius = (percent / 100) * maxRadius;
@@ -102,7 +102,7 @@ export function PortfolioChart({
               <polygon
                 key={`ring-${i}`}
                 points={points}
-                fill="none"
+            fill="none"
                 stroke="#ffffff"
                 strokeWidth={1}
                 opacity={0.3}
@@ -141,11 +141,37 @@ export function PortfolioChart({
             cx={point.x}
             cy={point.y}
             r={2.5}
-            fill={point.color}
+            fill="#ffffff"
             stroke="#ffffff"
             strokeWidth={1}
           />
         ))}
+        
+        {/* Draw labels at the outermost ring (100% ring) */}
+        {vertexPoints.map((point, i) => {
+          // Calculate label position at the outermost ring (100% = maxRadius)
+          const angle = (-Math.PI / 2) + (i * 2 * Math.PI / 5);
+          const labelOffset = 15; // Distance from outermost ring to label
+          const outerRadius = maxRadius + labelOffset;
+          const labelX = centerX + outerRadius * Math.cos(angle);
+          const labelY = centerY + outerRadius * Math.sin(angle);
+          
+          return (
+            <text
+              key={`label-${i}`}
+              x={labelX}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#ffffff"
+              fontSize="10"
+              fontWeight="500"
+              opacity={0.9}
+            >
+              {point.label}
+            </text>
+          );
+        })}
       </svg>
     </div>
   );

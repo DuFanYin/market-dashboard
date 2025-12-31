@@ -20,6 +20,7 @@ export type RawCryptoPosition = {
 export type PortfolioYaml = {
   timestamp: string;
   usd_sgd_rate?: number;
+  usd_cny_rate?: number;
   cash: number;
   positions: RawPosition[];
   crypto?: RawCryptoPosition[];
@@ -87,6 +88,7 @@ export type PortfolioData = {
   account_pnl: number;
   account_pnl_percent: number;
   usd_sgd_rate: number;
+  usd_cny_rate: number;
   original_amount_sgd: number;
   original_amount_usd: number;
 };

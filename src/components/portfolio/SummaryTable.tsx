@@ -37,22 +37,32 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, orig
             <td className={styles.summaryValue}>2025 Oct 20</td>
             <td className={styles.summaryValue}>{daysDiff}d</td>
           </tr>
-          {originalAmountSgd !== undefined && currentBalanceSgd !== undefined && applyMask && (
-            <tr className={styles.summaryRow}>
-              <td className={styles.summaryLabel}>Balance (SGD)</td>
-              <td className={styles.summaryValue}>{applyMask(`S$${formatMoney(originalAmountSgd)}`)}</td>
-              <td className={styles.summaryValue}>{applyMask(`S$${formatMoney(currentBalanceSgd)}`)}</td>
-            </tr>
+          {originalAmountSgd !== undefined && currentBalanceSgd !== undefined && originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
+            <>
+              <tr className={styles.summaryRow}>
+                <td className={styles.summaryLabel}>Initial Balance</td>
+                <td className={styles.summaryValue}>{applyMask(`S$${formatMoney(originalAmountSgd)}`)}</td>
+                <td className={styles.summaryValue}>{applyMask(`$${formatMoney(originalAmountUsd)}`)}</td>
+              </tr>
+              <tr className={styles.summaryRow}>
+                <td className={styles.summaryLabel}>Current Balance</td>
+                <td className={styles.summaryValue}>{applyMask(`S$${formatMoney(currentBalanceSgd)}`)}</td>
+                <td className={styles.summaryValue}>{applyMask(`$${formatMoney(currentBalanceUsd)}`)}</td>
+              </tr>
+            </>
           )}
-          {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
+          {originalAmountSgd !== undefined && currentBalanceSgd !== undefined && originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
             <tr className={styles.summaryRow}>
-              <td className={styles.summaryLabel}>Balance</td>
-              <td className={styles.summaryValue}>{applyMask(`$${formatMoney(originalAmountUsd)}`)}</td>
-              <td className={styles.summaryValue}>{applyMask(`$${formatMoney(currentBalanceUsd)}`)}</td>
+              <td className={styles.summaryLabel}>Account PnL</td>
+              <td className={`${styles.summaryValue} ${currentBalanceSgd - originalAmountSgd >= 0 ? styles.positive : styles.negative}`}>
+                {applyMask(`S$${formatMoney(currentBalanceSgd - originalAmountSgd)}`)}
+              </td>
+              <td className={`${styles.summaryValue} ${currentBalanceUsd - originalAmountUsd >= 0 ? styles.positive : styles.negative}`}>
+                {applyMask(`$${formatMoney(currentBalanceUsd - originalAmountUsd)}`)}
+              </td>
             </tr>
           )}
           {items
-            .filter((item) => item.label !== "Total Theta")
             .map((item) => {
               const className =
                 item.isUpnl && typeof item.numericValue === "number"
@@ -77,8 +87,12 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, orig
               return (
                 <React.Fragment key={item.label}>
                   <tr className={styles.summaryRow}>
-                    <td className={styles.summaryLabel}>{item.label}</td>
-                    <td className={className}>{item.display}</td>
+                    <td className={styles.summaryLabel}>{item.label === "Account PnL" ? "Account PnL %" : item.label}</td>
+                    <td className={className}>
+                      {item.label === "Account PnL" 
+                        ? ""
+                        : item.display}
+                    </td>
                     <td className={percentClass}>{item.percentDisplay ?? ""}</td>
                   </tr>
                   {item.label === "Account PnL" && (
@@ -86,19 +100,13 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, orig
                       <td className={styles.summaryLabel}>Annualized %</td>
                       <td className={styles.summaryValue}></td>
                       <td className={`${styles.summaryValue} ${annualizedReturn >= 0 ? styles.positive : styles.negative}`}>
-                        {applyMask ? applyMask(formatPercent(annualizedReturn)) : formatPercent(annualizedReturn)}
+                        {formatPercent(annualizedReturn)}
                       </td>
                     </tr>
                   )}
                 </React.Fragment>
               );
             })}
-          {/* Add one empty row */}
-          <tr className={styles.summaryRow}>
-            <td className={styles.summaryLabel}>&nbsp;</td>
-            <td className={styles.summaryValue}>&nbsp;</td>
-            <td className={styles.summaryPercent}>&nbsp;</td>
-          </tr>
         </tbody>
       </table>
     </div>

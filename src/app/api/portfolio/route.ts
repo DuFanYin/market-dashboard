@@ -123,6 +123,39 @@ async function fetchUsdSgdRate(): Promise<number> {
   }
 }
 
+async function fetchUsdCnyRate(): Promise<number> {
+  try {
+    const url = "https://query2.finance.yahoo.com/v8/finance/chart/CNY=X";
+    const params = new URLSearchParams({
+      interval: "1d",
+      range: "1d",
+    });
+
+    const response = await fetch(`${url}?${params.toString()}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Accept: "*/*",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Yahoo Finance API error (${response.status})`);
+    }
+
+    const data = (await response.json()) as {
+      chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> };
+    };
+    const rate = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (typeof rate !== "number" || rate <= 0) {
+      throw new Error("Invalid USD/CNY rate from Yahoo Finance");
+    }
+    return rate;
+  } catch (error) {
+    console.error("[portfolio API] Failed to fetch USD/CNY rate:", error);
+    throw error;
+  }
+}
+
 async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
   const tradierToken = process.env.TRADIER_TOKEN;
   if (!tradierToken) {
@@ -161,7 +194,7 @@ async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
 // Hardcoded ETF symbols (treat as ETF even if marked as STK in YAML)
 const ETF_SYMBOLS = ["GLDM"];
 
-function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cryptoPrices: Map<string, number>, usdSgdRate: number): PortfolioData {
+function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cryptoPrices: Map<string, number>, usdSgdRate: number, usdCnyRate: number): PortfolioData {
   const positionsOutput: Position[] = [];
   let totalStockMV = 0;
   let totalOptionMV = 0;
@@ -173,7 +206,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
   const optionPositions: RawPosition[] = [];
   const stockPositions: RawPosition[] = [];
   const etfPositions: RawPosition[] = [];
-  
+
   for (const pos of portfolio.positions) {
     if (pos.secType === "OPT") {
       optionPositions.push(pos);
@@ -376,6 +409,7 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     account_pnl: accountPnl,
     account_pnl_percent: accountPnlPercent,
     usd_sgd_rate: usdSgdRate,
+    usd_cny_rate: usdCnyRate,
     original_amount_sgd: originalAmountSgd,
     original_amount_usd: originalAmountUsd,
   };
@@ -426,9 +460,31 @@ export async function GET() {
       }
     }
 
+    let usdCnyRate: number | undefined = portfolio.usd_cny_rate;
+    try {
+      const freshCnyRate = await fetchUsdCnyRate();
+      usdCnyRate = freshCnyRate;
+      const updatedPortfolio: PortfolioYaml = {
+        ...portfolio,
+        usd_cny_rate: freshCnyRate,
+        timestamp: new Date().toISOString(),
+      };
+      await savePortfolioYaml(updatedPortfolio);
+    } catch (fxError) {
+      console.error("[portfolio API] using cached USD/CNY rate from YAML due to fetch failure", fxError);
+      if (usdCnyRate === undefined) {
+        // Use a default rate if unavailable (fallback)
+        usdCnyRate = 7.2;
+        console.warn("[portfolio API] Using default USD/CNY rate:", usdCnyRate);
+      }
+    }
+
     const quotes = await quotesPromise;
     if (usdSgdRate === undefined) {
       throw new Error("USD/SGD rate unavailable (no live or cached value)");
+    }
+    if (usdCnyRate === undefined) {
+      throw new Error("USD/CNY rate unavailable (no live or cached value)");
     }
 
     // Fetch crypto prices
@@ -465,7 +521,7 @@ export async function GET() {
       }
     }
 
-    const response = buildResponse(portfolio, quotes, cryptoPrices, usdSgdRate);
+    const response = buildResponse(portfolio, quotes, cryptoPrices, usdSgdRate, usdCnyRate);
 
     return NextResponse.json(response);
   } catch (error) {

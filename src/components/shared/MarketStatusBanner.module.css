@@ -6,6 +6,7 @@
   font-size: 12px;
   text-align: center;
   margin: 0;
+  margin-top: 20px;
   margin-bottom: 0;
 }
 
@@ -46,48 +47,48 @@
 
 /* Banner background colors */
 .bannerOpen {
-  color: #2e7d32;
+  color: #2e7d32; /* Green for open */
 }
 
 .bannerPreMarket {
-  color: #ff9800; /* Orange for pre-market */
+  color: #ffc107; /* Yellow for pre-market */
 }
 
 .bannerPostMarket {
-  color: #9c27b0; /* Purple for post-market */
+  color: #ffc107; /* Yellow for post-market */
 }
 
 .bannerNight {
-  color: #2196f3; /* Blue for night market */
+  color: #ffc107; /* Yellow for night market */
 }
 
 .bannerClosed {
-  color: #c62828;
+  color: #c62828; /* Red for closed */
 }
 
 /* Status text colors */
 .statusOpen {
-  color: #2e7d32;
+  color: #2e7d32; /* Green for open */
   font-weight: 600;
 }
 
 .statusPreMarket {
-  color: #ff9800;
+  color: #ffc107; /* Yellow for pre-market */
   font-weight: 600;
 }
 
 .statusPostMarket {
-  color: #9c27b0;
+  color: #ffc107; /* Yellow for post-market */
   font-weight: 600;
 }
 
 .statusNight {
-  color: #2196f3;
+  color: #ffc107; /* Yellow for night market */
   font-weight: 600;
 }
 
 .statusClosed {
-  color: #c62828;
+  color: #c62828; /* Red for closed */
   font-weight: 600;
 }
 

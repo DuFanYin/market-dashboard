@@ -19,11 +19,20 @@
   margin: 0 auto;
   box-sizing: border-box;
   overflow: hidden;
-  gap: 15px;
+  gap: 0;
 }
 
 .container > div:first-child {
-  margin-bottom: 0;
+  margin-bottom: 20px;
+}
+
+.container > div:nth-child(2) {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.container > div:last-child {
+  margin-top: 0;
 }
 
 .summarySection {
@@ -69,9 +78,10 @@
   color: #ffffff;
   cursor: pointer;
   transition: text-decoration 0.2s;
-  margin-top: 20px;
   grid-column: 2;
   justify-self: center;
+  align-self: center;
+  margin-top: 20px;
 }
 
 .title:hover {
@@ -354,7 +364,7 @@
 /* Layout ratio: Summary 28% | Chart 24% | Legend 48% */
 .chartSection {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   flex: 0 0 24%;
   min-width: 0;
@@ -363,15 +373,26 @@
   flex-shrink: 0;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  overflow: visible;
+  border-radius: 6px;
+  position: relative;
+  border: 1px solid transparent;
+  transition: border-color 0.2s;
+  z-index: 1;
+  padding-top: 12px;
+}
+
+.chartSection:hover {
+  border-color: #ffffff !important;
+  z-index: 2;
 }
 
 .chartWrapper {
   position: relative;
   width: 100%;
-  max-width: 200px;
-  height: 200px;
-  max-height: 200px;
+  max-width: 250px;
+  height: 250px;
+  max-height: 250px;
   flex-shrink: 1;
   margin: 0;
   display: block;
@@ -381,8 +402,8 @@
 .chartWrapper svg {
   width: 100%;
   height: 100%;
-  max-width: 200px;
-  max-height: 200px;
+  max-width: 250px;
+  max-height: 250px;
 }
 
 .legendSection {
@@ -397,6 +418,16 @@
   overflow: hidden;
   padding: 0;
   margin: 0;
+  border-radius: 6px;
+  position: relative;
+  border: 1px solid transparent;
+  transition: border-color 0.2s;
+  z-index: 1;
+}
+
+.legendSection:hover {
+  border-color: #ffffff !important;
+  z-index: 2;
 }
 
 .legendTableWrapper {
@@ -516,7 +547,7 @@
 }
 
 .center {
-  text-align: center;
+  text-align: center !important;
 }
 
 /* =========================================================================
@@ -555,8 +586,9 @@
   font-size: 13px;
 }
 
-/* Complete column width redesign - using percentages only */
-/* Column 1: Index - 3% */
+/* =========================================================================
+ * Column Widths - Individual adjustment allowed
+ * ========================================================================= */
 .positionsTable thead th:nth-child(1),
 .positionsTable th:nth-child(1),
 .positionsTable td:nth-child(1) {
@@ -564,65 +596,100 @@
   padding-right: 10px;
 }
 
-/* Column 2: Symbol - 15% */
 .positionsTable thead th:nth-child(2),
 .positionsTable th:nth-child(2),
 .positionsTable td:nth-child(2) {
-  width: 15%;
+  width: 14%;
 }
 
-/* Column 3: Quantity - 4% */
 .positionsTable thead th:nth-child(3),
 .positionsTable th:nth-child(3),
 .positionsTable td:nth-child(3) {
   width: 4%;
 }
 
-/* Columns 4-10: Price, Avg Cost, Total Cost, Market, UPnL, Change %, Pos % - 7% each */
 .positionsTable thead th:nth-child(4),
-.positionsTable thead th:nth-child(5),
-.positionsTable thead th:nth-child(6),
-.positionsTable thead th:nth-child(7),
-.positionsTable thead th:nth-child(8),
-.positionsTable thead th:nth-child(9),
-.positionsTable thead th:nth-child(10),
 .positionsTable th:nth-child(4),
-.positionsTable td:nth-child(4),
-.positionsTable th:nth-child(5),
-.positionsTable td:nth-child(5),
-.positionsTable th:nth-child(6),
-.positionsTable td:nth-child(6),
-.positionsTable th:nth-child(7),
-.positionsTable td:nth-child(7),
-.positionsTable th:nth-child(8),
-.positionsTable td:nth-child(8),
-.positionsTable th:nth-child(9),
-.positionsTable td:nth-child(9),
-.positionsTable th:nth-child(10),
-.positionsTable td:nth-child(10) {
-  width: 7%;
+.positionsTable td:nth-child(4) {
+  width: 6.6%;
 }
 
-/* Columns 11-16: Delta, Gamma, Theta, DTE, Strike, Spot - 4.833% each (6 columns × 4.833% = 29%) */
+.positionsTable thead th:nth-child(5),
+.positionsTable th:nth-child(5),
+.positionsTable td:nth-child(5) {
+  width: 6.6%;
+}
+
+.positionsTable thead th:nth-child(6),
+.positionsTable th:nth-child(6),
+.positionsTable td:nth-child(6) {
+  width: 6.6%;
+}
+
+.positionsTable thead th:nth-child(7),
+.positionsTable th:nth-child(7),
+.positionsTable td:nth-child(7) {
+  width: 6.6%;
+}
+
+.positionsTable thead th:nth-child(8),
+.positionsTable th:nth-child(8),
+.positionsTable td:nth-child(8) {
+  width: 6.6%;
+}
+
+.positionsTable thead th:nth-child(9),
+.positionsTable th:nth-child(9),
+.positionsTable td:nth-child(9) {
+  width: 6.6%;
+}
+
+.positionsTable thead th:nth-child(10),
+.positionsTable th:nth-child(10),
+.positionsTable td:nth-child(10) {
+  width: 6.6%;
+}
+
 .positionsTable thead th:nth-child(11),
-.positionsTable thead th:nth-child(12),
-.positionsTable thead th:nth-child(13),
-.positionsTable thead th:nth-child(14),
-.positionsTable thead th:nth-child(15),
-.positionsTable thead th:nth-child(16),
 .positionsTable th:nth-child(11),
-.positionsTable td:nth-child(11),
+.positionsTable td:nth-child(11) {
+  width: 6.6%;
+}
+
+.positionsTable thead th:nth-child(12),
 .positionsTable th:nth-child(12),
-.positionsTable td:nth-child(12),
+.positionsTable td:nth-child(12) {
+  width: 4.37%;
+}
+
+.positionsTable thead th:nth-child(13),
 .positionsTable th:nth-child(13),
-.positionsTable td:nth-child(13),
+.positionsTable td:nth-child(13) {
+  width: 4.37%;
+}
+
+.positionsTable thead th:nth-child(14),
 .positionsTable th:nth-child(14),
-.positionsTable td:nth-child(14),
+.positionsTable td:nth-child(14) {
+  width: 4.37%;
+}
+
+.positionsTable thead th:nth-child(15),
 .positionsTable th:nth-child(15),
-.positionsTable td:nth-child(15),
+.positionsTable td:nth-child(15) {
+  width: 4.37%;
+}
+
+.positionsTable thead th:nth-child(16),
 .positionsTable th:nth-child(16),
 .positionsTable td:nth-child(16) {
-  width: 4.833%;
+  width: 4.37%;
+}
+
+.positionsTable thead th:nth-child(17),
+.positionsTable th:nth-child(17),
+.positionsTable td:nth-child(17) {
+  width: 4.37%;
 }
 
 .positionsTable th,
@@ -635,10 +702,6 @@
   font-size: 13px;
   color: #ffffff;
   box-sizing: border-box;
-}
-
-.positionsTable td {
-  text-align: right;
 }
 
 .positionsTable td.positive {
@@ -655,41 +718,107 @@
   color: #ffffff !important;
   background-color: #000000 !important;
   border-bottom: 1px solid #333333 !important;
-  text-align: center !important;
   position: sticky;
   top: 0;
   z-index: 1;
+  text-align: right !important; /* Default right for all th, will be overridden by specific columns */
 }
 
+/* =========================================================================
+ * Column Alignment - Individual adjustment allowed
+ * ========================================================================= */
+/* Default: all cells right-aligned */
+.positionsTable td {
+  text-align: right;
+}
 
-.positionsTable th:first-child {
+/* Column 1: Index - center aligned */
+.positionsTable thead th:nth-child(1),
+.positionsTable th:nth-child(1),
+.positionsTable tbody td:nth-child(1),
+.positionsTable td:nth-child(1) {
   text-align: center !important;
 }
 
-.positionsTable td:first-child {
-  text-align: center;
-}
-
+/* Column 2: Symbol - center aligned for header, left aligned for data */
+.positionsTable thead th:nth-child(2),
 .positionsTable th:nth-child(2) {
   text-align: center !important;
 }
-
+.positionsTable tbody td:nth-child(2),
 .positionsTable td:nth-child(2) {
-  text-align: left;
+  text-align: left !important;
 }
 
-/* Quantity column (3rd) - center aligned */
+/* Column 3: Quantity - center aligned */
+.positionsTable thead th:nth-child(3),
 .positionsTable th:nth-child(3),
+.positionsTable tbody td:nth-child(3),
 .positionsTable td:nth-child(3) {
   text-align: center !important;
 }
 
-/* All columns from 4th onwards - right aligned */
-.positionsTable th:nth-child(n+4) {
-  text-align: right !important;
+/* Column 4: Type - center aligned */
+.positionsTable thead th:nth-child(4),
+.positionsTable th:nth-child(4),
+.positionsTable tbody td:nth-child(4),
+.positionsTable td:nth-child(4) {
+  text-align: center !important;
 }
 
-.positionsTable td:nth-child(n+4) {
+/* Columns 5-17: From Price onwards, all right aligned - must override any other rules */
+.positionsTable thead th:nth-child(5),
+.positionsTable thead th:nth-child(6),
+.positionsTable thead th:nth-child(7),
+.positionsTable thead th:nth-child(8),
+.positionsTable thead th:nth-child(9),
+.positionsTable thead th:nth-child(10),
+.positionsTable thead th:nth-child(11),
+.positionsTable thead th:nth-child(12),
+.positionsTable thead th:nth-child(13),
+.positionsTable thead th:nth-child(14),
+.positionsTable thead th:nth-child(15),
+.positionsTable thead th:nth-child(16),
+.positionsTable thead th:nth-child(17),
+.positionsTable th:nth-child(5),
+.positionsTable th:nth-child(6),
+.positionsTable th:nth-child(7),
+.positionsTable th:nth-child(8),
+.positionsTable th:nth-child(9),
+.positionsTable th:nth-child(10),
+.positionsTable th:nth-child(11),
+.positionsTable th:nth-child(12),
+.positionsTable th:nth-child(13),
+.positionsTable th:nth-child(14),
+.positionsTable th:nth-child(15),
+.positionsTable th:nth-child(16),
+.positionsTable th:nth-child(17),
+.positionsTable tbody td:nth-child(5),
+.positionsTable tbody td:nth-child(6),
+.positionsTable tbody td:nth-child(7),
+.positionsTable tbody td:nth-child(8),
+.positionsTable tbody td:nth-child(9),
+.positionsTable tbody td:nth-child(10),
+.positionsTable tbody td:nth-child(11),
+.positionsTable tbody td:nth-child(12),
+.positionsTable tbody td:nth-child(13),
+.positionsTable tbody td:nth-child(14),
+.positionsTable tbody td:nth-child(15),
+.positionsTable tbody td:nth-child(16),
+.positionsTable tbody td:nth-child(17),
+.positionsTable td:nth-child(5),
+.positionsTable td:nth-child(6),
+.positionsTable td:nth-child(7),
+.positionsTable td:nth-child(8),
+.positionsTable td:nth-child(9),
+.positionsTable td:nth-child(10),
+.positionsTable td:nth-child(11),
+.positionsTable td:nth-child(12),
+.positionsTable td:nth-child(13),
+.positionsTable td:nth-child(14),
+.positionsTable td:nth-child(15),
+.positionsTable td:nth-child(16),
+.positionsTable td:nth-child(17) {
   text-align: right !important;
 }
 

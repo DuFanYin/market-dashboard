@@ -11,12 +11,27 @@ interface PositionsTableProps {
   isIncognito: boolean;
 }
 
-type SortColumn = "symbol" | "totalCost" | "market" | "upnl" | "changePercent" | "posPercent" | "delta" | "gamma" | "theta" | "dte" | "strike" | "spot" | null;
+type SortColumn = "symbol" | "type" | "totalCost" | "market" | "upnl" | "changePercent" | "posPercent" | "delta" | "gamma" | "theta" | "dte" | "strike" | "spot" | null;
 type SortDirection = "asc" | "desc" | null;
 
 export function PositionsTable({ positions, netLiquidation, applyMask, isIncognito }: PositionsTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>("symbol");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const getTypeLabel = (secType: string) => {
+    switch (secType) {
+      case "OPT":
+        return "Option";
+      case "STK":
+        return "Stock";
+      case "CRYPTO":
+        return "Crypto";
+      case "ETF":
+        return "ETF";
+      default:
+        return secType;
+    }
+  };
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -48,6 +63,12 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
         return activeSortDirection === "asc" 
           ? aSymbol.localeCompare(bSymbol)
           : bSymbol.localeCompare(aSymbol);
+      }
+
+      if (activeSortColumn === "type") {
+        return activeSortDirection === "asc"
+          ? a.secType.localeCompare(b.secType)
+          : b.secType.localeCompare(a.secType);
       }
 
       let aValue: number;
@@ -138,6 +159,17 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
               )}
             </th>
             <th>Qty</th>
+            <th 
+              className={`${styles.sortable} ${styles.center}`}
+              onClick={() => handleSort("type")}
+            >
+              Type
+              {sortColumn === "type" && (
+                <span className={styles.sortIndicator}>
+                  {sortDirection === "asc" ? " ↑" : sortDirection === "desc" ? " ↓" : ""}
+                </span>
+              )}
+            </th>
             <th>Price</th>
             <th>Avg. Cost</th>
             <th 
@@ -228,17 +260,19 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                 </span>
               )}
             </th>
-            <th 
-              className={styles.sortable}
-              onClick={() => handleSort("dte")}
-            >
-              DTE
-              {sortColumn === "dte" && (
-                <span className={styles.sortIndicator}>
-                  {sortDirection === "asc" ? " ↑" : sortDirection === "desc" ? " ↓" : ""}
-                </span>
-              )}
-            </th>
+            {!isIncognito && (
+              <th 
+                className={styles.sortable}
+                onClick={() => handleSort("dte")}
+              >
+                DTE
+                {sortColumn === "dte" && (
+                  <span className={styles.sortIndicator}>
+                    {sortDirection === "asc" ? " ↑" : sortDirection === "desc" ? " ↓" : ""}
+                  </span>
+                )}
+              </th>
+            )}
             <th 
               className={styles.sortable}
               onClick={() => handleSort("strike")}
@@ -274,6 +308,7 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                 <td className={styles.center}>{index + 1}</td>
                 <td>{pos.is_option ? `${pos.underlyingKey}-${optionSymbol}` : pos.symbol}</td>
                 <td>{applyMask(formatNumber(pos.qty, pos.is_crypto ? 3 : 0))}</td>
+                <td className={styles.center}>{getTypeLabel(pos.secType)}</td>
                 <td>{applyMask(formatMoney(pos.price))}</td>
                 <td>{applyMask(formatMoney(pos.cost))}</td>
                 <td>{applyMask(formatMoney(pos.cost * pos.qty))}</td>
@@ -306,9 +341,11 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                 <td>{applyMask(formatNumber(pos.delta))}</td>
                 <td>{!pos.is_option ? "" : applyMask(formatNumber(pos.gamma))}</td>
                 <td>{!pos.is_option ? "" : applyMask(formatNumber(pos.theta))}</td>
-                <td>
-                  {pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0 ? `${pos.dteDays}` : ""}
-                </td>
+                {!isIncognito && (
+                  <td>
+                    {pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0 ? `${pos.dteDays}` : ""}
+                  </td>
+                )}
                 <td>
                   {pos.is_option && pos.strike ? applyMask(formatMoney(pos.strike)) : ""}
                 </td>
