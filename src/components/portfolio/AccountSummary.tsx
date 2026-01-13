@@ -1,5 +1,6 @@
 import type { SummaryItem } from "@/types/portfolio";
 import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalculations";
+import type { CurrencyMode } from "@/lib/currency";
 import { SummaryTable } from "./SummaryTable";
 import { PortfolioChart } from "./PortfolioChart";
 import { LegendTable } from "./LegendTable";
@@ -13,12 +14,11 @@ interface AccountSummaryProps {
   originalAmountSgd: number;
   originalAmountUsd: number;
   currentBalanceUsd: number;
-  currentBalanceSgd: number;
-  isDarkMode: boolean;
+  yearBeginBalanceUsd: number;
   onToggleIncognito: () => void;
   usdSgdRate: number;
   usdCnyRate: number;
-  currencyMode: "USD" | "SGD" | "CNY";
+  currencyMode: CurrencyMode;
   onToggleCurrency: () => void;
 }
 
@@ -30,8 +30,7 @@ export function AccountSummary({
   originalAmountSgd,
   originalAmountUsd,
   currentBalanceUsd,
-  currentBalanceSgd,
-  isDarkMode,
+  yearBeginBalanceUsd,
   onToggleIncognito,
   usdSgdRate,
   usdCnyRate,
@@ -42,17 +41,19 @@ export function AccountSummary({
     <section className={styles.chartContainer}>
       <SummaryTable 
         items={summaryItems} 
-        originalAmountSgd={originalAmountSgd}
         originalAmountUsd={originalAmountUsd}
         currentBalanceUsd={currentBalanceUsd}
-        currentBalanceSgd={currentBalanceSgd}
+        yearBeginBalanceUsd={yearBeginBalanceUsd}
+        originalAmountSgd={originalAmountSgd}
+        usdSgdRate={usdSgdRate}
+        usdCnyRate={usdCnyRate}
+        currencyMode={currencyMode}
         applyMask={applyMask}
         onToggleIncognito={onToggleIncognito}
       />
       <div className={styles.chartSection}>
         <PortfolioChart 
-          assetAllocation={assetAllocation}
-          isDarkMode={isDarkMode} />
+          assetAllocation={assetAllocation} />
       </div>
       <LegendTable 
         assetAllocation={assetAllocation} 

@@ -389,7 +389,9 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
   }
 
   const originalAmountSgd = Number(process.env.ORIGINAL_AMOUNT_SGD);
+  const originalAmountSgdRaw = Number(process.env.ORIGINAL_AMOUNT_SGD) || 0;
   const originalAmountUsd = originalAmountSgd / usdSgdRate;
+  const yearBeginBalanceUsd = Number(process.env.YEAR_BEGIN_BALANCE_USD) || 0;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
 
@@ -412,6 +414,8 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     usd_cny_rate: usdCnyRate,
     original_amount_sgd: originalAmountSgd,
     original_amount_usd: originalAmountUsd,
+    year_begin_balance_usd: yearBeginBalanceUsd,
+    original_amount_sgd_raw: originalAmountSgdRaw,
   };
 }
 

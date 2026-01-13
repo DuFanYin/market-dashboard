@@ -4,7 +4,6 @@ import styles from "@/app/portfolio/page.module.css";
 
 interface PortfolioChartProps {
   assetAllocation: AssetAllocation[];
-  isDarkMode?: boolean;
 }
 
 // Asset order: Cash, Option, ETF, Crypto, Stock (matching pentagon vertices)

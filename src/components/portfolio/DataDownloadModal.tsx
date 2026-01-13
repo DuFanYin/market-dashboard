@@ -1,9 +1,34 @@
 import { useState } from "react";
-import { formatMoney, formatPercent, formatNumber } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import type { PortfolioData } from "@/types/portfolio";
 import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalculations";
 import type { SummaryItem } from "@/types/portfolio";
+import {
+  calculateTotalCost,
+  calculateMarketValue,
+  calculatePositionPercent,
+  calculateTotalUnrealizedPnL,
+} from "@/lib/positionCalculations";
 import styles from "@/app/portfolio/page.module.css";
+
+type PositionExportData = {
+  symbol: string;
+  displaySymbol: string;
+  type: string;
+  qty: number | null;
+  price: number | null;
+  cost: number | null;
+  totalCost: number | null;
+  marketValue: number | null;
+  upnl: number | null;
+  upnlPercent: number | null;
+  positionPercent: number | null;
+  underlyingPrice?: number | null;
+  delta?: number | null;
+  gamma?: number | null;
+  theta?: number | null;
+  dte?: number | null;
+};
 
 interface DataDownloadModalProps {
   isOpen: boolean;
@@ -14,9 +39,6 @@ interface DataDownloadModalProps {
   summaryItems: SummaryItem[];
   originalAmountUsd: number;
   currentBalanceUsd: number;
-  isUsMarketOpen: boolean;
-  nyTimeLabel: string;
-  lastRefreshTime: Date | null;
 }
 
 export function DataDownloadModal({
@@ -34,6 +56,11 @@ export function DataDownloadModal({
   if (!isOpen || !data) return null;
 
   const formatAllData = (): string => {
+    const roundTo2dp = (value: number | null | undefined): number | null => {
+      if (value === null || value === undefined) return null;
+      return Math.round(value * 100) / 100;
+    };
+    
     let output = "PORTFOLIO DASHBOARD DATA EXPORT\n";
     output += "=".repeat(50) + "\n\n";
     output += `Generated: ${new Date().toLocaleString()}\n`;
@@ -52,55 +79,77 @@ export function DataDownloadModal({
     output += `CURRENT BALANCE USD: ${formatMoney(currentBalanceUsd)}\n`;
     
     output += "\n";
-
-    output += "ASSET ALLOCATION\n";
-    output += "-".repeat(50) + "\n";
-    assetAllocation
+    
+    // Convert asset allocation to compact JSON
+    const allocationData = assetAllocation
       .filter((asset) => asset.isVisible)
-      .forEach((asset) => {
-        output += `${asset.label}\n`;
-        output += `  Market Value: ${formatMoney(asset.marketValue)} (${formatPercent(asset.valueAllocationPercent)})\n`;
-        output += `  Unrealized PnL: ${formatMoney(asset.unrealizedPnL)} (${formatPercent(Math.abs(asset.profitLossPercent))})\n\n`;
+      .map((asset) => ({
+        label: asset.label,
+        marketValue: roundTo2dp(asset.marketValue),
+        valueAllocationPercent: roundTo2dp(asset.valueAllocationPercent),
+        unrealizedPnL: roundTo2dp(asset.unrealizedPnL),
+        profitLossPercent: roundTo2dp(Math.abs(asset.profitLossPercent)),
+      }));
+    
+    const totalUnrealizedPnL = calculateTotalUnrealizedPnL(assetBreakdown);
+    
+    // Convert positions to compact JSON
+    const positionsData = data.positions
+      .filter((pos) => !pos.isPlaceholder)
+      .map((pos) => {
+        let displaySymbol = pos.symbol;
+        if (pos.is_option && pos.strike && pos.expiry) {
+          const optionSymbol = `${(pos.right ?? "").toUpperCase()}-${pos.expiry.slice(2, 4)}'${pos.expiry.slice(4, 6)}'${pos.expiry.slice(6, 8)}-${pos.strike.toFixed(2)}`;
+          displaySymbol = pos.underlyingKey ? `${optionSymbol} (${pos.underlyingKey})` : optionSymbol;
+        }
+
+        let positionType = "Stock";
+        if (pos.is_option) positionType = "Option";
+        else if (pos.is_crypto) positionType = "Crypto";
+        else if (pos.secType === "ETF") positionType = "ETF";
+
+        const totalCost = calculateTotalCost(pos);
+        const marketValue = calculateMarketValue(pos);
+        const positionPercent = calculatePositionPercent(pos, currentBalanceUsd);
+
+        const positionObj: PositionExportData = {
+          symbol: pos.symbol,
+          displaySymbol,
+          type: positionType,
+          qty: roundTo2dp(pos.qty),
+          price: roundTo2dp(pos.price),
+          cost: roundTo2dp(pos.cost),
+          totalCost: roundTo2dp(totalCost),
+          marketValue: roundTo2dp(marketValue),
+          upnl: roundTo2dp(pos.upnl),
+          upnlPercent: roundTo2dp(pos.percent_change),
+          positionPercent: roundTo2dp(positionPercent),
+        };
+
+        if (pos.is_option) {
+          positionObj.underlyingPrice = roundTo2dp(pos.underlyingPrice);
+          positionObj.delta = roundTo2dp(pos.delta);
+          positionObj.gamma = roundTo2dp(pos.gamma);
+          positionObj.theta = roundTo2dp(pos.theta);
+          positionObj.dte = roundTo2dp(pos.dteDays);
+        }
+
+        return positionObj;
       });
-    output += `Total Market Value: ${formatMoney(assetBreakdown.totalMarketValue)}\n`;
-    output += `Total Unrealized PnL: ${formatMoney(assetBreakdown.stockUnrealizedPnL + assetBreakdown.optionUnrealizedPnL + assetBreakdown.cryptoUnrealizedPnL + assetBreakdown.etfUnrealizedPnL)}\n\n`;
-
-    output += "POSITIONS\n";
-    output += "-".repeat(50) + "\n";
-    data.positions.forEach((pos) => {
-      if (pos.isPlaceholder) {
-        return;
-      }
-
-      let displaySymbol = pos.symbol;
-      if (pos.is_option && pos.strike && pos.expiry) {
-        const optionSymbol = `${(pos.right ?? "").toUpperCase()}-${pos.expiry.slice(2, 4)}'${pos.expiry.slice(4, 6)}'${pos.expiry.slice(6, 8)}-${pos.strike.toFixed(2)}`;
-        displaySymbol = pos.underlyingKey ? `${optionSymbol} (${pos.underlyingKey})` : optionSymbol;
-      }
-
-      let positionType = "Stock";
-      if (pos.is_option) positionType = "Option";
-      else if (pos.is_crypto) positionType = "Crypto";
-      else if (pos.secType === "ETF") positionType = "ETF";
-      output += `${positionType}: ${displaySymbol}\n`;
-      output += `  Symbol: ${pos.symbol}\n`;
-      output += `  Quantity: ${formatNumber(pos.qty, 0)}\n`;
-      output += `  Price: ${formatMoney(pos.price)}\n`;
-      output += `  Avg Cost: ${formatMoney(pos.cost)}\n`;
-      output += `  Total Cost: ${formatMoney(pos.cost * pos.qty)}\n`;
-      output += `  Market Value: ${formatMoney(pos.price * pos.qty)}\n`;
-      output += `  Unrealized PnL: ${formatMoney(pos.upnl)} (${formatNumber(pos.percent_change)}%)\n`;
-      output += `  Position %: ${formatPercent(((pos.price * pos.qty) / currentBalanceUsd) * 100)}\n`;
-      
-      if (pos.is_option) {
-        output += `  Underlying Price: ${formatMoney(pos.underlyingPrice ?? 0)}\n`;
-        output += `  Delta: ${formatNumber(pos.delta)}\n`;
-        output += `  Gamma: ${formatNumber(pos.gamma)}\n`;
-        output += `  Theta: ${formatNumber(pos.theta)}\n`;
-        output += `  DTE: ${pos.dteDays !== undefined ? pos.dteDays : "N/A"}\n`;
-      }
-      output += "\n";
-    });
+    
+    // Combine both sections into a single JSON object
+    const portfolioJson = {
+      assetAllocation: {
+        allocations: allocationData,
+        summary: {
+          totalMarketValue: roundTo2dp(assetBreakdown.totalMarketValue),
+          totalUnrealizedPnL: roundTo2dp(totalUnrealizedPnL),
+        },
+      },
+      positions: positionsData,
+    };
+    
+    output += JSON.stringify(portfolioJson) + "\n\n";
 
     return output;
   };

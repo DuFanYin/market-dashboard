@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 
 import type { Position } from "@/types/portfolio";
 import { formatMoney, formatPercent, formatNumber } from "@/lib/format";
+import {
+  calculateTotalCost,
+  calculateMarketValue,
+  calculatePositionPercent,
+} from "@/lib/positionCalculations";
 import styles from "@/app/portfolio/page.module.css";
 
 interface PositionsTableProps {
@@ -76,12 +81,12 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
 
       switch (activeSortColumn) {
         case "totalCost":
-          aValue = a.cost * a.qty;
-          bValue = b.cost * b.qty;
+          aValue = calculateTotalCost(a);
+          bValue = calculateTotalCost(b);
           break;
         case "market":
-          aValue = a.price * a.qty;
-          bValue = b.price * b.qty;
+          aValue = calculateMarketValue(a);
+          bValue = calculateMarketValue(b);
           break;
         case "upnl":
           aValue = a.upnl;
@@ -92,8 +97,8 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
           bValue = b.percent_change;
           break;
         case "posPercent":
-          aValue = netLiquidation > 0 ? ((a.price * a.qty) / netLiquidation) * 100 : 0;
-          bValue = netLiquidation > 0 ? ((b.price * b.qty) / netLiquidation) * 100 : 0;
+          aValue = calculatePositionPercent(a, netLiquidation);
+          bValue = calculatePositionPercent(b, netLiquidation);
           break;
         case "delta":
           aValue = a.delta ?? 0;
@@ -129,7 +134,7 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
     // Calculate max and min values
     const upnlValues = ordered.map(p => p.upnl);
     const changePercentValues = ordered.map(p => p.percent_change);
-    const marketValues = ordered.map(p => p.price * p.qty);
+    const marketValues = ordered.map(p => calculateMarketValue(p));
 
     const maxUpnl = upnlValues.length > 0 ? Math.max(...upnlValues) : null;
     const minUpnl = upnlValues.length > 0 ? Math.min(...upnlValues) : null;
@@ -311,13 +316,13 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                 <td className={styles.center}>{getTypeLabel(pos.secType)}</td>
                 <td>{applyMask(formatMoney(pos.price))}</td>
                 <td>{applyMask(formatMoney(pos.cost))}</td>
-                <td>{applyMask(formatMoney(pos.cost * pos.qty))}</td>
+                <td>{applyMask(formatMoney(calculateTotalCost(pos)))}</td>
                 <td className={`${
-                  !isIncognito && maxMarketValue !== null && pos.price * pos.qty === maxMarketValue ? styles.maxValue : ""
+                  !isIncognito && maxMarketValue !== null && calculateMarketValue(pos) === maxMarketValue ? styles.maxValue : ""
                 } ${
-                  !isIncognito && minMarketValue !== null && pos.price * pos.qty === minMarketValue ? styles.minValue : ""
+                  !isIncognito && minMarketValue !== null && calculateMarketValue(pos) === minMarketValue ? styles.minValue : ""
                 }`}>
-                  {applyMask(formatMoney(pos.price * pos.qty))}
+                  {applyMask(formatMoney(calculateMarketValue(pos)))}
                 </td>
                 <td className={`${pos.upnl >= 0 ? styles.positive : styles.negative} ${
                   !isIncognito && maxUpnl !== null && pos.upnl === maxUpnl ? styles.maxValue : ""
@@ -334,9 +339,7 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                   {`${formatNumber(pos.percent_change)}%`}
                 </td>
                 <td>
-                  {netLiquidation > 0
-                    ? formatPercent(((pos.price * pos.qty) / netLiquidation) * 100)
-                    : "0.00%"}
+                  {formatPercent(calculatePositionPercent(pos, netLiquidation))}
                 </td>
                 <td>{applyMask(formatNumber(pos.delta))}</td>
                 <td>{!pos.is_option ? "" : applyMask(formatNumber(pos.gamma))}</td>

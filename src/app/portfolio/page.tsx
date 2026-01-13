@@ -3,6 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { PortfolioData } from "@/types/portfolio";
+import type { CurrencyMode } from "@/lib/currency";
 import { usePortfolioCalculations } from "@/hooks/usePortfolioCalculations";
 import { useMarketData } from "@/hooks/useMarketData";
 import { PortfolioHeader } from "@/components/portfolio/PortfolioHeader";
@@ -19,7 +20,6 @@ export default function PortfolioPage() {
   const [error, setError] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isIncognito, setIsIncognito] = useState(false);
-  type CurrencyMode = "USD" | "SGD" | "CNY";
   const [currencyMode, setCurrencyMode] = useState<CurrencyMode>("USD");
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [timeAgo, setTimeAgo] = useState<string>("");
@@ -170,11 +170,10 @@ export default function PortfolioPage() {
             assetAllocation={assetAllocation}
             assetBreakdown={assetBreakdown}
             applyMask={applyMask}
-            originalAmountSgd={data.original_amount_sgd}
+            originalAmountSgd={data.original_amount_sgd_raw}
             originalAmountUsd={data.original_amount_usd}
             currentBalanceUsd={data.net_liquidation}
-            currentBalanceSgd={data.net_liquidation * data.usd_sgd_rate}
-            isDarkMode={true}
+            yearBeginBalanceUsd={data.year_begin_balance_usd}
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
             usdSgdRate={data.usd_sgd_rate}
             usdCnyRate={data.usd_cny_rate}
@@ -207,9 +206,6 @@ export default function PortfolioPage() {
         summaryItems={summaryItems}
         originalAmountUsd={data.original_amount_usd}
         currentBalanceUsd={data.net_liquidation}
-        isUsMarketOpen={isUsMarketOpen}
-        nyTimeLabel={nyTimeLabel}
-        lastRefreshTime={lastRefreshTime}
       />
     </main>
   );

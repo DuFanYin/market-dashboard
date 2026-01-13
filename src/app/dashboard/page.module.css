@@ -28,7 +28,8 @@
 }
 
 .fgGreed {
-  background-color: #a3a3a3;
+  /* Lighter green for normal Greed (darker green reserved for Extreme Greed) */
+  background-color: #66bb6a;
   color: #ffffff;
 }
 
