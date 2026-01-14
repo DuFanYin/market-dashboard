@@ -38,7 +38,7 @@ export function AccountSummary({
   onToggleCurrency,
 }: AccountSummaryProps) {
   return (
-    <section className={styles.chartContainer}>
+    <>
       <SummaryTable 
         items={summaryItems} 
         originalAmountUsd={originalAmountUsd}
@@ -64,7 +64,7 @@ export function AccountSummary({
         currencyMode={currencyMode}
         onToggleCurrency={onToggleCurrency}
       />
-    </section>
+    </>
   );
 }
 

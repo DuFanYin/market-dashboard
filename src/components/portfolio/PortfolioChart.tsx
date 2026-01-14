@@ -90,8 +90,11 @@ export function PortfolioChart({
   const pathPoints = vertexPoints.map(p => `${p.x},${p.y}`).join(' ');
 
   return (
-    <div className={styles.chartWrapper}>
-      <svg width={250} height={250} viewBox="0 0 250 250">
+    <svg
+      viewBox="0 0 250 250"
+      preserveAspectRatio="xMidYMid meet"
+      className={styles.chartSvg}
+    >
         {/* Draw percentage layer rings (white rings at 0%, 20%, 40%, 60%, 80%, 100%) */}
         {[0, 20, 40, 60, 80, 100].map((percent, i) => {
           const radius = (percent / 100) * maxRadius;
@@ -171,8 +174,7 @@ export function PortfolioChart({
             </text>
           );
         })}
-      </svg>
-    </div>
+    </svg>
   );
 }
 

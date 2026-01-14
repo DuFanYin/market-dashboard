@@ -39,8 +39,7 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask, usdSgd
       onClick={onToggleCurrency}
       style={{ cursor: 'pointer' }}
     >
-      <div className={styles.legendTableWrapper}>
-        <table className={styles.chartLegend}>
+      <table className={styles.chartLegend}>
         <thead>
           <tr>
             <th className={styles.legendColorCell}></th>
@@ -89,7 +88,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask, usdSgd
           </tr>
         </tbody>
       </table>
-      </div>
     </div>
   );
 }
