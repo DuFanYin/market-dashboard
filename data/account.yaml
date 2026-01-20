@@ -1,4 +1,4 @@
-timestamp: '2026-01-20T08:33:05.215Z'
+timestamp: '2026-01-20T08:49:38.434Z'
 cash: 5008.95
 positions:
   - symbol: NVDA
@@ -36,7 +36,7 @@ positions:
     position: 15
     avgCost: 120.37895335
 usd_sgd_rate: 1.2866
-usd_cny_rate: 6.9584
+usd_cny_rate: 6.9582
 original_amount_sgd: 15000
 original_amount_usd: null
 year_begin_balance_usd: 13758

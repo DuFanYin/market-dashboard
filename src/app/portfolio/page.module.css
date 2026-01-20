@@ -1090,9 +1090,9 @@
     --summary-col2-flex:1.2;   /* Value */
     --summary-col3-flex: 1.2; /* Percent */
 
-    --summary-col1-pad-x: 5px;
-    --summary-col2-pad-x: 10px;
-    --summary-col3-pad-x: 10px;
+    --summary-col1-pad-x: 0px;
+    --summary-col2-pad-x: 0px;
+    --summary-col3-pad-x: 3px;
   }
 
   .summaryTable tbody {
@@ -1170,19 +1170,19 @@
      */
     --legend-col1-width: 5%; /* Color: tight but fits 12px square */
     --legend-col2-width: 5%;  /* Label: narrower to shrink gap */
-    --legend-col3-width: 12%;  /* Cost */
-    --legend-col4-width: 6%;  /* uPnL */
-    --legend-col5-width: 6%;   /* uPnL % */
-    --legend-col6-width: 12%;  /* Current */
+    --legend-col3-width: 11%;  /* Cost */
+    --legend-col4-width: 8%;  /* uPnL */
+    --legend-col5-width: 8%;   /* uPnL % */
+    --legend-col6-width: 11%;  /* Current */
     --legend-col7-width: 8%;   /* Allocation % */
 
     --legend-col1-pad-x: 0px;
     --legend-col2-pad-x: 0px;
-    --legend-col3-pad-x: 15px;
-    --legend-col4-pad-x: 10px;
-    --legend-col5-pad-x: 10px;
-    --legend-col6-pad-x: 15px;
-    --legend-col7-pad-x: 15px;
+    --legend-col3-pad-x: 0px;
+    --legend-col4-pad-x: 0px;
+    --legend-col5-pad-x: 0px;
+    --legend-col6-pad-x: 0px;
+    --legend-col7-pad-x: 0px;
   }
 
   .chartLegend thead {
@@ -1292,7 +1292,7 @@
   }
 
   .positionsTable {
-    min-width: 1200px;
+    min-width: 400px;
     width: max-content;
   }
 }
