@@ -1007,7 +1007,7 @@
   .summarySection {
     /* Mobile: put Summary + Chart on the same row without flex-shrink "disappearing" */
     display: grid;
-    grid-template-columns: minmax(0, 1.0fr) minmax(0, 220px);
+    grid-template-columns: minmax(0, 1.0fr) minmax(0, 150px);
     column-gap: 6px;
     row-gap: 12px;
     height: auto;
@@ -1171,8 +1171,8 @@
     --legend-col1-width: 5%; /* Color: tight but fits 12px square */
     --legend-col2-width: 5%;  /* Label: narrower to shrink gap */
     --legend-col3-width: 12%;  /* Cost */
-    --legend-col4-width: 8%;  /* uPnL */
-    --legend-col5-width: 8%;   /* uPnL % */
+    --legend-col4-width: 6%;  /* uPnL */
+    --legend-col5-width: 6%;   /* uPnL % */
     --legend-col6-width: 12%;  /* Current */
     --legend-col7-width: 8%;   /* Allocation % */
 
