@@ -1086,7 +1086,7 @@
     flex-direction: column;
     height: auto;
     /* Mobile summary column controls (3 cols) */
-    --summary-col1-flex: 1.2; /* Label */
+    --summary-col1-flex: 1.3; /* Label */
     --summary-col2-flex:1.2;   /* Value */
     --summary-col3-flex: 1.2; /* Percent */
 
@@ -1182,7 +1182,7 @@
     --legend-col4-pad-x: 0px;
     --legend-col5-pad-x: 0px;
     --legend-col6-pad-x: 0px;
-    --legend-col7-pad-x: 0px;
+    --legend-col7-pad-x: 5px;
   }
 
   .chartLegend thead {
