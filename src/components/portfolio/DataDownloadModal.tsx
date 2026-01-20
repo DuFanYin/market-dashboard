@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import type { PortfolioData } from "@/types/portfolio";
 import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalculations";
@@ -52,6 +52,50 @@ export function DataDownloadModal({
   currentBalanceUsd,
 }: DataDownloadModalProps) {
   const [copySuccess, setCopySuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<"export" | "yaml">("export");
+  const [yamlContent, setYamlContent] = useState<string>("");
+  const [isYamlLoading, setIsYamlLoading] = useState(false);
+  const [yamlError, setYamlError] = useState<string | null>(null);
+  const [isSavingYaml, setIsSavingYaml] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const loadYaml = async () => {
+    try {
+      setIsYamlLoading(true);
+      setYamlError(null);
+      const res = await fetch("/api/portfolio/yaml", {
+        method: "GET",
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to load YAML (status ${res.status})`);
+      }
+      const json = (await res.json()) as { yaml?: string };
+      setYamlContent(json.yaml ?? "");
+    } catch (err) {
+      console.error("Failed to load YAML:", err);
+      setYamlError("Failed to load YAML content.");
+    } finally {
+      setIsYamlLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && activeTab === "yaml" && !yamlContent && !isYamlLoading && !yamlError) {
+      void loadYaml();
+    }
+  }, [isOpen, activeTab, yamlContent, isYamlLoading, yamlError]);
+
+  // Reset tab state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveTab("export");
+      setYamlContent("");
+      setIsYamlLoading(false);
+      setYamlError(null);
+      setIsSavingYaml(false);
+      setSaveSuccess(false);
+    }
+  }, [isOpen]);
   
   if (!isOpen || !data) return null;
 
@@ -167,23 +211,91 @@ export function DataDownloadModal({
     }
   };
 
+  const handleSaveYaml = async () => {
+    try {
+      setIsSavingYaml(true);
+      setSaveSuccess(false);
+      setYamlError(null);
+      const res = await fetch("/api/portfolio/yaml", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ yaml: yamlContent }),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(json.error || `Failed to save YAML (status ${res.status})`);
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 1200);
+    } catch (err) {
+      console.error("Failed to save YAML:", err);
+      setYamlError("Failed to save YAML. Please check syntax.");
+    } finally {
+      setIsSavingYaml(false);
+    }
+  };
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Portfolio Data Export</h2>
+          <h2>Portfolio Data</h2>
           <button className={styles.modalCloseButton} onClick={onClose}>×</button>
         </div>
+        <div className={styles.modalTabs}>
+          <button
+            type="button"
+            className={`${styles.modalTab} ${activeTab === "export" ? styles.modalTabActive : ""}`}
+            onClick={() => setActiveTab("export")}
+          >
+            Summary
+          </button>
+          <button
+            type="button"
+            className={`${styles.modalTab} ${activeTab === "yaml" ? styles.modalTabActive : ""}`}
+            onClick={() => setActiveTab("yaml")}
+          >
+            YAML
+          </button>
+        </div>
         <div className={styles.modalBody}>
-          <pre className={styles.modalText}>{formatAllData()}</pre>
+          {activeTab === "export" ? (
+            <pre className={styles.modalText}>{formatAllData()}</pre>
+          ) : (
+            <div className={styles.yamlEditorContainer}>
+              {isYamlLoading ? (
+                <div className={styles.yamlStatusText}>Loading YAML...</div>
+              ) : (
+                <textarea
+                  className={styles.yamlEditor}
+                  value={yamlContent}
+                  onChange={(e) => setYamlContent(e.target.value)}
+                  spellCheck={false}
+                />
+              )}
+              {yamlError && <div className={styles.yamlErrorText}>{yamlError}</div>}
+            </div>
+          )}
         </div>
         <div className={styles.modalFooter}>
-          <button 
-            className={`${styles.modalCancelButton} ${copySuccess ? styles.copySuccessButton : ""}`} 
-            onClick={handleCopy}
-          >
-            {copySuccess ? "Success!" : "Copy to Clipboard"}
-          </button>
+          {activeTab === "export" ? (
+            <button 
+              className={`${styles.modalCancelButton} ${copySuccess ? styles.copySuccessButton : ""}`} 
+              onClick={handleCopy}
+            >
+              {copySuccess ? "Success!" : "Copy to Clipboard"}
+            </button>
+          ) : (
+            <button
+              className={`${styles.modalCancelButton} ${saveSuccess ? styles.copySuccessButton : ""}`}
+              onClick={handleSaveYaml}
+              disabled={isSavingYaml || isYamlLoading}
+            >
+              {isSavingYaml ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
+            </button>
+          )}
         </div>
       </div>
     </div>

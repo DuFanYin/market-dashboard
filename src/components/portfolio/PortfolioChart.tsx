@@ -36,7 +36,7 @@ export function PortfolioChart({
   const colors = SEGMENT_COLORS_DARK;
   const centerX = 125;
   const centerY = 125;
-  // maxRadius：几何上的最外层半径；业务上我们约定「单一资产 50% 时触达最外层」
+  // maxRadius：几何上的最外层半径；业务上我们约定「单一资产 60% 时触达最外层」
   const maxRadius = 120;
   
   // Create a map of asset allocations by key
@@ -55,9 +55,9 @@ export function PortfolioChart({
     if (asset) {
       // Calculate angle for this vertex (bottom vertex is -90 degrees, going clockwise - flipped upside down)
       const angle = (-Math.PI / 2) + (i * 2 * Math.PI / 5);
-      // Distance from center based on allocation percent (0% = center, 50% = maxRadius)
-      // 单一资产持仓达到 50% 时，就触达最外层；超过 50% 按 maxRadius 封顶
-      const radius = Math.min((asset.valueAllocationPercent / 50) * maxRadius, maxRadius);
+      // Distance from center based on allocation percent (0% = center, 60% = maxRadius)
+      // 单一资产持仓达到 60% 时，就触达最外层；超过 60% 按 maxRadius 封顶
+      const radius = Math.min((asset.valueAllocationPercent / 60) * maxRadius, maxRadius);
       const [x, y] = getPoint(centerX, centerY, angle, radius);
       
       // Map color
@@ -98,10 +98,10 @@ export function PortfolioChart({
       preserveAspectRatio="xMidYMid meet"
       className={styles.chartSvg}
     >
-        {/* Draw percentage layer rings (0%, 10%, 20%, 30%, 40%, 50%) */}
-        {[0, 10, 20, 30, 40, 50].map((percent, i) => {
-          // 这里的 percent 直接按「X% of maxRadius」理解，最外层 50% = maxRadius
-          const radius = (percent / 50) * maxRadius;
+        {/* Draw percentage layer rings (15%, 30%, 45%, 60%) */}
+        {[15, 30, 45, 60].map((percent, i) => {
+          // 这里的 percent 直接按「X% of maxRadius」理解，最外层 60% = maxRadius
+          const radius = (percent / 60) * maxRadius;
           if (radius > 0) {
             const points = getPentagonOutline(centerX, centerY, radius);
             return (

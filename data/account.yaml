@@ -1,5 +1,5 @@
-timestamp: '2026-01-20T15:32:37.348Z'
-cash: 5008.95
+timestamp: '2026-01-20T16:08:22.671Z'
+cash: 4636.29
 positions:
   - symbol: NVDA
     secType: OPT
@@ -29,16 +29,15 @@ positions:
     expiry: '20260717'
   - symbol: RKLB
     secType: STK
-    position: 6
-    avgCost: 50.03395
+    position: 10
+    avgCost: 67.29
   - symbol: NBIS
     secType: STK
     position: 15
     avgCost: 120.37895335
 usd_sgd_rate: 1.2866
-usd_cny_rate: 6.9599
+usd_cny_rate: 6.9594
 original_amount_sgd: 15000
-original_amount_usd: null
 year_begin_balance_usd: 13758
 btc:
   amount: 0.01717772

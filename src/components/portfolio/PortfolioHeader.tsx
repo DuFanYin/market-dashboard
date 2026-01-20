@@ -15,7 +15,7 @@ export function PortfolioHeader({ onDownloadClick }: PortfolioHeaderProps) {
           Portfolio Summary
         </h1>
         <button className={styles.downloadButton} onClick={onDownloadClick}>
-          Report
+          Data
         </button>
       </div>
     </header>

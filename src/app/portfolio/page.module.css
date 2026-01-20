@@ -111,6 +111,12 @@
   border-color: #ffffff;
 }
 
+@media (max-width: 768px) {
+  .downloadButton {
+    display: none;
+  }
+}
+
 /* =========================================================================
  * Modal
  * ========================================================================= */
@@ -135,6 +141,8 @@
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
+  /* Fix modal height so switching tabs doesn't change overall size */
+  height: 80vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
@@ -199,6 +207,62 @@
   gap: 12px;
   padding: 16px 20px;
   border-top: 1px solid #333333;
+}
+
+.modalTabs {
+  display: flex;
+  border-bottom: 1px solid #333333;
+  padding: 0 20px;
+  gap: 8px;
+}
+
+.modalTab {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cccccc;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.modalTabActive {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+
+.yamlEditorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.yamlEditor {
+  width: 100%;
+  min-height: 320px;
+  flex: 1;
+  resize: vertical;
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.yamlStatusText {
+  font-size: 13px;
+  color: #cccccc;
+}
+
+.yamlErrorText {
+  font-size: 12px;
+  color: #ff6b6b;
 }
 
 .modalCancelButton {
@@ -1330,9 +1394,10 @@
 
   .positionsTable th:nth-child(1),
   .positionsTable td:nth-child(1) {
-    min-width: 15px;
-    max-width: 15px;
+    min-width: 10px;
+    max-width: 10px;
     padding: 0 !important;
+    padding-left: 5px !important;
   }
 
   .positionsTable th:nth-child(2),
