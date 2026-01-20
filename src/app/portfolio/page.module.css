@@ -1065,12 +1065,12 @@
 
   /* Positions table: match summary/legend font size on mobile */
   .positionsTable {
-    font-size: 11px;
+    font-size: 9px;
   }
 
   .positionsTable th,
   .positionsTable td {
-    font-size: 11px;
+    font-size: 9px;
     padding: 6px 8px;
   }
   /* Summary Table - Fit-to-screen (no horizontal scroll) */
@@ -1110,7 +1110,7 @@
     align-items: center;
     min-width: 0;
     padding: 6px 0; /* horizontal padding is controlled per-column below */
-    font-size: 11px;
+    font-size: 9px;
   }
 
   /* 3 columns: label | value | value (controlled at the cell level for correct specificity) */
@@ -1202,7 +1202,7 @@
   .chartLegend td {
     display: table-cell;
     padding: 4px 6px;
-    font-size: 11px;
+    font-size: 9px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
