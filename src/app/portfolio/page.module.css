@@ -548,6 +548,12 @@
   justify-content: flex-end;
 }
 
+.legendHeaderRow td {
+  /* Header row is rendered inside tbody to match the same flex row-height distribution as SummaryTable */
+  justify-content: center !important;
+  font-weight: 600;
+}
+
 .legendRow td {
   border-bottom: 1px solid #333333;
 }
@@ -1294,5 +1300,75 @@
   .positionsTable {
     min-width: 400px;
     width: max-content;
+    /* Mobile: use separate border model to prevent collapsed row borders bleeding under sticky columns */
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  /* Mobile: freeze first two columns in PositionsTable while horizontally scrolling */
+  .positionsTable thead th:nth-child(1),
+  .positionsTable tbody td:nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: #000000;
+    /* Ensure the sticky cell background covers its border area too */
+    background-clip: border-box;
+  }
+
+  .positionsTable thead th:nth-child(2),
+  .positionsTable tbody td:nth-child(2) {
+    position: sticky;
+    left: 52px;
+    z-index: 10;
+    background-color: #000000;
+    /* Ensure the sticky cell background covers its border area too */
+    background-clip: border-box;
+  }
+
+  .positionsTable th:nth-child(1),
+  .positionsTable td:nth-child(1) {
+    min-width: 52px;
+    max-width: 52px;
+  }
+
+  .positionsTable th:nth-child(2),
+  .positionsTable td:nth-child(2) {
+    min-width: 135px;
+    max-width: 135px;
+  }
+
+  /*
+   * Mobile: max/min value highlight uses border + negative margin on desktop to "overlay" neighbors.
+   * That can visually bleed under/over sticky columns. On mobile we keep the highlight but confine it
+   * to the cell box via outline instead.
+   */
+  .positionsTable td.maxValue {
+    border: none;
+    margin: 0;
+    box-shadow: inset 0 0 0 2px #2e7d32;
+  }
+
+  .positionsTable td.minValue {
+    border: none;
+    margin: 0;
+    box-shadow: inset 0 0 0 2px #c62828;
+  }
+
+  /* Mobile: disable row-hover horizontal lines (they can look like they "bleed through" sticky cols) */
+  .positionsTable tbody tr:hover td {
+    box-shadow: none !important;
+  }
+
+  .positionsTable tbody tr:hover td.maxValue {
+    border: none !important;
+    margin: 0 !important;
+    box-shadow: inset 0 0 0 2px #2e7d32 !important;
+  }
+
+  .positionsTable tbody tr:hover td.minValue {
+    border: none !important;
+    margin: 0 !important;
+    box-shadow: inset 0 0 0 2px #c62828 !important;
   }
 }

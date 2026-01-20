@@ -40,18 +40,17 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask, usdSgd
       style={{ cursor: 'pointer' }}
     >
       <table className={styles.chartLegend}>
-        <thead>
-          <tr>
-            <th className={styles.legendColorCell}></th>
-            <th className={styles.legendLabel}></th>
-            <th className={styles.legendAmount}>Cost</th>
-            <th className={styles.legendAmount}>uPnL</th>
-            <th className={styles.legendPercent}>%</th>
-            <th className={styles.legendAmount}>Current</th>
-            <th className={styles.legendPercent}>%</th>
-          </tr>
-        </thead>
         <tbody>
+          {/* Header row in tbody so it participates in the same flex-based row height distribution (matches SummaryTable behavior) */}
+          <tr className={`${styles.legendRow} ${styles.legendHeaderRow}`}>
+            <td className={styles.legendColorCell}></td>
+            <td className={styles.legendLabel}></td>
+            <td className={styles.legendAmount}>Cost</td>
+            <td className={styles.legendAmount}>uPnL</td>
+            <td className={styles.legendPercent}>%</td>
+            <td className={styles.legendAmount}>Current</td>
+            <td className={styles.legendPercent}>%</td>
+          </tr>
           {assetAllocation
             .filter((asset) => asset.isVisible)
             .map((asset) => (

@@ -23,14 +23,23 @@ interface SummaryTableProps {
 }
 
 export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceUsd, originalAmountSgd, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
-  const startDate = new Date(2025, 9, 20); // November 20, 2025 (month is 0-indexed, so 10 = November)
+  // 起点 1：整体账户从最初投入开始的年化收益（例：2025-10-20）
+  const overallStartDate = new Date(2025, 9, 20); // 2025-10-20（month 0-indexed, 9 = October）
+  // 起点 2：当年的年初，用于 yearBeginBalanceUsd 的年化收益
   const today = new Date();
-  // Calculate total calendar days (includes all days: trading and non-trading days)
-  const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const yearBeginDate = new Date(today.getFullYear(), 0, 1); // 当年 1 月 1 日
+
+  // 计算自然日差（包含周末、假期）
+  const overallDaysDiff = Math.floor(
+    (today.getTime() - overallStartDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const yearBeginDaysDiff = Math.floor(
+    (today.getTime() - yearBeginDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
   
-  // Calculate annualized return (always based on USD)
-  const annualizedReturn = originalAmountUsd && currentBalanceUsd
-    ? calculateAnnualizedReturn(currentBalanceUsd, originalAmountUsd, daysDiff)
+  // 年化收益 1：currentBalanceUsd 相对 originalAmountUsd，从 overallStartDate 起算
+  const annualizedReturn = originalAmountUsd && currentBalanceUsd && overallDaysDiff > 0
+    ? calculateAnnualizedReturn(currentBalanceUsd, originalAmountUsd, overallDaysDiff)
     : 0;
 
   // Calculate values for row 4-6 col 1 (relative to yearBeginBalanceUsd, always in USD)
@@ -40,8 +49,9 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
   const yearBeginPnLPercent = yearBeginBalanceUsd && yearBeginBalanceUsd > 0 && yearBeginPnL !== undefined
     ? calculateAccountPnLPercent(yearBeginPnL, yearBeginBalanceUsd)
     : undefined;
-  const yearBeginAnnualizedReturn = yearBeginBalanceUsd && currentBalanceUsd !== undefined && daysDiff > 0 && yearBeginBalanceUsd > 0
-    ? calculateAnnualizedReturn(currentBalanceUsd, yearBeginBalanceUsd, daysDiff)
+  // 年化收益 2：currentBalanceUsd 相对 yearBeginBalanceUsd，从当年年初起算
+  const yearBeginAnnualizedReturn = yearBeginBalanceUsd && currentBalanceUsd !== undefined && yearBeginDaysDiff > 0 && yearBeginBalanceUsd > 0
+    ? calculateAnnualizedReturn(currentBalanceUsd, yearBeginBalanceUsd, yearBeginDaysDiff)
     : undefined;
   
   // Currency formatting helpers using shared utility functions
@@ -70,7 +80,7 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
           <tr className={styles.summaryRow}>
             <td className={styles.summaryLabel}>Start Date</td>
             <td className={styles.summaryValue}>2025 Oct 20</td>
-            <td className={styles.summaryValue}>{daysDiff}d</td>
+            <td className={styles.summaryValue}>{overallDaysDiff}d</td>
           </tr>
           {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
             <>

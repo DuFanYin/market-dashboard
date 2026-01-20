@@ -8,7 +8,7 @@ load_dotenv()
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT_DIR, "data")
-YAML_PATH = os.path.join(DATA_DIR, "positions.yaml")
+YAML_PATH = os.path.join(DATA_DIR, "account.yaml")
 
 IB_HOST = os.getenv("IB_HOST", "127.0.0.1")
 IB_PORT = int(os.getenv("IB_PORT", "7496"))
@@ -60,9 +60,28 @@ def main():
     try:
         data = pull_ibkr_data(ib)
         os.makedirs(DATA_DIR, exist_ok=True)
+        # 保留 account.yaml 里原有的其他字段，只更新 timestamp / cash / positions
+        if os.path.exists(YAML_PATH):
+            with open(YAML_PATH, "r") as f:
+                try:
+                    existing = yaml.safe_load(f) or {}
+                except yaml.YAMLError:
+                    existing = {}
+        else:
+            existing = {}
+
+        existing.update(
+            {
+                "timestamp": data["timestamp"],
+                "cash": data["cash"],
+                "positions": data["positions"],
+            }
+        )
+
         with open(YAML_PATH, "w") as f:
-            yaml.dump(data, f, sort_keys=False)
-        print(f"✅ Saved to {YAML_PATH}")
+            yaml.dump(existing, f, sort_keys=False)
+
+        print(f"✅ Updated {YAML_PATH}")
     finally:
         ib.disconnect()
 
