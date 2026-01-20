@@ -1295,6 +1295,8 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+    /* Mobile: prevent "rubber-band" horizontal overscroll dragging beyond the scroll range */
+    overscroll-behavior-x: none;
   }
 
   .positionsTable {
@@ -1319,7 +1321,7 @@
   .positionsTable thead th:nth-child(2),
   .positionsTable tbody td:nth-child(2) {
     position: sticky;
-    left: 52px;
+    left: 10px;
     z-index: 10;
     background-color: #000000;
     /* Ensure the sticky cell background covers its border area too */
@@ -1328,8 +1330,9 @@
 
   .positionsTable th:nth-child(1),
   .positionsTable td:nth-child(1) {
-    min-width: 52px;
-    max-width: 52px;
+    min-width: 15px;
+    max-width: 15px;
+    padding: 0 !important;
   }
 
   .positionsTable th:nth-child(2),
