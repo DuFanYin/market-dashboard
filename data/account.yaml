@@ -1,0 +1,45 @@
+timestamp: '2026-01-20T08:21:01.898Z'
+cash: 5008.95
+positions:
+  - symbol: NVDA
+    secType: OPT
+    position: 1
+    avgCost: 970.6259
+    right: C
+    strike: 200
+    expiry: '20260320'
+  - symbol: GLDM
+    secType: STK
+    position: 6
+    avgCost: 85.88384805
+  - symbol: AMD
+    secType: STK
+    position: 10
+    avgCost: 240.06897
+  - symbol: NVDA
+    secType: STK
+    position: 10
+    avgCost: 182.16025
+  - symbol: ZETA
+    secType: OPT
+    position: 1
+    avgCost: 400.0459
+    right: C
+    strike: 22.5
+    expiry: '20260717'
+  - symbol: RKLB
+    secType: STK
+    position: 6
+    avgCost: 50.03395
+  - symbol: NBIS
+    secType: STK
+    position: 15
+    avgCost: 120.37895335
+usd_sgd_rate: 1.2866
+usd_cny_rate: 6.9591
+original_amount_sgd: 15000
+original_amount_usd: null
+year_begin_balance_usd: 13758
+btc:
+  amount: 0.01717772
+  cost_sgd: 2000

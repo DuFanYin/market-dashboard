@@ -5,7 +5,7 @@ import { load, dump } from "js-yaml";
 import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
 import { getOkxPrices } from "@/lib/data";
 
-const yamlPath = path.join(process.cwd(), "data", "positions.yaml");
+const dataYamlPath = path.join(process.cwd(), "data", "account.yaml");
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
 
 export const dynamic = "force-dynamic";
@@ -63,23 +63,33 @@ function ensureArray<T>(item: T | T[] | undefined): T[] {
   return Array.isArray(item) ? item : [item];
 }
 
-async function loadPortfolioYaml(): Promise<PortfolioYaml> {
+type AccountYaml = PortfolioYaml & {
+  original_amount_sgd?: number;
+  original_amount_usd?: number;
+  year_begin_balance_usd?: number;
+  btc?: {
+    amount?: number;
+    cost_sgd?: number;
+  };
+};
+
+async function loadPortfolioYaml(): Promise<AccountYaml> {
   try {
-    await fs.access(yamlPath);
+    await fs.access(dataYamlPath);
   } catch {
     throw new Error("Portfolio data file not found");
   }
-  const raw = await fs.readFile(yamlPath, "utf8");
-  const parsed = load(raw) as PortfolioYaml;
+  const raw = await fs.readFile(dataYamlPath, "utf8");
+  const parsed = load(raw) as AccountYaml;
   if (!parsed || typeof parsed !== "object") {
     throw new Error("Failed to parse portfolio YAML file.");
   }
   return parsed;
 }
 
-async function savePortfolioYaml(portfolio: PortfolioYaml): Promise<void> {
+async function savePortfolioYaml(portfolio: AccountYaml): Promise<void> {
   const content = dump(portfolio, { noRefs: true, lineWidth: 240 });
-  await fs.writeFile(yamlPath, content, "utf8");
+  await fs.writeFile(dataYamlPath, content, "utf8");
 }
 
 async function fetchUsdSgdRate(): Promise<number> {
@@ -194,7 +204,13 @@ async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
 // Hardcoded ETF symbols (treat as ETF even if marked as STK in YAML)
 const ETF_SYMBOLS = ["GLDM"];
 
-function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cryptoPrices: Map<string, number>, usdSgdRate: number, usdCnyRate: number): PortfolioData {
+function buildResponse(
+  portfolio: AccountYaml,
+  quotes: Map<string, Quote>,
+  cryptoPrices: Map<string, number>,
+  usdSgdRate: number,
+  usdCnyRate: number
+): PortfolioData {
   const positionsOutput: Position[] = [];
   let totalStockMV = 0;
   let totalOptionMV = 0;
@@ -288,9 +304,9 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     });
   }
 
-  // Process crypto positions from .env
-  const btcQty = Number(process.env.BTC);
-  const btcCostSGD = Number(process.env.BTC_COST_SGD);
+  // Process crypto positions from YAML
+  const btcQty = portfolio.btc?.amount ?? 0;
+  const btcCostSGD = portfolio.btc?.cost_sgd ?? 0;
   if (btcQty > 0 && btcCostSGD > 0) {
     const totalCostUSD = btcCostSGD / usdSgdRate;
     const cost = btcQty > 0 ? totalCostUSD / btcQty : 0;
@@ -388,10 +404,12 @@ function buildResponse(portfolio: PortfolioYaml, quotes: Map<string, Quote>, cry
     }
   }
 
-  const originalAmountSgd = Number(process.env.ORIGINAL_AMOUNT_SGD);
-  const originalAmountSgdRaw = Number(process.env.ORIGINAL_AMOUNT_SGD) || 0;
-  const originalAmountUsd = originalAmountSgd / usdSgdRate;
-  const yearBeginBalanceUsd = Number(process.env.YEAR_BEGIN_BALANCE_USD) || 0;
+  const originalAmountSgd = portfolio.original_amount_sgd ?? 0;
+  const originalAmountSgdRaw = originalAmountSgd || 0;
+  const originalAmountUsd =
+    portfolio.original_amount_usd ??
+    (originalAmountSgd && usdSgdRate ? originalAmountSgd / usdSgdRate : 0);
+  const yearBeginBalanceUsd = portfolio.year_begin_balance_usd ?? 0;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
 
@@ -495,8 +513,8 @@ export async function GET() {
     const cryptoPrices = new Map<string, number>();
     const cryptoSymbols: string[] = [];
     
-    // Add BTC from .env
-    const btcQty = Number(process.env.BTC);
+    // Add BTC from YAML
+    const btcQty = portfolio.btc?.amount ?? 0;
     if (btcQty > 0) {
       cryptoSymbols.push("BTC-USDT");
     }

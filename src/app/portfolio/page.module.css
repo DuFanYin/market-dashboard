@@ -676,7 +676,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 /* =========================================================================
@@ -988,3 +988,311 @@
   font-size: 14px;
 }
 
+/* =========================================================================
+ * Responsive Styles - Mobile
+ * ========================================================================= */
+@media (max-width: 768px) {
+  /* Layout: vertical stack (Summary -> Chart -> Legend -> Positions) */
+  .page {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
+  .container {
+    height: auto;
+    overflow: visible;
+  }
+
+  .summarySection {
+    /* Mobile: put Summary + Chart on the same row without flex-shrink "disappearing" */
+    display: grid;
+    grid-template-columns: minmax(0, 1.0fr) minmax(0, 220px);
+    column-gap: 6px;
+    row-gap: 12px;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 0; /* avoid double-spacing: legend is inside summarySection */
+  }
+
+  .summaryStack,
+  .chartSection,
+  .legendSection {
+    height: auto;
+    min-height: auto;
+    min-width: 0;
+  }
+
+  .summaryStack {
+    grid-column: 1;
+    max-width: none;
+  }
+
+  .chartSection {
+    grid-column: 2;
+    max-width: none;
+    justify-content: center;
+    padding: 8px 0;
+  }
+
+  /* Keep legend on its own row */
+  .legendSection {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+    margin-bottom: 0px; /* target spacing before positions */
+  }
+
+  /* Mobile: PositionsTable wrapper has a default margin-top: 20px (see base styles). Remove it to avoid extra gap. */
+  .tableWrapper {
+    margin-top: 0;
+  }
+
+  .chartSvg {
+    height: auto;
+    max-width: 180px; /* allow two-up on narrow screens */
+    max-height: none;
+    transform: none;
+  }
+
+  .positionsSection {
+    margin-top: 12px; /* paired with legend margin-bottom for 24px total gap */
+    height: auto;
+    min-height: 0;
+    overflow-y: visible;
+  }
+
+  /* Positions table: match summary/legend font size on mobile */
+  .positionsTable {
+    font-size: 11px;
+  }
+
+  .positionsTable th,
+  .positionsTable td {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  /* Summary Table - Fit-to-screen (no horizontal scroll) */
+  .summaryStack {
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .summaryTable {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    /* Mobile summary column controls (3 cols) */
+    --summary-col1-flex: 1.2; /* Label */
+    --summary-col2-flex:1.2;   /* Value */
+    --summary-col3-flex: 1.2; /* Percent */
+
+    --summary-col1-pad-x: 5px;
+    --summary-col2-pad-x: 10px;
+    --summary-col3-pad-x: 10px;
+  }
+
+  .summaryTable tbody {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summaryRow {
+    display: flex;
+    flex: 0 0 auto;
+  }
+
+  .summaryRow td {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 6px 0; /* horizontal padding is controlled per-column below */
+    font-size: 11px;
+  }
+
+  /* 3 columns: label | value | value (controlled at the cell level for correct specificity) */
+  .summaryRow td:nth-child(1) {
+    flex: var(--summary-col1-flex) 1 0;
+    padding-left: 5;
+    padding-right: var(--summary-col1-pad-x);
+    --summary-pad-x-current: var(--summary-col1-pad-x);
+    justify-content: flex-start;
+  }
+
+  .summaryRow td:nth-child(2) {
+    flex: var(--summary-col2-flex) 1 0;
+    padding-left: 0;
+    padding-right: var(--summary-col2-pad-x);
+    --summary-pad-x-current: var(--summary-col2-pad-x);
+    justify-content: flex-end;
+  }
+
+  .summaryRow td:nth-child(3) {
+    flex: var(--summary-col3-flex) 1 0;
+    padding-left: 0;
+    padding-right: var(--summary-col3-pad-x);
+    --summary-pad-x-current: var(--summary-col3-pad-x);
+    justify-content: flex-end;
+  }
+
+  /* Narrow variant for percent used in second column (Account PnL %) */
+  .summaryPercentNarrow {
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0; /* tighten gap to next column */
+  }
+
+  .summaryLabel,
+  .summaryValue,
+  .summaryPercent {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Legend Table - Fit-to-screen (no horizontal scroll) */
+  .legendSection {
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  .chartLegend {
+    width: 100%;
+    min-width: 0;
+    display: table;
+    table-layout: fixed;
+    /*
+     * Mobile legend column controls (7 cols)
+     * You can tweak these variables to control each column without changing layout/DOM.
+     */
+    --legend-col1-width: 5%; /* Color: tight but fits 12px square */
+    --legend-col2-width: 5%;  /* Label: narrower to shrink gap */
+    --legend-col3-width: 12%;  /* Cost */
+    --legend-col4-width: 8%;  /* uPnL */
+    --legend-col5-width: 8%;   /* uPnL % */
+    --legend-col6-width: 12%;  /* Current */
+    --legend-col7-width: 8%;   /* Allocation % */
+
+    --legend-col1-pad-x: 0px;
+    --legend-col2-pad-x: 0px;
+    --legend-col3-pad-x: 15px;
+    --legend-col4-pad-x: 10px;
+    --legend-col5-pad-x: 10px;
+    --legend-col6-pad-x: 15px;
+    --legend-col7-pad-x: 15px;
+  }
+
+  .chartLegend thead {
+    display: table-header-group;
+  }
+
+  .chartLegend tbody {
+    display: table-row-group;
+  }
+
+  .chartLegend thead tr,
+  .chartLegend tbody tr {
+    display: table-row;
+  }
+
+  .chartLegend th,
+  .chartLegend td {
+    display: table-cell;
+    padding: 4px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Mobile legend per-column controls (keeps existing table layout) */
+  .chartLegend th:nth-child(1),
+  .chartLegend td:nth-child(1) {
+    width: var(--legend-col1-width);
+    padding-left: 0;
+    padding-right: var(--legend-col1-pad-x);
+    --legend-pad-x-current: var(--legend-col1-pad-x);
+    text-align: center;
+  }
+
+  .chartLegend th:nth-child(2),
+  .chartLegend td:nth-child(2) {
+    width: var(--legend-col2-width);
+    padding-left: 0;
+    padding-right: var(--legend-col2-pad-x);
+    --legend-pad-x-current: var(--legend-col2-pad-x);
+    text-align: center;
+  }
+
+  .chartLegend th:nth-child(3),
+  .chartLegend td:nth-child(3) {
+    width: var(--legend-col3-width);
+    padding-left: 0;
+    padding-right: var(--legend-col3-pad-x);
+    --legend-pad-x-current: var(--legend-col3-pad-x);
+    text-align: right;
+  }
+
+  .chartLegend th:nth-child(4),
+  .chartLegend td:nth-child(4) {
+    width: var(--legend-col4-width);
+    padding-left: 0;
+    padding-right: var(--legend-col4-pad-x);
+    --legend-pad-x-current: var(--legend-col4-pad-x);
+    text-align: right;
+  }
+
+  .chartLegend th:nth-child(5),
+  .chartLegend td:nth-child(5) {
+    width: var(--legend-col5-width);
+    padding-left: 0;
+    padding-right: var(--legend-col5-pad-x);
+    --legend-pad-x-current: var(--legend-col5-pad-x);
+    text-align: right;
+  }
+
+  .chartLegend th:nth-child(6),
+  .chartLegend td:nth-child(6) {
+    width: var(--legend-col6-width);
+    padding-left: 0;
+    padding-right: var(--legend-col6-pad-x);
+    --legend-pad-x-current: var(--legend-col6-pad-x);
+    text-align: right;
+  }
+
+  .chartLegend th:nth-child(7),
+  .chartLegend td:nth-child(7) {
+    width: var(--legend-col7-width);
+    padding-left: 0;
+    padding-right: var(--legend-col7-pad-x);
+    --legend-pad-x-current: var(--legend-col7-pad-x);
+    text-align: right;
+  }
+
+
+  /* Reduce visual gap between color square and text */
+  .legendColor {
+    transform: none;
+    margin-inline: auto; /* center the color square in its table cell */
+  }
+
+  .legendLabel {
+    padding-left: 2px;
+  }
+
+  /* Positions Table - Horizontal Scroll */
+  .tableWrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .positionsTable {
+    min-width: 1200px;
+    width: max-content;
+  }
+}

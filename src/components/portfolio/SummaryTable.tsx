@@ -145,8 +145,8 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                     <td className={styles.summaryLabel}>{item.label === "Account PnL" ? "Account PnL %" : item.label}</td>
                     <td className={item.label === "Account PnL" 
                       ? (yearBeginPnLPercent !== undefined
-                        ? `${styles.summaryPercent} ${yearBeginPnLPercent >= 0 ? styles.positive : styles.negative}`
-                        : styles.summaryPercent)
+                        ? `${styles.summaryPercent} ${styles.summaryPercentNarrow} ${yearBeginPnLPercent >= 0 ? styles.positive : styles.negative}`
+                        : `${styles.summaryPercent} ${styles.summaryPercentNarrow}`)
                       : className}>
                       {item.label === "Account PnL" 
                         ? (yearBeginPnLPercent !== undefined
@@ -154,7 +154,9 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                           : "")
                         : item.display}
                     </td>
-                    <td className={percentClass}>
+                    <td className={item.label === "Account PnL"
+                      ? `${percentClass} ${styles.summaryPercentNarrow}`
+                      : percentClass}>
                       {item.percentDisplay ?? ""}
                     </td>
                   </tr>
