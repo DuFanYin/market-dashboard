@@ -266,7 +266,7 @@ export function DataDownloadModal({
         </div>
         <div className={styles.modalBody}>
           {activeTab === "export" ? (
-            <pre className={styles.modalText}>{formatAllData()}</pre>
+          <pre className={styles.modalText}>{formatAllData()}</pre>
           ) : (
             <div className={styles.yamlEditorContainer}>
               {isJsonLoading ? (
@@ -285,12 +285,12 @@ export function DataDownloadModal({
         </div>
         <div className={styles.modalFooter}>
           {activeTab === "export" ? (
-            <button 
-              className={`${styles.modalCancelButton} ${copySuccess ? styles.copySuccessButton : ""}`} 
-              onClick={handleCopy}
-            >
-              {copySuccess ? "Success!" : "Copy to Clipboard"}
-            </button>
+          <button 
+            className={`${styles.modalCancelButton} ${copySuccess ? styles.copySuccessButton : ""}`} 
+            onClick={handleCopy}
+          >
+            {copySuccess ? "Success!" : "Copy to Clipboard"}
+          </button>
           ) : (
             <button
               className={`${styles.modalCancelButton} ${saveSuccess ? styles.copySuccessButton : ""}`}

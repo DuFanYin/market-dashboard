@@ -156,29 +156,29 @@ export function PortfolioChart({
         {/* Optional: labels at the outermost ring (100% ring) */}
         {showLabels &&
           vertexPoints.map((point, i) => {
-            // Calculate label position at the outermost ring (100% = maxRadius)
-            const angle = (-Math.PI / 2) + (i * 2 * Math.PI / 5);
-            const labelOffset = 15; // Distance from outermost ring to label
-            const outerRadius = maxRadius + labelOffset;
-            const labelX = centerX + outerRadius * Math.cos(angle);
-            const labelY = centerY + outerRadius * Math.sin(angle);
-
-            return (
-              <text
-                key={`label-${i}`}
-                x={labelX}
-                y={labelY}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#ffffff"
-                fontSize="10"
-                fontWeight="500"
-                opacity={0.9}
-              >
-                {point.label}
-              </text>
-            );
-          })}
+          // Calculate label position at the outermost ring (100% = maxRadius)
+          const angle = (-Math.PI / 2) + (i * 2 * Math.PI / 5);
+          const labelOffset = 15; // Distance from outermost ring to label
+          const outerRadius = maxRadius + labelOffset;
+          const labelX = centerX + outerRadius * Math.cos(angle);
+          const labelY = centerY + outerRadius * Math.sin(angle);
+          
+          return (
+            <text
+              key={`label-${i}`}
+              x={labelX}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#ffffff"
+              fontSize="10"
+              fontWeight="500"
+              opacity={0.9}
+            >
+              {point.label}
+            </text>
+          );
+        })}
     </svg>
   );
 }

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import path from "node:path";
 import { promises as fs } from "node:fs";
+import { put, head } from "@vercel/blob";
 import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
 import { getOkxPrices } from "@/lib/data";
 
 const dataJsonPath = path.join(process.cwd(), "data", "account.json");
+const BLOB_KEY = "account.json";
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
 
 export const dynamic = "force-dynamic";
@@ -73,12 +75,31 @@ type AccountData = PortfolioYaml & {
 };
 
 async function loadPortfolioJson(): Promise<AccountData> {
+  let raw: string;
+  
+  // Try Blob first (production)
   try {
-    await fs.access(dataJsonPath);
-  } catch {
-    throw new Error("Portfolio data file not found");
+    const blobInfo = await head(BLOB_KEY);
+    if (blobInfo) {
+      const response = await fetch(blobInfo.url);
+      if (response.ok) {
+        raw = await response.text();
+      } else {
+        throw new Error("Blob fetch failed");
+      }
+    } else {
+      throw new Error("Blob not found");
+    }
+  } catch (error) {
+    // Fallback to local file (development)
+    try {
+      await fs.access(dataJsonPath);
+      raw = await fs.readFile(dataJsonPath, "utf8");
+    } catch {
+      throw new Error("Portfolio data file not found in both Blob and local file");
+    }
   }
-  const raw = await fs.readFile(dataJsonPath, "utf8");
+  
   const parsed = JSON.parse(raw) as AccountData;
   if (!parsed || typeof parsed !== "object") {
     throw new Error("Failed to parse portfolio JSON file.");
@@ -87,7 +108,28 @@ async function loadPortfolioJson(): Promise<AccountData> {
 }
 
 async function savePortfolioJson(portfolio: AccountData): Promise<void> {
-  await fs.writeFile(dataJsonPath, JSON.stringify(portfolio, null, 2), "utf8");
+  const content = JSON.stringify(portfolio, null, 2);
+  
+  // Try Blob first (production)
+  try {
+    await put(BLOB_KEY, content, {
+      contentType: "application/json",
+      access: "public",
+      addRandomSuffix: false, // Keep same filename
+    });
+    return;
+  } catch (error) {
+    // Fallback to local file (development)
+    try {
+      await fs.writeFile(dataJsonPath, content, "utf8");
+    } catch (localError) {
+      const errorCode = (localError as { code?: string })?.code;
+      if (errorCode === "EROFS") {
+        throw new Error("Read-only file system. Please configure Vercel Blob Storage.");
+      }
+      throw localError;
+    }
+  }
 }
 
 async function fetchUsdSgdRate(): Promise<number> {

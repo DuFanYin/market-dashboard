@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-21T03:51:50.567Z",
-  "cash": 4376.76,
+  "timestamp": "2026-01-21T15:54:49.475Z",
+  "cash": 6845.31,
   "positions": [
     {
       "symbol": "NVDA",
@@ -19,12 +19,6 @@
       "right": "C",
       "strike": 200,
       "expiry": "20260213"
-    },
-    {
-      "symbol": "AMD",
-      "secType": "STK",
-      "position": 10,
-      "avgCost": 240.06897
     },
     {
       "symbol": "GLDM",
@@ -61,7 +55,7 @@
     }
   ],
   "usd_sgd_rate": 1.2866,
-  "usd_cny_rate": 6.9656,
+  "usd_cny_rate": 6.9632,
   "original_amount_sgd": 15000,
   "year_begin_balance_usd": 13758,
   "btc": {
