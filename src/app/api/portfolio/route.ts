@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { load, dump } from "js-yaml";
 import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
 import { getOkxPrices } from "@/lib/data";
 
-const dataYamlPath = path.join(process.cwd(), "data", "account.yaml");
+const dataJsonPath = path.join(process.cwd(), "data", "account.json");
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +62,7 @@ function ensureArray<T>(item: T | T[] | undefined): T[] {
   return Array.isArray(item) ? item : [item];
 }
 
-type AccountYaml = PortfolioYaml & {
+type AccountData = PortfolioYaml & {
   original_amount_sgd?: number;
   original_amount_usd?: number;
   year_begin_balance_usd?: number;
@@ -73,23 +72,22 @@ type AccountYaml = PortfolioYaml & {
   };
 };
 
-async function loadPortfolioYaml(): Promise<AccountYaml> {
+async function loadPortfolioJson(): Promise<AccountData> {
   try {
-    await fs.access(dataYamlPath);
+    await fs.access(dataJsonPath);
   } catch {
     throw new Error("Portfolio data file not found");
   }
-  const raw = await fs.readFile(dataYamlPath, "utf8");
-  const parsed = load(raw) as AccountYaml;
+  const raw = await fs.readFile(dataJsonPath, "utf8");
+  const parsed = JSON.parse(raw) as AccountData;
   if (!parsed || typeof parsed !== "object") {
-    throw new Error("Failed to parse portfolio YAML file.");
+    throw new Error("Failed to parse portfolio JSON file.");
   }
   return parsed;
 }
 
-async function savePortfolioYaml(portfolio: AccountYaml): Promise<void> {
-  const content = dump(portfolio, { noRefs: true, lineWidth: 240 });
-  await fs.writeFile(dataYamlPath, content, "utf8");
+async function savePortfolioJson(portfolio: AccountData): Promise<void> {
+  await fs.writeFile(dataJsonPath, JSON.stringify(portfolio, null, 2), "utf8");
 }
 
 async function fetchUsdSgdRate(): Promise<number> {
@@ -205,7 +203,7 @@ async function fetchQuotes(symbols: string[]): Promise<Map<string, Quote>> {
 const ETF_SYMBOLS = ["GLDM"];
 
 function buildResponse(
-  portfolio: AccountYaml,
+  portfolio: AccountData,
   quotes: Map<string, Quote>,
   cryptoPrices: Map<string, number>,
   usdSgdRate: number,
@@ -446,7 +444,7 @@ export async function GET() {
   }
 
   try {
-    const portfolio = await loadPortfolioYaml();
+    const portfolio = await loadPortfolioJson();
     const symbolSet = new Set<string>();
     for (const pos of portfolio.positions) {
       if (pos.secType === "OPT") {
@@ -474,7 +472,7 @@ export async function GET() {
         usd_sgd_rate: freshRate,
         timestamp: new Date().toISOString(),
       };
-      await savePortfolioYaml(updatedPortfolio);
+      await savePortfolioJson(updatedPortfolio);
     } catch (fxError) {
       console.error("[portfolio API] using cached USD/SGD rate from YAML due to fetch failure", fxError);
       if (usdSgdRate === undefined) {
@@ -491,7 +489,7 @@ export async function GET() {
         usd_cny_rate: freshCnyRate,
         timestamp: new Date().toISOString(),
       };
-      await savePortfolioYaml(updatedPortfolio);
+      await savePortfolioJson(updatedPortfolio);
     } catch (fxError) {
       console.error("[portfolio API] using cached USD/CNY rate from YAML due to fetch failure", fxError);
       if (usdCnyRate === undefined) {

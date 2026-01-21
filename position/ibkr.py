@@ -8,7 +8,7 @@ load_dotenv()
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT_DIR, "data")
-YAML_PATH = os.path.join(DATA_DIR, "account.yaml")
+JSON_PATH = os.path.join(DATA_DIR, "account.json")
 
 IB_HOST = os.getenv("IB_HOST", "127.0.0.1")
 IB_PORT = int(os.getenv("IB_PORT", "7496"))
@@ -60,12 +60,13 @@ def main():
     try:
         data = pull_ibkr_data(ib)
         os.makedirs(DATA_DIR, exist_ok=True)
-        # 保留 account.yaml 里原有的其他字段，只更新 timestamp / cash / positions
-        if os.path.exists(YAML_PATH):
-            with open(YAML_PATH, "r") as f:
+        # 保留 account.json 里原有的其他字段，只更新 timestamp / cash / positions
+        if os.path.exists(JSON_PATH):
+            with open(JSON_PATH, "r") as f:
                 try:
-                    existing = yaml.safe_load(f) or {}
-                except yaml.YAMLError:
+                    import json
+                    existing = json.load(f)
+                except Exception:
                     existing = {}
         else:
             existing = {}
@@ -78,10 +79,12 @@ def main():
             }
         )
 
-        with open(YAML_PATH, "w") as f:
-            yaml.dump(existing, f, sort_keys=False)
+        with open(JSON_PATH, "w") as f:
+            import json
 
-        print(f"✅ Updated {YAML_PATH}")
+            json.dump(existing, f, ensure_ascii=False, indent=2)
+
+        print(f"✅ Updated {JSON_PATH}")
     finally:
         ib.disconnect()
 

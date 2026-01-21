@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/format";
 import type { PortfolioData } from "@/types/portfolio";
 import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalculations";
@@ -51,48 +52,49 @@ export function DataDownloadModal({
   originalAmountUsd,
   currentBalanceUsd,
 }: DataDownloadModalProps) {
+  const router = useRouter();
   const [copySuccess, setCopySuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<"export" | "yaml">("export");
-  const [yamlContent, setYamlContent] = useState<string>("");
-  const [isYamlLoading, setIsYamlLoading] = useState(false);
-  const [yamlError, setYamlError] = useState<string | null>(null);
-  const [isSavingYaml, setIsSavingYaml] = useState(false);
+  const [activeTab, setActiveTab] = useState<"export" | "json">("export");
+  const [jsonContent, setJsonContent] = useState<string>("");
+  const [isJsonLoading, setIsJsonLoading] = useState(false);
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [isSavingJson, setIsSavingJson] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const loadYaml = async () => {
     try {
-      setIsYamlLoading(true);
-      setYamlError(null);
-      const res = await fetch("/api/portfolio/yaml", {
+      setIsJsonLoading(true);
+      setJsonError(null);
+      const res = await fetch("/api/portfolio/json", {
         method: "GET",
       });
       if (!res.ok) {
-        throw new Error(`Failed to load YAML (status ${res.status})`);
+        throw new Error(`Failed to load JSON (status ${res.status})`);
       }
-      const json = (await res.json()) as { yaml?: string };
-      setYamlContent(json.yaml ?? "");
+      const json = (await res.json()) as { json?: string };
+      setJsonContent(json.json ?? "");
     } catch (err) {
-      console.error("Failed to load YAML:", err);
-      setYamlError("Failed to load YAML content.");
+      console.error("Failed to load JSON:", err);
+      setJsonError("Failed to load JSON content.");
     } finally {
-      setIsYamlLoading(false);
+      setIsJsonLoading(false);
     }
   };
 
   useEffect(() => {
-    if (isOpen && activeTab === "yaml" && !yamlContent && !isYamlLoading && !yamlError) {
+    if (isOpen && activeTab === "json" && !jsonContent && !isJsonLoading && !jsonError) {
       void loadYaml();
     }
-  }, [isOpen, activeTab, yamlContent, isYamlLoading, yamlError]);
+  }, [isOpen, activeTab, jsonContent, isJsonLoading, jsonError]);
 
   // Reset tab state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setActiveTab("export");
-      setYamlContent("");
-      setIsYamlLoading(false);
-      setYamlError(null);
-      setIsSavingYaml(false);
+      setJsonContent("");
+      setIsJsonLoading(false);
+      setJsonError(null);
+      setIsSavingJson(false);
       setSaveSuccess(false);
     }
   }, [isOpen]);
@@ -213,27 +215,29 @@ export function DataDownloadModal({
 
   const handleSaveYaml = async () => {
     try {
-      setIsSavingYaml(true);
+      setIsSavingJson(true);
       setSaveSuccess(false);
-      setYamlError(null);
-      const res = await fetch("/api/portfolio/yaml", {
+      setJsonError(null);
+      const res = await fetch("/api/portfolio/json", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ yaml: yamlContent }),
+        body: JSON.stringify({ json: jsonContent }),
       });
       if (!res.ok) {
         const json = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(json.error || `Failed to save YAML (status ${res.status})`);
+        throw new Error(json.error || `Failed to save JSON (status ${res.status})`);
       }
       setSaveSuccess(true);
+      // Refresh page data so any new/removed entries in the JSON are reflected immediately
+      router.refresh();
       setTimeout(() => setSaveSuccess(false), 1200);
     } catch (err) {
-      console.error("Failed to save YAML:", err);
-      setYamlError("Failed to save YAML. Please check syntax.");
+      console.error("Failed to save JSON:", err);
+      setJsonError("Failed to save JSON. Please check syntax.");
     } finally {
-      setIsSavingYaml(false);
+      setIsSavingJson(false);
     }
   };
 
@@ -254,10 +258,10 @@ export function DataDownloadModal({
           </button>
           <button
             type="button"
-            className={`${styles.modalTab} ${activeTab === "yaml" ? styles.modalTabActive : ""}`}
-            onClick={() => setActiveTab("yaml")}
+            className={`${styles.modalTab} ${activeTab === "json" ? styles.modalTabActive : ""}`}
+            onClick={() => setActiveTab("json")}
           >
-            YAML
+            JSON
           </button>
         </div>
         <div className={styles.modalBody}>
@@ -265,17 +269,17 @@ export function DataDownloadModal({
             <pre className={styles.modalText}>{formatAllData()}</pre>
           ) : (
             <div className={styles.yamlEditorContainer}>
-              {isYamlLoading ? (
-                <div className={styles.yamlStatusText}>Loading YAML...</div>
+              {isJsonLoading ? (
+                <div className={styles.yamlStatusText}>Loading JSON...</div>
               ) : (
                 <textarea
                   className={styles.yamlEditor}
-                  value={yamlContent}
-                  onChange={(e) => setYamlContent(e.target.value)}
+                  value={jsonContent}
+                  onChange={(e) => setJsonContent(e.target.value)}
                   spellCheck={false}
                 />
               )}
-              {yamlError && <div className={styles.yamlErrorText}>{yamlError}</div>}
+              {jsonError && <div className={styles.yamlErrorText}>{jsonError}</div>}
             </div>
           )}
         </div>
@@ -291,9 +295,9 @@ export function DataDownloadModal({
             <button
               className={`${styles.modalCancelButton} ${saveSuccess ? styles.copySuccessButton : ""}`}
               onClick={handleSaveYaml}
-              disabled={isSavingYaml || isYamlLoading}
+              disabled={isSavingJson || isJsonLoading}
             >
-              {isSavingYaml ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
+              {isSavingJson ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
             </button>
           )}
         </div>
