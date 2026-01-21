@@ -43,7 +43,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask, usdSgd
         <tbody>
           {/* Header row in tbody so it participates in the same flex-based row height distribution (matches SummaryTable behavior) */}
           <tr className={`${styles.legendRow} ${styles.legendHeaderRow}`}>
-            <td className={styles.legendColorCell}></td>
             <td className={styles.legendLabel}></td>
             <td className={styles.legendAmount}>Cost</td>
             <td className={styles.legendAmount}>uPnL</td>
@@ -55,9 +54,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask, usdSgd
             .filter((asset) => asset.isVisible)
             .map((asset) => (
               <tr key={asset.key} className={styles.legendRow}>
-                <td className={styles.legendColorCell}>
-                  <span className={styles.legendColor} style={{ backgroundColor: asset.color }} />
-                </td>
                 <td className={styles.legendLabel}>{asset.label}</td>
                 <td className={styles.legendAmount}>{applyMask(formatCurrencyValue(asset.cost))}</td>
                 <td className={`${styles.legendAmount} ${asset.isCash ? styles.center : ""}`} style={asset.unrealizedPnL !== 0 && !asset.isCash ? { color: asset.unrealizedPnL >= 0 ? "#2e7d32" : "#c62828" } : undefined}>
@@ -73,7 +69,6 @@ export function LegendTable({ assetAllocation, assetBreakdown, applyMask, usdSgd
               </tr>
             ))}
           <tr className={styles.legendRow}>
-            <td className={styles.legendColorCell}></td>
             <td className={styles.legendLabel} style={{ fontWeight: 600 }}>Total</td>
             <td className={styles.legendAmount} style={{ fontWeight: 600 }}>{applyMask(formatCurrencyValue(assetBreakdown.totalCost))}</td>
             <td className={styles.legendAmount} style={{ fontWeight: 600, color: totalPnL !== 0 ? (totalPnL >= 0 ? "#2e7d32" : "#c62828") : undefined }}>

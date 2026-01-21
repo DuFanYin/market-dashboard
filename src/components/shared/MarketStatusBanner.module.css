@@ -6,8 +6,12 @@
   font-size: 12px;
   text-align: center;
   margin: 0;
-  margin-top: 20px;
+  margin-top: 8px;
   margin-bottom: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 @media (min-width: 640px) {
@@ -22,15 +26,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .bannerCenter {
   text-align: center;
   font-size: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .bannerLabel {
   display: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 @media (min-width: 640px) {
@@ -43,6 +59,10 @@
   margin-left: 8px;
   font-size: 14px;
   color: #888888;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 /* Banner background colors */
@@ -70,26 +90,46 @@
 .statusOpen {
   color: #2e7d32; /* Green for open */
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .statusPreMarket {
   color: #ffc107; /* Yellow for pre-market */
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .statusPostMarket {
   color: #ffc107; /* Yellow for post-market */
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .statusNight {
   color: #ffc107; /* Yellow for night market */
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .statusClosed {
   color: #c62828; /* Red for closed */
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .lastRefreshTime {
@@ -101,6 +141,10 @@
   margin-top: 6px;
   transition: outline 0.2s;
   border-radius: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .lastRefreshTime:hover {

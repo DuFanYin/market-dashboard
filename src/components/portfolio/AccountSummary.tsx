@@ -20,6 +20,7 @@ interface AccountSummaryProps {
   usdCnyRate: number;
   currencyMode: CurrencyMode;
   onToggleCurrency: () => void;
+  onChartClick?: () => void;
 }
 
 export function AccountSummary({
@@ -36,6 +37,7 @@ export function AccountSummary({
   usdCnyRate,
   currencyMode,
   onToggleCurrency,
+  onChartClick,
 }: AccountSummaryProps) {
   return (
     <>
@@ -53,7 +55,8 @@ export function AccountSummary({
       />
       <div className={styles.chartSection}>
         <PortfolioChart 
-          assetAllocation={assetAllocation} />
+          assetAllocation={assetAllocation}
+          onClick={onChartClick} />
       </div>
       <LegendTable 
         assetAllocation={assetAllocation} 

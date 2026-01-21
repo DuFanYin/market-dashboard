@@ -57,7 +57,25 @@ export default function PortfolioPage() {
 
     return () => clearInterval(interval);
   }, [lastRefreshTime]);
-  const { marketStatus, isUsMarketOpen, nyTimeLabel } = useMarketData();
+  const { marketStatus, nyTimeLabel } = useMarketData();
+
+  // Hydrate from cached payload (set by /dashboard) to avoid refetch on navigation
+  useEffect(() => {
+    if (data) return;
+    try {
+      const raw = sessionStorage.getItem("portfolio_cache_v1");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { ts?: number; payload?: PortfolioData };
+      if (parsed?.payload) {
+        setData(parsed.payload);
+        setLastRefreshTime(parsed.ts ? new Date(parsed.ts) : new Date());
+        setIsInitialLoad(false);
+        setIsLoading(false);
+      }
+    } catch {
+      // ignore
+    }
+  }, [data]);
 
   const fetchPortfolio = useCallback(
     async (isRefresh = false) => {
@@ -83,6 +101,14 @@ export default function PortfolioPage() {
       setData(payload);
       setLastRefreshTime(new Date());
       setIsInitialLoad(false);
+      try {
+        sessionStorage.setItem(
+          "portfolio_cache_v1",
+          JSON.stringify({ ts: Date.now(), payload })
+        );
+      } catch {
+        // ignore
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred.");
       if (isInitialLoad && !isRefresh) {
@@ -96,8 +122,11 @@ export default function PortfolioPage() {
   );
 
   useEffect(() => {
-    fetchPortfolio(false);
-  }, [fetchPortfolio]);
+    // If cache already hydrated data, skip auto-fetch; manual refresh still works.
+    if (!data) {
+      fetchPortfolio(false);
+    }
+  }, [fetchPortfolio, data]);
 
   const handleRefresh = useCallback(async () => {
     await fetchPortfolio(true);
@@ -145,9 +174,7 @@ export default function PortfolioPage() {
     <main className={styles.page}>
       <div className={styles.container}>
         <div>
-          <PortfolioHeader
-            onDownloadClick={() => setIsDownloadModalOpen(true)}
-          />
+          <PortfolioHeader />
           {error && (
             <div className={styles.errorMessage}>
               Error refreshing: {error}
@@ -185,6 +212,7 @@ export default function PortfolioPage() {
                 return "USD";
               });
             }}
+            onChartClick={() => setIsDownloadModalOpen(true)}
           />
         </div>
 

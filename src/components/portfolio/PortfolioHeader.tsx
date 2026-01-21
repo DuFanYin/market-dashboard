@@ -1,11 +1,7 @@
 import { useRouter } from "next/navigation";
 import styles from "@/app/portfolio/page.module.css";
 
-interface PortfolioHeaderProps {
-  onDownloadClick: () => void;
-}
-
-export function PortfolioHeader({ onDownloadClick }: PortfolioHeaderProps) {
+export function PortfolioHeader() {
   const router = useRouter();
 
   return (
@@ -14,9 +10,6 @@ export function PortfolioHeader({ onDownloadClick }: PortfolioHeaderProps) {
         <h1 className={styles.title} onClick={() => router.push("/dashboard")}>
           Portfolio Summary
         </h1>
-        <button className={styles.downloadButton} onClick={onDownloadClick}>
-          Data
-        </button>
       </div>
     </header>
   );

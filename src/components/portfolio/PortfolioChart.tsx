@@ -5,6 +5,7 @@ import styles from "@/app/portfolio/page.module.css";
 interface PortfolioChartProps {
   assetAllocation: AssetAllocation[];
   showLabels?: boolean;
+  onClick?: () => void;
 }
 
 // Asset order: Cash, Option, ETF, Crypto, Stock (matching pentagon vertices)
@@ -32,6 +33,7 @@ function getPentagonOutline(centerX: number, centerY: number, radius: number): s
 export function PortfolioChart({
   assetAllocation,
   showLabels = false,
+  onClick,
 }: PortfolioChartProps) {
   const colors = SEGMENT_COLORS_DARK;
   const centerX = 125;
@@ -97,6 +99,8 @@ export function PortfolioChart({
       viewBox="0 0 250 250"
       preserveAspectRatio="xMidYMid meet"
       className={styles.chartSvg}
+      onClick={onClick}
+      style={{ cursor: onClick ? "pointer" : "default" }}
     >
         {/* Draw percentage layer rings (15%, 30%, 45%, 60%) */}
         {[15, 30, 45, 60].map((percent, i) => {
@@ -139,19 +143,6 @@ export function PortfolioChart({
           stroke="#ffffff"
           strokeWidth={1.5}
         />
-        
-        {/* Draw the 5 vertex points */}
-        {vertexPoints.map((point, i) => (
-          <circle
-            key={`point-${i}`}
-            cx={point.x}
-            cy={point.y}
-            r={2.5}
-            fill={point.color}
-            stroke="#ffffff"
-            strokeWidth={1}
-          />
-        ))}
         
         {/* Optional: labels at the outermost ring (100% ring) */}
         {showLabels &&

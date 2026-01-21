@@ -265,19 +265,17 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                 </span>
               )}
             </th>
-            {!isIncognito && (
-              <th 
-                className={styles.sortable}
-                onClick={() => handleSort("dte")}
-              >
-                DTE
-                {sortColumn === "dte" && (
-                  <span className={styles.sortIndicator}>
-                    {sortDirection === "asc" ? " ↑" : sortDirection === "desc" ? " ↓" : ""}
-                  </span>
-                )}
-              </th>
-            )}
+            <th
+              className={isIncognito ? undefined : styles.sortable}
+              onClick={isIncognito ? undefined : () => handleSort("dte")}
+            >
+              DTE
+              {!isIncognito && sortColumn === "dte" && (
+                <span className={styles.sortIndicator}>
+                  {sortDirection === "asc" ? " ↑" : sortDirection === "desc" ? " ↓" : ""}
+                </span>
+              )}
+            </th>
             <th 
               className={styles.sortable}
               onClick={() => handleSort("strike")}
@@ -344,11 +342,13 @@ export function PositionsTable({ positions, netLiquidation, applyMask, isIncogni
                 <td>{applyMask(formatNumber(pos.delta))}</td>
                 <td>{!pos.is_option ? "" : applyMask(formatNumber(pos.gamma))}</td>
                 <td>{!pos.is_option ? "" : applyMask(formatNumber(pos.theta))}</td>
-                {!isIncognito && (
-                  <td>
-                    {pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0 ? `${pos.dteDays}` : ""}
-                  </td>
-                )}
+                <td>
+                  {isIncognito
+                    ? ""
+                    : pos.is_option && typeof pos.dteDays === "number" && pos.dteDays >= 0
+                      ? `${pos.dteDays}`
+                      : ""}
+                </td>
                 <td>
                   {pos.is_option && pos.strike ? applyMask(formatMoney(pos.strike)) : ""}
                 </td>

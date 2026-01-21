@@ -82,39 +82,11 @@
   grid-column: 2;
   justify-self: center;
   align-self: center;
-  margin-top: 20px;
+  margin-top: 50px;
 }
 
 .title:hover {
   text-decoration: underline;
-}
-
-/* =========================================================================
- * Download Button
- * ========================================================================= */
-.downloadButton {
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #ffffff;
-  background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  margin-top: 20px;
-  grid-column: 3;
-  justify-self: end;
-}
-
-.downloadButton:hover {
-  border-color: #ffffff;
-}
-
-@media (max-width: 768px) {
-  .downloadButton {
-    display: none;
-  }
 }
 
 /* =========================================================================
@@ -342,6 +314,10 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .summaryTable tbody {
@@ -371,6 +347,10 @@
   align-items: center;
   min-height: 0;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .summaryRow:last-child td {
@@ -535,6 +515,10 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .chartLegend thead {
@@ -572,6 +556,10 @@
   align-items: center;
   justify-content: flex-end;
   min-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .chartLegend td.legendAmount,
@@ -594,7 +582,7 @@
 
 /* Legend alignment rules:
    - Header (col row): all centered
-   - Body: col 1 centered (color), col 2 centered (label/value), col 3-7 right aligned (numbers)
+   - Body: col 1 centered (label), col 2-6 right aligned (numbers)
 */
 .chartLegend thead th {
   justify-content: center;
@@ -604,11 +592,7 @@
   justify-content: center;
 }
 
-.chartLegend tbody td:nth-child(2) {
-  justify-content: center;
-}
-
-.chartLegend tbody td:nth-child(n + 3) {
+.chartLegend tbody td:nth-child(n + 2) {
   justify-content: flex-end;
 }
 
@@ -626,32 +610,16 @@
   border-bottom: none;
 }
 
-.legendColorCell {
-  /* Column width is controlled by flex rules below (nth-child(1)) */
-  width: auto;
-  min-width: 0;
-  max-width: none;
-  justify-content: center;
-  vertical-align: middle;
-}
 
 /* Legend column sizing (flex-based table layout) */
 .chartLegend th:nth-child(1),
 .chartLegend td:nth-child(1) {
-  /* Narrower color column (half width) */
-  flex: 0 0 20px;
-  padding-left: 5px;
-  padding-right: 0;
-  /* Allow the color square to nudge without getting clipped */
-  overflow: visible;
-}
-
-.chartLegend th:nth-child(2),
-.chartLegend td:nth-child(2) {
-  /* Reduce width by ~1/3 (from 1.4 → ~0.93) */
+  /* Label column */
   flex: 0.9 1 0;
 }
 
+.chartLegend th:nth-child(2),
+.chartLegend td:nth-child(2),
 .chartLegend th:nth-child(3),
 .chartLegend td:nth-child(3),
 .chartLegend th:nth-child(4),
@@ -659,20 +627,8 @@
 .chartLegend th:nth-child(5),
 .chartLegend td:nth-child(5),
 .chartLegend th:nth-child(6),
-.chartLegend td:nth-child(6),
-.chartLegend th:nth-child(7),
-.chartLegend td:nth-child(7) {
+.chartLegend td:nth-child(6) {
   flex: 1 1 0;
-}
-
-.legendColor {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  display: block;
-  vertical-align: middle;
-  /* Fine-tune horizontal position inside a narrow column */
-  transform: translateX(6px);
 }
 
 .legendLabel {
@@ -747,6 +703,18 @@
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 11px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.positionsTable tbody tr {
+  height: 32px;
+}
+
+.positionsTable thead tr {
+  height: 32px;
 }
 
 /* =========================================================================
@@ -865,6 +833,14 @@
   font-size: 13px;
   color: #ffffff;
   box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
+  line-height: 20px;
+  vertical-align: middle;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .positionsTable td.positive {
@@ -1003,15 +979,17 @@
 
 
 .positionsTable td.maxValue {
-  border: 2px solid #2e7d32;
-  margin: -2px;
+  box-shadow: inset 0 0 0 2px #2e7d32;
+  border: 0;
+  margin: 0;
   position: relative;
   z-index: 2;
 }
 
 .positionsTable td.minValue {
-  border: 2px solid #c62828;
-  margin: -2px;
+  box-shadow: inset 0 0 0 2px #c62828;
+  border: 0;
+  margin: 0;
   position: relative;
   z-index: 1;
 }
@@ -1023,17 +1001,11 @@
 }
 
 .positionsTable tbody tr:hover td.maxValue {
-  border: 2px solid #2e7d32 !important;
-  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00 !important;
-  margin: -2px;
-  z-index: 2;
+  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00, inset 0 0 0 2px #2e7d32;
 }
 
 .positionsTable tbody tr:hover td.minValue {
-  border: 2px solid #c62828 !important;
-  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00 !important;
-  margin: -2px;
-  z-index: 1;
+  box-shadow: inset 0 -1px 0 0 #ffff00, inset 0 1px 0 0 #ffff00, inset 0 0 0 2px #c62828;
 }
 
 
@@ -1077,7 +1049,7 @@
   .summarySection {
     /* Mobile: put Summary + Chart on the same row without flex-shrink "disappearing" */
     display: grid;
-    grid-template-columns: minmax(0, 1.0fr) minmax(0, 150px);
+    grid-template-columns: minmax(0, 1.0fr) minmax(0, 130px);
     column-gap: 6px;
     row-gap: 12px;
     height: auto;
@@ -1103,6 +1075,7 @@
     max-width: none;
     justify-content: center;
     padding: 8px 0;
+    pointer-events: none;
   }
 
   /* Keep legend on its own row */
@@ -1121,9 +1094,11 @@
 
   .chartSvg {
     height: auto;
-    max-width: 180px; /* allow two-up on narrow screens */
+    max-width: 120px; /* allow two-up on narrow screens */
     max-height: none;
     transform: none;
+    pointer-events: none;
+    cursor: default;
   }
 
   .positionsSection {
@@ -1235,24 +1210,22 @@
     display: table;
     table-layout: fixed;
     /*
-     * Mobile legend column controls (7 cols)
+     * Mobile legend column controls (6 cols)
      * You can tweak these variables to control each column without changing layout/DOM.
      */
-    --legend-col1-width: 5%; /* Color: tight but fits 12px square */
-    --legend-col2-width: 5%;  /* Label: narrower to shrink gap */
-    --legend-col3-width: 11%;  /* Cost */
-    --legend-col4-width: 8%;  /* uPnL */
-    --legend-col5-width: 8%;   /* uPnL % */
-    --legend-col6-width: 11%;  /* Current */
-    --legend-col7-width: 8%;   /* Allocation % */
+    --legend-col1-width: 8%;  /* Label */
+    --legend-col2-width: 12%;   /* Cost */
+    --legend-col3-width: 9%;    /* uPnL */
+    --legend-col4-width: 9%;    /* uPnL % */
+    --legend-col5-width: 12%;   /* Current */
+    --legend-col6-width: 9%;    /* Allocation % */
 
     --legend-col1-pad-x: 0px;
     --legend-col2-pad-x: 0px;
     --legend-col3-pad-x: 0px;
     --legend-col4-pad-x: 0px;
     --legend-col5-pad-x: 0px;
-    --legend-col6-pad-x: 0px;
-    --legend-col7-pad-x: 5px;
+    --legend-col6-pad-x: 5px;
   }
 
   .chartLegend thead {
@@ -1294,7 +1267,7 @@
     padding-left: 0;
     padding-right: var(--legend-col2-pad-x);
     --legend-pad-x-current: var(--legend-col2-pad-x);
-    text-align: center;
+    text-align: right;
   }
 
   .chartLegend th:nth-child(3),
@@ -1331,22 +1304,6 @@
     padding-right: var(--legend-col6-pad-x);
     --legend-pad-x-current: var(--legend-col6-pad-x);
     text-align: right;
-  }
-
-  .chartLegend th:nth-child(7),
-  .chartLegend td:nth-child(7) {
-    width: var(--legend-col7-width);
-    padding-left: 0;
-    padding-right: var(--legend-col7-pad-x);
-    --legend-pad-x-current: var(--legend-col7-pad-x);
-    text-align: right;
-  }
-
-
-  /* Reduce visual gap between color square and text */
-  .legendColor {
-    transform: none;
-    margin-inline: auto; /* center the color square in its table cell */
   }
 
   .legendLabel {

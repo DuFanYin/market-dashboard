@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { useMarketData } from "@/hooks/useMarketData";
@@ -9,7 +9,60 @@ import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
 
 export default function Page() {
   const router = useRouter();
-  const { data, marketStatus, nyTimeLabel, next5In, handleRefresh } = useMarketData();
+  const { data, marketStatus, nyTimeLabel, handleRefresh: originalHandleRefresh } = useMarketData();
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(new Date());
+  const [timeAgo, setTimeAgo] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSeconds < 60) {
+      return `${diffSeconds} second${diffSeconds !== 1 ? "s" : ""} ago`;
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+    } else {
+      return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+    }
+  };
+
+  useEffect(() => {
+    if (!lastRefreshTime) return;
+
+    // Update immediately
+    setTimeAgo(formatTimeAgo(lastRefreshTime));
+
+    // Update every second
+    const interval = setInterval(() => {
+      setTimeAgo(formatTimeAgo(lastRefreshTime));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastRefreshTime]);
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    try {
+      await originalHandleRefresh();
+      setLastRefreshTime(new Date());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update refresh time when data loads
+  useEffect(() => {
+    if (data) {
+      setLastRefreshTime(new Date());
+    }
+  }, [data]);
 
   // Derived data for rendering
   const fg = data?.cnnFearGreed ?? { success: false };
@@ -47,37 +100,33 @@ export default function Page() {
   }, [data]);
 
   return (
-    <main className={`${styles.page} min-h-screen px-2 sm:px-4 py-2 sm:py-6`}>
-      <div className={`mx-auto max-w-7xl ${styles.uniformGap}`}>
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <div>
+          {/* Header (match Portfolio page sizing/position) */}
+          <header className={styles.header}>
+            <div className={styles.headerTop}>
+              <div />
+              <h1 className={styles.title} onClick={() => router.push("/portfolio")}>
+                Market Dashboard
+              </h1>
+              <div />
+            </div>
+          </header>
 
-        {/* Header */}
-        <header className="flex flex-col items-center justify-center text-center" style={{ marginTop: "20px" }}>
-          <div>
-            <h1 
-              className="text-2xl sm:text-3xl font-bold tracking-tight text-white cursor-pointer hover:underline transition"
-              onClick={() => router.push("/portfolio")}
-            >
-              Market Dashboard
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-400">Macro · Crypto · Sentiment</p>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2" style={{ marginTop: "20px" }}>
-            <div className="text-[10px] sm:text-xs text-gray-400">{next5In}s</div>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="text-[10px] sm:text-xs border border-white rounded px-1.5 sm:px-2 py-0.5 sm:py-1 hover:bg-gray-800 text-white"
-            >
-              Refresh
-            </button>
-          </div>
-        </header>
-
-        {/* US Stock Market status banner */}
-        <MarketStatusBanner marketStatus={marketStatus} nyTimeLabel={nyTimeLabel} />
+          {/* US Stock Market status banner */}
+          <MarketStatusBanner 
+            marketStatus={marketStatus} 
+            nyTimeLabel={nyTimeLabel}
+            lastRefreshTime={lastRefreshTime}
+            timeAgo={timeAgo}
+            isLoading={isLoading}
+            onRefresh={handleRefresh}
+          />
+        </div>
 
         {/* Main grid */}
-        <div className="grid gap-1 sm:gap-6 lg:gap-8 lg:grid-cols-2">
+        <div className={styles.contentGrid}>
           <MarketsTable rows={marketRows} ahr={ahr} />
           <FearGreedPanel fg={fg} />
         </div>
