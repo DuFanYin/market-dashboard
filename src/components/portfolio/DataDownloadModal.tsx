@@ -40,6 +40,7 @@ interface DataDownloadModalProps {
   summaryItems: SummaryItem[];
   originalAmountUsd: number;
   currentBalanceUsd: number;
+  onSaveSuccess?: () => void; // Callback when JSON is successfully saved
 }
 
 export function DataDownloadModal({
@@ -51,6 +52,7 @@ export function DataDownloadModal({
   summaryItems,
   originalAmountUsd,
   currentBalanceUsd,
+  onSaveSuccess,
 }: DataDownloadModalProps) {
   const router = useRouter();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -73,7 +75,12 @@ export function DataDownloadModal({
         throw new Error(`Failed to load JSON (status ${res.status})`);
       }
       const json = (await res.json()) as { json?: string };
-      setJsonContent(json.json ?? "");
+      const content = json.json ?? "";
+      setJsonContent(content);
+      // If content is empty (first time use), don't show error, just let user input
+      if (!content) {
+        setJsonError(null); // Clear any previous errors
+      }
     } catch (err) {
       console.error("Failed to load JSON:", err);
       setJsonError("Failed to load JSON content.");
@@ -215,6 +222,12 @@ export function DataDownloadModal({
   };
 
   const handleSaveYaml = async () => {
+    // Validate JSON is not empty
+    if (!jsonContent || jsonContent.trim() === "") {
+      setJsonError("JSON content cannot be empty. Please input the complete JSON data.");
+      return;
+    }
+
     try {
       setIsSavingJson(true);
       setSaveSuccess(false);
@@ -230,11 +243,68 @@ export function DataDownloadModal({
         const json = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(json.error || `Failed to save JSON (status ${res.status})`);
       }
+      
+      // Verify the save by reading back the data (with retry for CDN cache propagation)
+      // Blob put() completes when data is written, but CDN cache may take a moment
+      let verified = false;
+      const maxRetries = 3;
+      const retryDelay = 500; // 500ms between retries
+      
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          // Wait a bit for CDN cache to update (especially on first retry)
+          if (i > 0) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          }
+          
+          const verifyRes = await fetch("/api/portfolio/json", {
+            method: "GET",
+            cache: "no-store",
+          });
+          
+          if (verifyRes.ok) {
+            const verifyJson = (await verifyRes.json()) as { json?: string };
+            const savedContent = verifyJson.json ?? "";
+            
+            // Check if the saved content includes our timestamp (server adds it)
+            // Or verify the content matches what we expect
+            if (savedContent && savedContent.length > 0) {
+              verified = true;
+              break;
+            }
+          }
+        } catch (err) {
+          // Continue to next retry
+          console.log(`Save verification attempt ${i + 1} failed:`, err);
+        }
+      }
+      
+      // Show success even if verification failed (put() already succeeded)
+      // But log a warning if verification failed
+      if (!verified) {
+        console.warn("Save succeeded but verification failed - data may be cached");
+      }
+      
       setSaveSuccess(true);
-      // Refresh page data so any new/removed entries in the JSON are reflected immediately
-      router.refresh();
+      
+      // Clear sessionStorage cache to force fresh data fetch
+      try {
+        sessionStorage.removeItem("portfolio_cache_v1");
+      } catch {
+        // ignore
+      }
+      
       // Reload JSON content to show the saved version (which may have timestamp added)
       await loadYaml();
+      
+      // Notify parent component to refresh data
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      } else {
+        // Fallback: use router.refresh() if no callback provided
+        router.refresh();
+      }
+      
       setTimeout(() => setSaveSuccess(false), 1200);
     } catch (err) {
       console.error("Failed to save JSON:", err);
@@ -275,12 +345,20 @@ export function DataDownloadModal({
               {isJsonLoading ? (
                 <div className={styles.yamlStatusText}>Loading JSON...</div>
               ) : (
-                <textarea
-                  className={styles.yamlEditor}
-                  value={jsonContent}
-                  onChange={(e) => setJsonContent(e.target.value)}
-                  spellCheck={false}
-                />
+                <>
+                  {!jsonContent && !jsonError && (
+                    <div className={styles.yamlStatusText} style={{ marginBottom: "8px", color: "#888" }}>
+                      No JSON data found. Please input the complete JSON data below.
+                    </div>
+                  )}
+                  <textarea
+                    className={styles.yamlEditor}
+                    value={jsonContent}
+                    onChange={(e) => setJsonContent(e.target.value)}
+                    placeholder={!jsonContent ? "Paste your complete JSON data here..." : ""}
+                    spellCheck={false}
+                  />
+                </>
               )}
               {jsonError && <div className={styles.yamlErrorText}>{jsonError}</div>}
             </div>

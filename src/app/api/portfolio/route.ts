@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import path from "node:path";
-import { promises as fs } from "node:fs";
 import { put, head } from "@vercel/blob";
+import { BlobNotFoundError } from "@vercel/blob";
 import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
 import { getOkxPrices } from "@/lib/data";
 
-const dataJsonPath = path.join(process.cwd(), "data", "account.json");
 const BLOB_KEY = "account.json";
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
 
@@ -75,61 +73,48 @@ type AccountData = PortfolioYaml & {
 };
 
 async function loadPortfolioJson(): Promise<AccountData> {
-  let raw: string;
-  
-  // Try Blob first (production)
+  // Read from Blob only (no local file fallback)
   try {
     const blobInfo = await head(BLOB_KEY);
-    if (blobInfo) {
-      const response = await fetch(blobInfo.url);
-      if (response.ok) {
-        raw = await response.text();
-      } else {
-        throw new Error("Blob fetch failed");
-      }
-    } else {
-      throw new Error("Blob not found");
+    if (!blobInfo) {
+      throw new BlobNotFoundError();
     }
+    
+    // Add timestamp query parameter to bypass CDN cache
+    const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
+    const response = await fetch(urlWithCacheBuster, {
+      cache: "no-store",
+    });
+    
+    if (!response.ok) {
+      throw new Error("Blob fetch failed");
+    }
+    
+    const raw = await response.text();
+    const parsed = JSON.parse(raw) as AccountData;
+    
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Failed to parse portfolio JSON file.");
+    }
+    
+    return parsed;
   } catch (error) {
-    // Fallback to local file (development)
-  try {
-      await fs.access(dataJsonPath);
-      raw = await fs.readFile(dataJsonPath, "utf8");
-  } catch {
-      throw new Error("Portfolio data file not found in both Blob and local file");
+    if (error instanceof BlobNotFoundError) {
+      throw new Error("Portfolio data not found. Please input JSON data in the modal first.");
     }
+    throw error;
   }
-  
-  const parsed = JSON.parse(raw) as AccountData;
-  if (!parsed || typeof parsed !== "object") {
-    throw new Error("Failed to parse portfolio JSON file.");
-  }
-  return parsed;
 }
 
 async function savePortfolioJson(portfolio: AccountData): Promise<void> {
   const content = JSON.stringify(portfolio, null, 2);
   
-  // Try Blob first (production)
-  try {
-    await put(BLOB_KEY, content, {
-      contentType: "application/json",
-      access: "public",
-      addRandomSuffix: false, // Keep same filename
-    });
-    return;
-  } catch (error) {
-    // Fallback to local file (development)
-    try {
-      await fs.writeFile(dataJsonPath, content, "utf8");
-    } catch (localError) {
-      const errorCode = (localError as { code?: string })?.code;
-      if (errorCode === "EROFS") {
-        throw new Error("Read-only file system. Please configure Vercel Blob Storage.");
-      }
-      throw localError;
-    }
-  }
+  // Save to Blob only (no local file fallback)
+  await put(BLOB_KEY, content, {
+    contentType: "application/json",
+    access: "public",
+    addRandomSuffix: false, // Keep same filename
+  });
 }
 
 async function fetchUsdSgdRate(): Promise<number> {

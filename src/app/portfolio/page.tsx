@@ -82,7 +82,13 @@ export default function PortfolioPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/portfolio");
+      // Add cache busting to ensure fresh data after JSON updates
+      const response = await fetch("/api/portfolio", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      });
 
       if (response.status === 404) {
         if (isInitialLoad && !isRefresh) {
@@ -234,6 +240,10 @@ export default function PortfolioPage() {
         summaryItems={summaryItems}
         originalAmountUsd={data.original_amount_usd}
         currentBalanceUsd={data.net_liquidation}
+        onSaveSuccess={() => {
+          // Force refresh portfolio data after JSON save
+          void fetchPortfolio(true);
+        }}
       />
     </main>
   );

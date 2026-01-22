@@ -1,69 +1,50 @@
 import { NextResponse } from "next/server";
-import path from "node:path";
-import { promises as fs } from "node:fs";
 import { put, head } from "@vercel/blob";
+import { BlobNotFoundError } from "@vercel/blob";
 
-const dataJsonPath = path.join(process.cwd(), "data", "account.json");
 const BLOB_KEY = "account.json";
 
-// Try to read from Blob first, fallback to local file
-async function readAccountJson(): Promise<string> {
-  // Try Blob first (production)
+// Read from Blob only (no local file fallback)
+async function readAccountJson(): Promise<string | null> {
   try {
     const blobInfo = await head(BLOB_KEY);
     if (blobInfo) {
-      const response = await fetch(blobInfo.url, {
+      // Add timestamp query parameter to bypass CDN cache and ensure fresh data
+      const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
+      const response = await fetch(urlWithCacheBuster, {
         cache: "no-store", // Prevent caching to always get fresh data
       });
       if (response.ok) {
         return await response.text();
       }
     }
+    return null; // Blob not found
   } catch (error) {
-    console.log("[portfolio JSON API] Blob read failed, trying local file:", error);
-  }
-
-  // Fallback to local file (development)
-  try {
-    return await fs.readFile(dataJsonPath, "utf8");
-  } catch (error) {
-    throw new Error("Failed to read account JSON from both Blob and local file");
+    // If blob doesn't exist, return null (user needs to input JSON manually)
+    if (error instanceof BlobNotFoundError) {
+      return null;
+    }
+    console.error("[portfolio JSON API] Blob read error:", error);
+    throw error;
   }
 }
 
-// Try to save to Blob first, fallback to local file
+// Save to Blob only (no local file fallback)
 async function saveAccountJson(content: string): Promise<void> {
-  // Try Blob first (production)
-  try {
-    await put(BLOB_KEY, content, {
-      contentType: "application/json",
-      access: "public",
-      addRandomSuffix: false, // Keep same filename
-    });
-    return; // Success
-  } catch (error) {
-    console.log("[portfolio JSON API] Blob write failed, trying local file:", error);
-  }
-
-  // Fallback to local file (development)
-  try {
-    await fs.writeFile(dataJsonPath, content, "utf8");
-  } catch (error) {
-    const errorCode = (error as { code?: string })?.code;
-    if (errorCode === "EROFS") {
-      throw new Error(
-        "Read-only file system. Please configure Vercel Blob Storage in your Vercel project settings."
-      );
-    }
-    throw error;
-  }
+  await put(BLOB_KEY, content, {
+    contentType: "application/json",
+    access: "public",
+    addRandomSuffix: false, // Keep same filename
+  });
 }
 
 export async function GET() {
   try {
     const raw = await readAccountJson();
+    // If blob doesn't exist (first time use), return empty string
+    // Frontend will handle prompting user to input JSON manually
     return NextResponse.json(
-      { json: raw },
+      { json: raw ?? "" },
       {
         headers: {
           "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -88,7 +69,7 @@ export async function PUT(request: Request) {
     let parsed: Record<string, unknown> | null = null;
     try {
       parsed = JSON.parse(body.json) as Record<string, unknown>;
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: "Invalid JSON content" }, { status: 400 });
     }
 
