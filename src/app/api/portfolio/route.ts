@@ -92,10 +92,10 @@ async function loadPortfolioJson(): Promise<AccountData> {
     }
   } catch (error) {
     // Fallback to local file (development)
-    try {
+  try {
       await fs.access(dataJsonPath);
       raw = await fs.readFile(dataJsonPath, "utf8");
-    } catch {
+  } catch {
       throw new Error("Portfolio data file not found in both Blob and local file");
     }
   }

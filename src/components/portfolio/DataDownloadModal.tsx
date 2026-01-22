@@ -67,6 +67,7 @@ export function DataDownloadModal({
       setJsonError(null);
       const res = await fetch("/api/portfolio/json", {
         method: "GET",
+        cache: "no-store", // Prevent caching to always get fresh data
       });
       if (!res.ok) {
         throw new Error(`Failed to load JSON (status ${res.status})`);
@@ -232,6 +233,8 @@ export function DataDownloadModal({
       setSaveSuccess(true);
       // Refresh page data so any new/removed entries in the JSON are reflected immediately
       router.refresh();
+      // Reload JSON content to show the saved version (which may have timestamp added)
+      await loadYaml();
       setTimeout(() => setSaveSuccess(false), 1200);
     } catch (err) {
       console.error("Failed to save JSON:", err);

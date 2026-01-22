@@ -12,7 +12,9 @@ async function readAccountJson(): Promise<string> {
   try {
     const blobInfo = await head(BLOB_KEY);
     if (blobInfo) {
-      const response = await fetch(blobInfo.url);
+      const response = await fetch(blobInfo.url, {
+        cache: "no-store", // Prevent caching to always get fresh data
+      });
       if (response.ok) {
         return await response.text();
       }
@@ -60,7 +62,16 @@ async function saveAccountJson(content: string): Promise<void> {
 export async function GET() {
   try {
     const raw = await readAccountJson();
-    return NextResponse.json({ json: raw });
+    return NextResponse.json(
+      { json: raw },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
+      }
+    );
   } catch (error) {
     console.error("[portfolio JSON API] Failed to read JSON file:", error);
     return NextResponse.json({ error: "Failed to read portfolio JSON file" }, { status: 500 });

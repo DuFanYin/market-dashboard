@@ -124,7 +124,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     // If cache already hydrated data, skip auto-fetch; manual refresh still works.
     if (!data) {
-      fetchPortfolio(false);
+    fetchPortfolio(false);
     }
   }, [fetchPortfolio, data]);
 

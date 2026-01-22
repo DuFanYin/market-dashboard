@@ -102,19 +102,19 @@ export default function Page() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        <div>
+          <div>
           {/* Header (match Portfolio page sizing/position) */}
           <header className={styles.header}>
             <div className={styles.headerTop}>
               <div />
               <h1 className={styles.title} onClick={() => router.push("/portfolio")}>
-                Market Dashboard
-              </h1>
+              Market Dashboard
+            </h1>
               <div />
-            </div>
-          </header>
+          </div>
+        </header>
 
-          {/* US Stock Market status banner */}
+        {/* US Stock Market status banner */}
           <MarketStatusBanner 
             marketStatus={marketStatus} 
             nyTimeLabel={nyTimeLabel}
