@@ -65,7 +65,7 @@ function ensureArray<T>(item: T | T[] | undefined): T[] {
 type AccountData = PortfolioYaml & {
   original_amount_sgd?: number;
   original_amount_usd?: number;
-  year_begin_balance_usd?: number;
+  year_begin_balance_sgd?: number;
   btc?: {
     amount?: number;
     cost_sgd?: number;
@@ -434,7 +434,7 @@ function buildResponse(
   const originalAmountUsd =
     portfolio.original_amount_usd ??
     (originalAmountSgd && usdSgdRate ? originalAmountSgd / usdSgdRate : 0);
-  const yearBeginBalanceUsd = portfolio.year_begin_balance_usd ?? 0;
+  const yearBeginBalanceSgd = portfolio.year_begin_balance_sgd ?? 0;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
 
@@ -457,7 +457,7 @@ function buildResponse(
     usd_cny_rate: usdCnyRate,
     original_amount_sgd: originalAmountSgd,
     original_amount_usd: originalAmountUsd,
-    year_begin_balance_usd: yearBeginBalanceUsd,
+    year_begin_balance_sgd: yearBeginBalanceSgd,
     original_amount_sgd_raw: originalAmountSgdRaw,
   };
 }

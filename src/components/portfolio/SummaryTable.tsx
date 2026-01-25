@@ -13,7 +13,7 @@ interface SummaryTableProps {
   items: SummaryItem[];
   originalAmountUsd?: number;
   currentBalanceUsd?: number;
-  yearBeginBalanceUsd?: number;
+  yearBeginBalanceSgd?: number;
   originalAmountSgd?: number;
   usdSgdRate?: number;
   usdCnyRate?: number;
@@ -22,10 +22,10 @@ interface SummaryTableProps {
   onToggleIncognito?: () => void;
 }
 
-export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceUsd, originalAmountSgd, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
+export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceSgd, originalAmountSgd, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
   // 起点 1：整体账户从最初投入开始的年化收益（例：2025-10-20）
   const overallStartDate = new Date(2025, 9, 20); // 2025-10-20（month 0-indexed, 9 = October）
-  // 起点 2：当年的年初，用于 yearBeginBalanceUsd 的年化收益
+  // 起点 2：当年的年初，用于 yearBeginBalanceSgd 的年化收益
   const today = new Date();
   const yearBeginDate = new Date(today.getFullYear(), 0, 1); // 当年 1 月 1 日
 
@@ -42,15 +42,20 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
     ? calculateAnnualizedReturn(currentBalanceUsd, originalAmountUsd, overallDaysDiff)
     : 0;
 
-  // Calculate values for row 4-6 col 1 (relative to yearBeginBalanceUsd, always in USD)
-  const yearBeginPnL = yearBeginBalanceUsd && currentBalanceUsd !== undefined
+  // Convert yearBeginBalanceSgd to USD for calculations (since currentBalanceUsd is in USD)
+  const yearBeginBalanceUsd = (yearBeginBalanceSgd !== undefined && yearBeginBalanceSgd > 0 && usdSgdRate !== undefined && usdSgdRate > 0)
+    ? yearBeginBalanceSgd / usdSgdRate
+    : undefined;
+
+  // Calculate values for row 4-6 col 2 (relative to yearBeginBalanceSgd, converted to USD for comparison)
+  const yearBeginPnL = (yearBeginBalanceUsd !== undefined && currentBalanceUsd !== undefined)
     ? calculateAccountPnL(currentBalanceUsd, yearBeginBalanceUsd)
     : undefined;
-  const yearBeginPnLPercent = yearBeginBalanceUsd && yearBeginBalanceUsd > 0 && yearBeginPnL !== undefined
+  const yearBeginPnLPercent = (yearBeginBalanceUsd !== undefined && yearBeginBalanceUsd > 0 && yearBeginPnL !== undefined)
     ? calculateAccountPnLPercent(yearBeginPnL, yearBeginBalanceUsd)
     : undefined;
-  // 年化收益 2：currentBalanceUsd 相对 yearBeginBalanceUsd，从当年年初起算
-  const yearBeginAnnualizedReturn = yearBeginBalanceUsd && currentBalanceUsd !== undefined && yearBeginDaysDiff > 0 && yearBeginBalanceUsd > 0
+  // 年化收益 2：currentBalanceUsd 相对 yearBeginBalanceUsd（从 SGD 转换），从当年年初起算
+  const yearBeginAnnualizedReturn = (yearBeginBalanceUsd !== undefined && currentBalanceUsd !== undefined && yearBeginDaysDiff > 0 && yearBeginBalanceUsd > 0)
     ? calculateAnnualizedReturn(currentBalanceUsd, yearBeginBalanceUsd, yearBeginDaysDiff)
     : undefined;
   
@@ -87,8 +92,8 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
               <tr className={styles.summaryRow}>
                 <td className={styles.summaryLabel}>Initial Balance</td>
                 <td className={styles.summaryValue}>
-                  {yearBeginBalanceUsd !== undefined && yearBeginBalanceUsd > 0
-                    ? applyMask(formatCurrencyValue(yearBeginBalanceUsd))
+                  {yearBeginBalanceSgd !== undefined && yearBeginBalanceSgd > 0
+                    ? applyMask(formatCurrencyValueFromSgdBase(yearBeginBalanceSgd))
                     : ""}
                 </td>
                 <td className={styles.summaryValue}>

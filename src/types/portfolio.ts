@@ -91,7 +91,7 @@ export type PortfolioData = {
   usd_cny_rate: number;
   original_amount_sgd: number;
   original_amount_usd: number;
-  year_begin_balance_usd: number;
+  year_begin_balance_sgd: number;
   original_amount_sgd_raw: number;
 };
 

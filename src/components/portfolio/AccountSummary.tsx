@@ -14,7 +14,7 @@ interface AccountSummaryProps {
   originalAmountSgd: number;
   originalAmountUsd: number;
   currentBalanceUsd: number;
-  yearBeginBalanceUsd: number;
+  yearBeginBalanceSgd: number;
   onToggleIncognito: () => void;
   usdSgdRate: number;
   usdCnyRate: number;
@@ -31,7 +31,7 @@ export function AccountSummary({
   originalAmountSgd,
   originalAmountUsd,
   currentBalanceUsd,
-  yearBeginBalanceUsd,
+  yearBeginBalanceSgd,
   onToggleIncognito,
   usdSgdRate,
   usdCnyRate,
@@ -45,7 +45,7 @@ export function AccountSummary({
         items={summaryItems} 
         originalAmountUsd={originalAmountUsd}
         currentBalanceUsd={currentBalanceUsd}
-        yearBeginBalanceUsd={yearBeginBalanceUsd}
+        yearBeginBalanceSgd={yearBeginBalanceSgd}
         originalAmountSgd={originalAmountSgd}
         usdSgdRate={usdSgdRate}
         usdCnyRate={usdCnyRate}
