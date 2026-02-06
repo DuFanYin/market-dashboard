@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { put, head } from "@vercel/blob";
 import { BlobNotFoundError } from "@vercel/blob";
+import path from "node:path";
+import { promises as fs } from "node:fs";
 import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
 import { getOkxPrices } from "@/lib/data";
 
 const BLOB_KEY = "account.json";
+const LOCAL_FILE_PATH = path.join(process.cwd(), "data", "account.json");
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
+
+// Check if LOCAL env variable is set to true/1
+const useLocal = process.env.LOCAL === "true" || process.env.LOCAL === "1";
 
 export const dynamic = "force-dynamic";
 
@@ -65,56 +71,135 @@ function ensureArray<T>(item: T | T[] | undefined): T[] {
 type AccountData = PortfolioYaml & {
   original_amount_sgd?: number;
   original_amount_usd?: number;
-  year_begin_balance_sgd?: number;
-  btc?: {
+  principal?: number;
+  BTC_account?: {
     amount?: number;
     cost_sgd?: number;
   };
 };
 
 async function loadPortfolioJson(): Promise<AccountData> {
-  // Read from Blob only (no local file fallback)
-  try {
-    const blobInfo = await head(BLOB_KEY);
-    if (!blobInfo) {
-      throw new BlobNotFoundError();
+  if (useLocal) {
+    // Read from local file
+    try {
+      const raw = await fs.readFile(LOCAL_FILE_PATH, "utf8");
+      const parsed = JSON.parse(raw) as AccountData;
+      
+      if (!parsed || typeof parsed !== "object") {
+        throw new Error("Failed to parse portfolio JSON file.");
+      }
+      
+      if (!parsed.IBKR_account) {
+        throw new Error("IBKR_account field is required in portfolio JSON file.");
+      }
+      
+      return parsed;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new Error("Portfolio data not found. Please input JSON data in the modal first.");
+      }
+      throw error;
     }
-    
-    // Add timestamp query parameter to bypass CDN cache
-    const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
-    const response = await fetch(urlWithCacheBuster, {
-      cache: "no-store",
-    });
-    
-    if (!response.ok) {
-      throw new Error("Blob fetch failed");
+  } else {
+    // Read from Blob
+    try {
+      const blobInfo = await head(BLOB_KEY);
+      if (!blobInfo) {
+        throw new BlobNotFoundError();
+      }
+      
+      // Add timestamp query parameter to bypass CDN cache
+      const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
+      const response = await fetch(urlWithCacheBuster, {
+        cache: "no-store",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Blob fetch failed");
+      }
+      
+      const raw = await response.text();
+      const parsed = JSON.parse(raw) as AccountData;
+      
+      if (!parsed || typeof parsed !== "object") {
+        throw new Error("Failed to parse portfolio JSON file.");
+      }
+      
+      if (!parsed.IBKR_account) {
+        throw new Error("IBKR_account field is required in portfolio JSON file.");
+      }
+      
+      return parsed;
+    } catch (error) {
+      if (error instanceof BlobNotFoundError) {
+        throw new Error("Portfolio data not found. Please input JSON data in the modal first.");
+      }
+      throw error;
     }
-    
-    const raw = await response.text();
-    const parsed = JSON.parse(raw) as AccountData;
-    
-    if (!parsed || typeof parsed !== "object") {
-      throw new Error("Failed to parse portfolio JSON file.");
-    }
-    
-    return parsed;
-  } catch (error) {
-    if (error instanceof BlobNotFoundError) {
-      throw new Error("Portfolio data not found. Please input JSON data in the modal first.");
-    }
-    throw error;
   }
 }
 
 async function savePortfolioJson(portfolio: AccountData): Promise<void> {
   const content = JSON.stringify(portfolio, null, 2);
   
-  // Save to Blob only (no local file fallback)
-  await put(BLOB_KEY, content, {
-    contentType: "application/json",
-    access: "public",
-    addRandomSuffix: false, // Keep same filename
-  });
+  if (useLocal) {
+    // Save to local file
+    await fs.mkdir(path.dirname(LOCAL_FILE_PATH), { recursive: true });
+    await fs.writeFile(LOCAL_FILE_PATH, content, "utf8");
+  } else {
+    // Save to Blob - ensure the operation completes
+    const blobResult = await put(BLOB_KEY, content, {
+      contentType: "application/json",
+      access: "public",
+      addRandomSuffix: false, // Keep same filename
+    });
+    
+    // Verify the blob was created successfully
+    if (!blobResult || !blobResult.url) {
+      throw new Error("Blob save operation did not return a valid URL");
+    }
+    
+    // Wait a moment for the blob to be fully committed
+    // Vercel Blob may need a brief moment for consistency
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    
+    // Verify by reading back immediately (with cache busting)
+    const verifyUrl = `${blobResult.url}?t=${Date.now()}`;
+    const verifyResponse = await fetch(verifyUrl, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+      },
+    });
+    
+    if (!verifyResponse.ok) {
+      throw new Error(`Failed to verify blob save: ${verifyResponse.status} ${verifyResponse.statusText}`);
+    }
+    
+    const savedContent = await verifyResponse.text();
+    // Basic verification: check if content structure matches
+    try {
+      const savedParsed = JSON.parse(savedContent);
+      const expectedParsed = JSON.parse(content);
+      // Verify key fields match (excluding timestamp which may differ)
+      const savedKeys = Object.keys(savedParsed).filter(k => k !== "timestamp").sort();
+      const expectedKeys = Object.keys(expectedParsed).filter(k => k !== "timestamp").sort();
+      if (JSON.stringify(savedKeys) !== JSON.stringify(expectedKeys)) {
+        throw new Error("Saved blob structure does not match expected structure");
+      }
+      // Verify critical fields match
+      if (savedParsed.IBKR_account && expectedParsed.IBKR_account) {
+        const savedIbkrKeys = Object.keys(savedParsed.IBKR_account).sort();
+        const expectedIbkrKeys = Object.keys(expectedParsed.IBKR_account).sort();
+        if (JSON.stringify(savedIbkrKeys) !== JSON.stringify(expectedIbkrKeys)) {
+          throw new Error("Saved IBKR_account structure does not match");
+        }
+      }
+    } catch (parseError) {
+      // If parsing fails, the content might not match - this is a problem
+      throw new Error(`Failed to verify saved content: ${parseError instanceof Error ? parseError.message : "Unknown error"}`);
+    }
+  }
 }
 
 async function fetchUsdSgdRate(): Promise<number> {
@@ -248,7 +333,26 @@ function buildResponse(
   const stockPositions: RawPosition[] = [];
   const etfPositions: RawPosition[] = [];
 
-  for (const pos of portfolio.positions) {
+  const positions = portfolio.IBKR_account.positions;
+  
+  // Calculate total cash: IBKR_account.cash + cash_account (with currency conversion)
+  let cash = portfolio.IBKR_account.cash;
+  
+  // Add cash_account amounts (convert SGD to USD)
+  if (portfolio.cash_account) {
+    const sgdCash = portfolio.cash_account.SGD_cash ?? 0;
+    const usdCash = portfolio.cash_account.USD_cash ?? 0;
+    
+    // Convert SGD to USD
+    if (sgdCash > 0 && usdSgdRate > 0) {
+      cash += sgdCash / usdSgdRate;
+    }
+    
+    // Add USD cash directly
+    cash += usdCash;
+  }
+
+  for (const pos of positions) {
     if (pos.secType === "OPT") {
       optionPositions.push(pos);
     } else if (pos.secType === "ETF" || ETF_SYMBOLS.includes(pos.symbol)) {
@@ -275,11 +379,11 @@ function buildResponse(
     const underlyingQuote = rawPos.secType === "OPT" ? quotes.get(rawPos.symbol) : quote;
     const bid = asNumber(quote?.bid);
     const ask = asNumber(quote?.ask);
-    const midPrice = (bid + ask) / 2 || 0;
+    const midPrice = (bid + ask) / 2;
     const price = rawPos.secType === "OPT" ? midPrice * 100 : midPrice;
     const underlyingBid = asNumber(underlyingQuote?.bid);
     const underlyingAsk = asNumber(underlyingQuote?.ask);
-    const underlyingMid = (underlyingBid + underlyingAsk) / 2 || 0;
+    const underlyingMid = (underlyingBid + underlyingAsk) / 2;
 
     const upnl = (price - cost) * qty;
 
@@ -329,12 +433,12 @@ function buildResponse(
     });
   }
 
-  // Process crypto positions from YAML
-  const btcQty = portfolio.btc?.amount ?? 0;
-  const btcCostSGD = portfolio.btc?.cost_sgd ?? 0;
+  // Process BTC position
+  const btcQty = portfolio.BTC_account?.amount ?? 0;
+  const btcCostSGD = portfolio.BTC_account?.cost_sgd ?? 0;
   if (btcQty > 0 && btcCostSGD > 0) {
     const totalCostUSD = btcCostSGD / usdSgdRate;
-    const cost = btcQty > 0 ? totalCostUSD / btcQty : 0;
+    const cost = totalCostUSD / btcQty;
 
     // Map crypto symbol to OKX format (BTC -> BTC-USDT)
     const okxSymbol = "BTC-USDT";
@@ -362,13 +466,13 @@ function buildResponse(
     });
   }
   
-  // Also process crypto positions from YAML (for backward compatibility)
+  // Process crypto positions
   if (portfolio.crypto && portfolio.crypto.length > 0) {
     for (const cryptoPos of portfolio.crypto) {
       const qty = asNumber(cryptoPos.position);
       const totalCostSGD = asNumber(cryptoPos.totalCostSGD);
       const totalCostUSD = totalCostSGD / usdSgdRate;
-      const cost = qty > 0 ? totalCostUSD / qty : 0;
+      const cost = qty > 0 ? totalCostUSD / qty : 0; // Keep check here as qty could be 0 from asNumber
 
       // Map crypto symbol to OKX format (e.g., BTC -> BTC-USDT)
       const okxSymbol = `${cryptoPos.symbol}-USDT`;
@@ -397,15 +501,15 @@ function buildResponse(
     }
   }
 
-  const netLiquidation = portfolio.cash + totalStockMV + totalOptionMV + totalCryptoMV + totalEtfMV;
-  const utilization = netLiquidation !== 0 ? (netLiquidation - portfolio.cash) / netLiquidation : 0;
+  const netLiquidation = cash + totalStockMV + totalOptionMV + totalCryptoMV + totalEtfMV;
+  const utilization = netLiquidation !== 0 ? (netLiquidation - cash) / netLiquidation : 0;
 
   const chartSegments: ChartSegment[] = [];
   const radius = 80;
   const circumference = netLiquidation > 0 ? 2 * Math.PI * radius : 0;
   if (netLiquidation > 0) {
     const segmentsData: Array<{ name: "cash" | "stock" | "option" | "crypto" | "etf"; value: number; color: string }> = [
-      { name: "cash", value: portfolio.cash, color: "#d4d4d4" },
+      { name: "cash", value: cash, color: "#d4d4d4" },
       { name: "stock", value: totalStockMV, color: "#a3a3a3" },
       { name: "option", value: totalOptionMV, color: "#737373" },
       { name: "crypto", value: totalCryptoMV, color: "#525252" },
@@ -430,16 +534,15 @@ function buildResponse(
   }
 
   const originalAmountSgd = portfolio.original_amount_sgd ?? 0;
-  const originalAmountSgdRaw = originalAmountSgd || 0;
   const originalAmountUsd =
     portfolio.original_amount_usd ??
     (originalAmountSgd && usdSgdRate ? originalAmountSgd / usdSgdRate : 0);
-  const yearBeginBalanceSgd = portfolio.year_begin_balance_sgd ?? 0;
+  const yearBeginBalanceSgd = portfolio.principal ?? 0;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
 
   return {
-    cash: portfolio.cash,
+    cash: cash,
     net_liquidation: netLiquidation,
     total_stock_mv: totalStockMV,
     total_option_mv: totalOptionMV,
@@ -457,8 +560,8 @@ function buildResponse(
     usd_cny_rate: usdCnyRate,
     original_amount_sgd: originalAmountSgd,
     original_amount_usd: originalAmountUsd,
-    year_begin_balance_sgd: yearBeginBalanceSgd,
-    original_amount_sgd_raw: originalAmountSgdRaw,
+    principal: yearBeginBalanceSgd,
+    original_amount_sgd_raw: originalAmountSgd,
   };
 }
 
@@ -473,7 +576,8 @@ export async function GET() {
   try {
     const portfolio = await loadPortfolioJson();
     const symbolSet = new Set<string>();
-    for (const pos of portfolio.positions) {
+    const positions = portfolio.IBKR_account.positions;
+    for (const pos of positions) {
       if (pos.secType === "OPT") {
         const optionSymbol = toOccSymbol(pos);
         if (optionSymbol) {
@@ -490,35 +594,41 @@ export async function GET() {
 
     const quotesPromise = fetchQuotes(symbols);
 
-    let usdSgdRate: number | undefined = portfolio.usd_sgd_rate;
+    let usdSgdRate: number | undefined = portfolio.rates?.usd_sgd_rate;
     try {
       const freshRate = await fetchUsdSgdRate();
       usdSgdRate = freshRate;
-      const updatedPortfolio: PortfolioYaml = {
+      const updatedPortfolio: AccountData = {
         ...portfolio,
-        usd_sgd_rate: freshRate,
+        rates: {
+          ...portfolio.rates,
+          usd_sgd_rate: freshRate,
+        },
         timestamp: new Date().toISOString(),
       };
       await savePortfolioJson(updatedPortfolio);
     } catch (fxError) {
-      console.error("[portfolio API] using cached USD/SGD rate from YAML due to fetch failure", fxError);
+      console.error("[portfolio API] using cached USD/SGD rate from portfolio data due to fetch failure", fxError);
       if (usdSgdRate === undefined) {
-        throw new Error("USD/SGD rate unavailable (API failed and no cached rate in YAML)");
+        throw new Error("USD/SGD rate unavailable (API failed and no cached rate in portfolio data)");
       }
     }
 
-    let usdCnyRate: number | undefined = portfolio.usd_cny_rate;
+    let usdCnyRate: number | undefined = portfolio.rates?.usd_cny_rate;
     try {
       const freshCnyRate = await fetchUsdCnyRate();
       usdCnyRate = freshCnyRate;
-      const updatedPortfolio: PortfolioYaml = {
+      const updatedPortfolio: AccountData = {
         ...portfolio,
-        usd_cny_rate: freshCnyRate,
+        rates: {
+          ...portfolio.rates,
+          usd_cny_rate: freshCnyRate,
+        },
         timestamp: new Date().toISOString(),
       };
       await savePortfolioJson(updatedPortfolio);
     } catch (fxError) {
-      console.error("[portfolio API] using cached USD/CNY rate from YAML due to fetch failure", fxError);
+      console.error("[portfolio API] using cached USD/CNY rate from portfolio data due to fetch failure", fxError);
       if (usdCnyRate === undefined) {
         // Use a default rate if unavailable (fallback)
         usdCnyRate = 7.2;
@@ -538,13 +648,13 @@ export async function GET() {
     const cryptoPrices = new Map<string, number>();
     const cryptoSymbols: string[] = [];
     
-    // Add BTC from YAML
-    const btcQty = portfolio.btc?.amount ?? 0;
+    // Add BTC symbol for price fetching
+    const btcQty = portfolio.BTC_account?.amount ?? 0;
     if (btcQty > 0) {
       cryptoSymbols.push("BTC-USDT");
     }
     
-    // Add crypto from YAML (for backward compatibility)
+    // Add crypto symbols for price fetching
     if (portfolio.crypto && portfolio.crypto.length > 0) {
       portfolio.crypto.forEach(c => {
         const symbol = `${c.symbol}-USDT`;

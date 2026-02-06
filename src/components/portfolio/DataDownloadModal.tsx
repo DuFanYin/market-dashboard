@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/format";
-import type { PortfolioData } from "@/types/portfolio";
+import type { PortfolioData, SummaryItem } from "@/types/portfolio";
 import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalculations";
-import type { SummaryItem } from "@/types/portfolio";
 import {
   calculateTotalCost,
   calculateMarketValue,
@@ -63,7 +62,7 @@ export function DataDownloadModal({
   const [isSavingJson, setIsSavingJson] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const loadYaml = async () => {
+  const loadJson = async () => {
     try {
       setIsJsonLoading(true);
       setJsonError(null);
@@ -91,7 +90,7 @@ export function DataDownloadModal({
 
   useEffect(() => {
     if (isOpen && activeTab === "json" && !jsonContent && !isJsonLoading && !jsonError) {
-      void loadYaml();
+      void loadJson();
     }
   }, [isOpen, activeTab, jsonContent, isJsonLoading, jsonError]);
 
@@ -118,7 +117,8 @@ export function DataDownloadModal({
     let output = "PORTFOLIO DASHBOARD DATA EXPORT\n";
     output += "=".repeat(50) + "\n\n";
     output += `Generated: ${new Date().toLocaleString()}\n`;
-    output += `USD/SGD Rate: ${data.usd_sgd_rate}\n\n`;
+    output += `USD/SGD Rate: ${data.usd_sgd_rate}\n`;
+    output += `USD/CNY Rate: ${data.usd_cny_rate}\n\n`;
 
     output += "ACCOUNT SUMMARY\n";
     output += "-".repeat(50) + "\n";
@@ -221,7 +221,7 @@ export function DataDownloadModal({
     }
   };
 
-  const handleSaveYaml = async () => {
+  const handleSaveJson = async () => {
     // Validate JSON is not empty
     if (!jsonContent || jsonContent.trim() === "") {
       setJsonError("JSON content cannot be empty. Please input the complete JSON data.");
@@ -239,38 +239,87 @@ export function DataDownloadModal({
         },
         body: JSON.stringify({ json: jsonContent }),
       });
+      
       if (!res.ok) {
         const json = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(json.error || `Failed to save JSON (status ${res.status})`);
       }
       
-      // Verify the save by reading back the data (with retry for CDN cache propagation)
-      // Blob put() completes when data is written, but CDN cache may take a moment
+      const saveResult = (await res.json()) as { ok?: boolean; timestamp?: string };
+      const savedTimestamp = saveResult.timestamp;
+      
+      // Server-side verification already happened, so we can be more lenient here
+      // Just verify that we can read back valid JSON with a recent timestamp
+      // This is mainly to catch CDN cache issues, not to verify correctness
       let verified = false;
-      const maxRetries = 3;
-      const retryDelay = 500; // 500ms between retries
+      const maxRetries = 8; // More retries for CDN propagation
+      const initialDelay = 200; // Start with shorter delay
       
       for (let i = 0; i < maxRetries; i++) {
         try {
-          // Wait a bit for CDN cache to update (especially on first retry)
+          // Exponential backoff: wait longer on each retry
           if (i > 0) {
-            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+            const delay = initialDelay * Math.pow(1.5, i - 1);
+            await new Promise((resolve) => setTimeout(resolve, delay));
           }
           
           const verifyRes = await fetch("/api/portfolio/json", {
             method: "GET",
             cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+            },
           });
           
           if (verifyRes.ok) {
             const verifyJson = (await verifyRes.json()) as { json?: string };
             const savedContent = verifyJson.json ?? "";
             
-            // Check if the saved content includes our timestamp (server adds it)
-            // Or verify the content matches what we expect
             if (savedContent && savedContent.length > 0) {
-              verified = true;
-              break;
+              try {
+                const savedParsed = JSON.parse(savedContent);
+                
+                // More lenient verification:
+                // 1. If we have a timestamp from server, check if saved data has a timestamp
+                // 2. If saved data has a timestamp, it's likely fresh (server adds it)
+                // 3. If timestamp matches or is very recent (within 10 seconds), consider verified
+                if (savedParsed.timestamp && typeof savedParsed.timestamp === "string") {
+                  const savedTime = new Date(savedParsed.timestamp).getTime();
+                  const now = Date.now();
+                  const timeDiff = now - savedTime;
+                  
+                  // If timestamp is recent (within 10 seconds), consider it verified
+                  // This means the data was saved recently
+                  if (timeDiff >= 0 && timeDiff < 10000) {
+                    verified = true;
+                    break;
+                  }
+                  
+                  // If we have a savedTimestamp from server response, also check if it matches
+                  if (savedTimestamp) {
+                    const expectedTime = new Date(savedTimestamp).getTime();
+                    const matchDiff = Math.abs(savedTime - expectedTime);
+                    // Allow up to 10 seconds difference (for processing and CDN delays)
+                    if (matchDiff < 10000) {
+                      verified = true;
+                      break;
+                    }
+                  }
+                }
+                
+                // Fallback: if we can parse the JSON and it has the expected structure, consider it verified
+                // This is less strict but catches major issues
+                if (savedParsed.IBKR_account && typeof savedParsed.IBKR_account === "object") {
+                  // Basic structure check passed, consider verified if we've tried a few times
+                  if (i >= 3) {
+                    verified = true;
+                    break;
+                  }
+                }
+              } catch (parseErr) {
+                // Continue to next retry if parsing fails
+                console.log(`Verification parse error on attempt ${i + 1}:`, parseErr);
+              }
             }
           }
         } catch (err) {
@@ -279,10 +328,13 @@ export function DataDownloadModal({
         }
       }
       
-      // Show success even if verification failed (put() already succeeded)
-      // But log a warning if verification failed
+      // If verification failed after all retries, log a warning but don't fail
+      // Server-side verification already passed, so the data is likely saved correctly
+      // The failure is likely due to CDN cache delays, which will resolve soon
       if (!verified) {
-        console.warn("Save succeeded but verification failed - data may be cached");
+        console.warn("Frontend verification failed after retries - data is likely saved correctly but CDN cache may be delayed");
+        // Don't throw error - server already verified, so data is saved
+        // User can refresh manually if needed
       }
       
       setSaveSuccess(true);
@@ -295,7 +347,7 @@ export function DataDownloadModal({
       }
       
       // Reload JSON content to show the saved version (which may have timestamp added)
-      await loadYaml();
+      await loadJson();
       
       // Notify parent component to refresh data
       if (onSaveSuccess) {
@@ -375,7 +427,7 @@ export function DataDownloadModal({
           ) : (
             <button
               className={`${styles.modalCancelButton} ${saveSuccess ? styles.copySuccessButton : ""}`}
-              onClick={handleSaveYaml}
+              onClick={handleSaveJson}
               disabled={isSavingJson || isJsonLoading}
             >
               {isSavingJson ? "Saving..." : saveSuccess ? "Saved!" : "Save"}

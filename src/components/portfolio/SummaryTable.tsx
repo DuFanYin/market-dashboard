@@ -6,7 +6,9 @@ import {
   calculateAccountPnL,
   calculateAccountPnLPercent,
   calculateAnnualizedReturn,
+  calculateTotalUnrealizedPnL,
 } from "@/lib/positionCalculations";
+import type { AssetBreakdown } from "@/hooks/usePortfolioCalculations";
 import styles from "@/app/portfolio/page.module.css";
 
 interface SummaryTableProps {
@@ -14,7 +16,7 @@ interface SummaryTableProps {
   originalAmountUsd?: number;
   currentBalanceUsd?: number;
   yearBeginBalanceSgd?: number;
-  originalAmountSgd?: number;
+  assetBreakdown?: AssetBreakdown;
   usdSgdRate?: number;
   usdCnyRate?: number;
   currencyMode?: CurrencyMode;
@@ -22,25 +24,14 @@ interface SummaryTableProps {
   onToggleIncognito?: () => void;
 }
 
-export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceSgd, originalAmountSgd, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
-  // 起点 1：整体账户从最初投入开始的年化收益（例：2025-10-20）
-  const overallStartDate = new Date(2025, 9, 20); // 2025-10-20（month 0-indexed, 9 = October）
-  // 起点 2：当年的年初，用于 yearBeginBalanceSgd 的年化收益
+export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
+  // 计算从当年年初到现在的自然日差（包含周末、假期），用于年化收益计算
   const today = new Date();
   const yearBeginDate = new Date(today.getFullYear(), 0, 1); // 当年 1 月 1 日
-
-  // 计算自然日差（包含周末、假期）
-  const overallDaysDiff = Math.floor(
-    (today.getTime() - overallStartDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
   const yearBeginDaysDiff = Math.floor(
     (today.getTime() - yearBeginDate.getTime()) / (1000 * 60 * 60 * 24)
   );
   
-  // 年化收益 1：currentBalanceUsd 相对 originalAmountUsd，从 overallStartDate 起算
-  const annualizedReturn = originalAmountUsd && currentBalanceUsd && overallDaysDiff > 0
-    ? calculateAnnualizedReturn(currentBalanceUsd, originalAmountUsd, overallDaysDiff)
-    : 0;
 
   // Convert yearBeginBalanceSgd to USD for calculations (since currentBalanceUsd is in USD)
   const yearBeginBalanceUsd = (yearBeginBalanceSgd !== undefined && yearBeginBalanceSgd > 0 && usdSgdRate !== undefined && usdSgdRate > 0)
@@ -57,6 +48,14 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
   // 年化收益 2：currentBalanceUsd 相对 yearBeginBalanceUsd（从 SGD 转换），从当年年初起算
   const yearBeginAnnualizedReturn = (yearBeginBalanceUsd !== undefined && currentBalanceUsd !== undefined && yearBeginDaysDiff > 0 && yearBeginBalanceUsd > 0)
     ? calculateAnnualizedReturn(currentBalanceUsd, yearBeginBalanceUsd, yearBeginDaysDiff)
+    : undefined;
+  
+  // Calculate unrealised and realised PnL
+  const unrealisedPnL = assetBreakdown 
+    ? calculateTotalUnrealizedPnL(assetBreakdown)
+    : undefined;
+  const realisedPnL = (yearBeginPnL !== undefined && unrealisedPnL !== undefined)
+    ? yearBeginPnL - unrealisedPnL
     : undefined;
   
   // Currency formatting helpers using shared utility functions
@@ -82,11 +81,6 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
     >
       <table className={styles.summaryTable}>
         <tbody>
-          <tr className={styles.summaryRow}>
-            <td className={styles.summaryLabel}>Start Date</td>
-            <td className={styles.summaryValue}>2025 Oct 20</td>
-            <td className={styles.summaryValue}>{overallDaysDiff}d</td>
-          </tr>
           {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
             <>
               <tr className={styles.summaryRow}>
@@ -96,11 +90,7 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                     ? applyMask(formatCurrencyValueFromSgdBase(yearBeginBalanceSgd))
                     : ""}
                 </td>
-                <td className={styles.summaryValue}>
-                  {originalAmountSgd !== undefined && originalAmountSgd > 0 && usdSgdRate !== undefined
-                    ? applyMask(formatCurrencyValueFromSgdBase(originalAmountSgd))
-                    : ""}
-                </td>
+                <td className={styles.summaryValue}></td>
               </tr>
               <tr className={styles.summaryRow}>
                 <td className={styles.summaryLabel}>Current Balance</td>
@@ -111,28 +101,89 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                     : ""}
                 </td>
               </tr>
+              <tr className={styles.summaryRow}>
+                <td className={styles.summaryLabel}>r/u PnL</td>
+                <td className={`${styles.summaryValue} ${realisedPnL !== undefined 
+                  ? (realisedPnL >= 0 ? styles.positive : styles.negative)
+                  : ""}`}>
+                  {realisedPnL !== undefined && applyMask
+                    ? applyMask(formatCurrencyValueNoPrefix(realisedPnL))
+                    : ""}
+                </td>
+                <td className={`${styles.summaryValue} ${unrealisedPnL !== undefined 
+                  ? (unrealisedPnL >= 0 ? styles.positive : styles.negative)
+                  : ""}`}>
+                  {unrealisedPnL !== undefined && applyMask
+                    ? applyMask(formatCurrencyValueNoPrefix(unrealisedPnL))
+                    : ""}
+                </td>
+              </tr>
+              <tr className={styles.summaryRow}>
+                <td className={styles.summaryLabel}>Account PnL</td>
+                <td className={styles.summaryValue}></td>
+                <td className={`${styles.summaryValue} ${yearBeginPnL !== undefined 
+                  ? (yearBeginPnL >= 0 ? styles.positive : styles.negative)
+                  : ""}`}>
+                  {yearBeginPnL !== undefined && applyMask
+                    ? applyMask(formatCurrencyValueNoPrefix(yearBeginPnL))
+                    : ""}
+                </td>
+              </tr>
             </>
           )}
-          {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
-            <tr className={styles.summaryRow}>
-              <td className={styles.summaryLabel}>Account PnL</td>
-              <td className={`${styles.summaryValue} ${yearBeginPnL !== undefined 
-                ? (yearBeginPnL >= 0 ? styles.positive : styles.negative)
-                : ""}`}>
-                {yearBeginPnL !== undefined && applyMask
-                  ? applyMask(formatCurrencyValueNoPrefix(yearBeginPnL))
-                  : ""}
-              </td>
-              <td className={`${styles.summaryValue} ${currentBalanceUsd !== undefined && originalAmountUsd !== undefined
-                ? (calculateAccountPnL(currentBalanceUsd, originalAmountUsd) >= 0 ? styles.positive : styles.negative)
-                : ""}`}>
-                {currentBalanceUsd !== undefined && originalAmountUsd !== undefined
-                  ? applyMask(formatCurrencyValueNoPrefix(calculateAccountPnL(currentBalanceUsd, originalAmountUsd)))
-                  : ""}
-              </td>
-            </tr>
-          )}
+          {items.length > 0 && (() => {
+            const firstItem = items[0];
+            const className =
+              firstItem.isUpnl && typeof firstItem.numericValue === "number"
+                ? `${styles.summaryValue} ${firstItem.numericValue >= 0 ? styles.positive : styles.negative}`
+                : styles.summaryValue;
+            
+            // Special handling for Utilization - put value in third column
+            if (firstItem.label === "Utilization") {
+              return (
+                <tr key={firstItem.label} className={styles.summaryRow}>
+                  <td className={styles.summaryLabel}>{firstItem.label}</td>
+                  <td className={styles.summaryValue}></td>
+                  <td className={styles.summaryValue}>{firstItem.display}</td>
+                </tr>
+              );
+            }
+            
+            return (
+              <React.Fragment key={firstItem.label}>
+                <tr className={styles.summaryRow}>
+                  <td className={styles.summaryLabel}>{firstItem.label === "Account PnL" ? "Account PnL %" : firstItem.label}</td>
+                  <td className={styles.summaryValue}></td>
+                  <td className={firstItem.label === "Account PnL" 
+                    ? (yearBeginPnLPercent !== undefined
+                      ? `${styles.summaryPercent} ${styles.summaryPercentNarrow} ${yearBeginPnLPercent >= 0 ? styles.positive : styles.negative}`
+                      : `${styles.summaryPercent} ${styles.summaryPercentNarrow}`)
+                    : className}>
+                    {firstItem.label === "Account PnL" 
+                      ? (yearBeginPnLPercent !== undefined
+                        ? formatPercent(yearBeginPnLPercent)
+                        : "")
+                      : firstItem.display}
+                  </td>
+                </tr>
+                  {firstItem.label === "Account PnL" && (
+                  <tr className={styles.summaryRow}>
+                    <td className={styles.summaryLabel}>Annualized %</td>
+                    <td className={styles.summaryValue}></td>
+                    <td className={yearBeginAnnualizedReturn !== undefined
+                      ? `${styles.summaryValue} ${yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative}`
+                      : styles.summaryValue}>
+                      {yearBeginAnnualizedReturn !== undefined
+                        ? formatPercent(yearBeginAnnualizedReturn)
+                        : ""}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })()}
           {items
+            .slice(1)
             .map((item) => {
               const className =
                 item.isUpnl && typeof item.numericValue === "number"
@@ -172,21 +223,18 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                     <td className={item.label === "Account PnL"
                       ? `${percentClass} ${styles.summaryPercentNarrow}`
                       : percentClass}>
-                      {item.percentDisplay ?? ""}
                     </td>
                   </tr>
                   {item.label === "Account PnL" && (
                     <tr className={styles.summaryRow}>
                       <td className={styles.summaryLabel}>Annualized %</td>
+                      <td className={styles.summaryValue}></td>
                       <td className={yearBeginAnnualizedReturn !== undefined
                         ? `${styles.summaryValue} ${yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative}`
                         : styles.summaryValue}>
                         {yearBeginAnnualizedReturn !== undefined
                           ? formatPercent(yearBeginAnnualizedReturn)
                           : ""}
-                      </td>
-                      <td className={`${styles.summaryValue} ${annualizedReturn >= 0 ? styles.positive : styles.negative}`}>
-                        {formatPercent(annualizedReturn)}
                       </td>
                     </tr>
                   )}

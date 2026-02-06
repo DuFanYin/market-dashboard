@@ -16,13 +16,30 @@ export type RawCryptoPosition = {
   totalCostSGD: number;
 };
 
-// Portfolio YAML structure
-export type PortfolioYaml = {
-  timestamp: string;
-  usd_sgd_rate?: number;
-  usd_cny_rate?: number;
+// IBKR account data structure
+export type IBKRAccount = {
   cash: number;
   positions: RawPosition[];
+};
+
+// Exchange rates structure
+export type ExchangeRates = {
+  usd_sgd_rate?: number;
+  usd_cny_rate?: number;
+};
+
+// Cash account structure
+export type CashAccount = {
+  SGD_cash?: number;
+  USD_cash?: number;
+};
+
+// Portfolio data structure
+export type PortfolioYaml = {
+  timestamp: string;
+  rates?: ExchangeRates;
+  cash_account?: CashAccount;
+  IBKR_account: IBKRAccount;
   crypto?: RawCryptoPosition[];
 };
 
@@ -91,7 +108,7 @@ export type PortfolioData = {
   usd_cny_rate: number;
   original_amount_sgd: number;
   original_amount_usd: number;
-  year_begin_balance_sgd: number;
+  principal: number;
   original_amount_sgd_raw: number;
 };
 

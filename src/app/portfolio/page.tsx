@@ -203,10 +203,9 @@ export default function PortfolioPage() {
             assetAllocation={assetAllocation}
             assetBreakdown={assetBreakdown}
             applyMask={applyMask}
-            originalAmountSgd={data.original_amount_sgd_raw}
             originalAmountUsd={data.original_amount_usd}
             currentBalanceUsd={data.net_liquidation}
-            yearBeginBalanceSgd={data.year_begin_balance_sgd}
+            yearBeginBalanceSgd={data.principal}
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
             usdSgdRate={data.usd_sgd_rate}
             usdCnyRate={data.usd_cny_rate}

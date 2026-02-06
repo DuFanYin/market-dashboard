@@ -71,13 +71,17 @@ def main():
         else:
             existing = {}
 
-        existing.update(
-            {
-                "timestamp": data["timestamp"],
-                "cash": data["cash"],
-                "positions": data["positions"],
-            }
-        )
+        # Update timestamp at root level
+        existing["timestamp"] = data["timestamp"]
+        
+        # Update IBKR_account object with cash and positions
+        if "IBKR_account" not in existing:
+            existing["IBKR_account"] = {}
+        
+        existing["IBKR_account"].update({
+            "cash": data["cash"],
+            "positions": data["positions"],
+        })
 
         with open(JSON_PATH, "w") as f:
             import json

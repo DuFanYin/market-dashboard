@@ -11,7 +11,6 @@ interface AccountSummaryProps {
   assetAllocation: AssetAllocation[];
   assetBreakdown: AssetBreakdown;
   applyMask: (value: string) => string;
-  originalAmountSgd: number;
   originalAmountUsd: number;
   currentBalanceUsd: number;
   yearBeginBalanceSgd: number;
@@ -28,7 +27,6 @@ export function AccountSummary({
   assetAllocation,
   assetBreakdown,
   applyMask,
-  originalAmountSgd,
   originalAmountUsd,
   currentBalanceUsd,
   yearBeginBalanceSgd,
@@ -46,7 +44,7 @@ export function AccountSummary({
         originalAmountUsd={originalAmountUsd}
         currentBalanceUsd={currentBalanceUsd}
         yearBeginBalanceSgd={yearBeginBalanceSgd}
-        originalAmountSgd={originalAmountSgd}
+        assetBreakdown={assetBreakdown}
         usdSgdRate={usdSgdRate}
         usdCnyRate={usdCnyRate}
         currencyMode={currencyMode}
