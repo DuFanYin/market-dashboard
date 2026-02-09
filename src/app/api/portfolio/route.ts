@@ -71,7 +71,6 @@ function ensureArray<T>(item: T | T[] | undefined): T[] {
 type AccountData = PortfolioYaml & {
   original_amount_sgd?: number;
   original_amount_usd?: number;
-  principal?: number;
   BTC_account?: {
     amount?: number;
     cost_sgd?: number;
@@ -537,9 +536,12 @@ function buildResponse(
   const originalAmountUsd =
     portfolio.original_amount_usd ??
     (originalAmountSgd && usdSgdRate ? originalAmountSgd / usdSgdRate : 0);
-  const yearBeginBalanceSgd = portfolio.principal ?? 0;
+  const yearBeginBalanceSgd = portfolio.account_info?.principal_SGD ?? 0;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
+  const maxValue = portfolio.account_info?.max_value_USD;
+  const minValue = portfolio.account_info?.min_value_USD;
+  const maxDrawdownPercent = portfolio.account_info?.max_drawdown_percent;
 
   return {
     cash: cash,
@@ -562,6 +564,9 @@ function buildResponse(
     original_amount_usd: originalAmountUsd,
     principal: yearBeginBalanceSgd,
     original_amount_sgd_raw: originalAmountSgd,
+    max_value_USD: maxValue,
+    min_value_USD: minValue,
+    max_drawdown_percent: maxDrawdownPercent,
   };
 }
 
@@ -574,7 +579,7 @@ export async function GET() {
   }
 
   try {
-    const portfolio = await loadPortfolioJson();
+    let portfolio = await loadPortfolioJson();
     const symbolSet = new Set<string>();
     const positions = portfolio.IBKR_account.positions;
     for (const pos of positions) {
@@ -678,7 +683,99 @@ export async function GET() {
       }
     }
 
+    // Reload portfolio data before building response to ensure we have latest account_info
+    // This is important because account_info might have been updated in previous requests
+    // (e.g., when updating exchange rates)
+    portfolio = await loadPortfolioJson();
+    
     const response = buildResponse(portfolio, quotes, cryptoPrices, usdSgdRate, usdCnyRate);
+
+    // Update max_value and min_value based on current net_liquidation
+    // For MDD calculation: min_value should be the lowest value AFTER reaching max_value
+    const currentNetLiquidation = response.net_liquidation;
+    // Round to 2 decimal places
+    const roundedNetLiquidation = Math.round(currentNetLiquidation * 100) / 100;
+    let shouldUpdateAccountInfo = false;
+    const currentAccountInfo = portfolio.account_info || {};
+    // Round existing values to 2 decimal places if they exist
+    const currentMaxValue = currentAccountInfo.max_value_USD !== undefined 
+      ? Math.round((currentAccountInfo.max_value_USD ?? 0) * 100) / 100 
+      : 0;
+    const currentMinValue = currentAccountInfo.min_value_USD !== undefined 
+      ? Math.round((currentAccountInfo.min_value_USD ?? 0) * 100) / 100 
+      : 0;
+    
+    let updatedMaxValue = currentMaxValue;
+    let updatedMinValue = currentMinValue;
+    const currentMaxDrawdown = currentAccountInfo.max_drawdown_percent ?? 0;
+    let updatedMaxDrawdown = currentMaxDrawdown;
+    
+    // Update max_value if current value is greater (new peak reached)
+    if (roundedNetLiquidation > currentMaxValue || currentMaxValue === 0) {
+      updatedMaxValue = roundedNetLiquidation;
+      // When a new peak is reached, reset min_value to the new peak
+      // This ensures min_value is always the lowest value AFTER the current peak
+      updatedMinValue = roundedNetLiquidation;
+      shouldUpdateAccountInfo = true;
+    } else {
+      // Only update min_value if we haven't reached a new peak
+      // min_value should be the lowest value since the last peak
+      if (currentMinValue === 0 || roundedNetLiquidation < currentMinValue) {
+        updatedMinValue = roundedNetLiquidation;
+        shouldUpdateAccountInfo = true;
+      }
+    }
+    
+    // Calculate current drawdown from the peak
+    const currentDrawdown = updatedMaxValue > 0 
+      ? ((updatedMinValue - updatedMaxValue) / updatedMaxValue) * 100 
+      : 0;
+    
+    // Update historical max drawdown if current drawdown is worse (more negative)
+    if (currentDrawdown < updatedMaxDrawdown) {
+      updatedMaxDrawdown = currentDrawdown;
+      shouldUpdateAccountInfo = true;
+    }
+    
+    // Always ensure values are rounded to 2 decimal places, even if not updating
+    // This fixes any existing values that might not be properly rounded
+    const roundedMaxValue = Math.round(updatedMaxValue * 100) / 100;
+    const roundedMinValue = Math.round(updatedMinValue * 100) / 100;
+    const roundedMaxDrawdown = Math.round(updatedMaxDrawdown * 100) / 100;
+    
+    // Check if rounding changed the values (to handle existing non-2dp values)
+    if (roundedMaxValue !== updatedMaxValue || roundedMinValue !== updatedMinValue || roundedMaxDrawdown !== updatedMaxDrawdown) {
+      shouldUpdateAccountInfo = true;
+    }
+    
+    // Save updated account_info if values changed
+    if (shouldUpdateAccountInfo) {
+      try {
+        const updatedPortfolio: AccountData = {
+          ...portfolio,
+          account_info: {
+            ...currentAccountInfo,
+            max_value_USD: roundedMaxValue,
+            min_value_USD: roundedMinValue,
+            max_drawdown_percent: roundedMaxDrawdown,
+          },
+          timestamp: new Date().toISOString(),
+        };
+        await savePortfolioJson(updatedPortfolio);
+        
+        // Update response with latest account_info values to ensure frontend gets fresh data
+        // This ensures the response reflects the updated values immediately
+        response.max_value_USD = roundedMaxValue;
+        response.min_value_USD = roundedMinValue;
+        response.max_drawdown_percent = roundedMaxDrawdown;
+        
+        // Update portfolio variable for consistency
+        portfolio = updatedPortfolio;
+      } catch (updateError) {
+        // Log error but don't fail the request
+        console.error("[portfolio API] Failed to update account_info max/min values:", updateError);
+      }
+    }
 
     return NextResponse.json(response);
   } catch (error) {

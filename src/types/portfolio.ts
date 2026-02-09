@@ -34,9 +34,18 @@ export type CashAccount = {
   USD_cash?: number;
 };
 
+// Account info structure
+export type AccountInfo = {
+  principal_SGD?: number;
+  max_value_USD?: number;
+  min_value_USD?: number;
+  max_drawdown_percent?: number; // Historical maximum drawdown percentage
+};
+
 // Portfolio data structure
 export type PortfolioYaml = {
   timestamp: string;
+  account_info?: AccountInfo;
   rates?: ExchangeRates;
   cash_account?: CashAccount;
   IBKR_account: IBKRAccount;
@@ -110,6 +119,9 @@ export type PortfolioData = {
   original_amount_usd: number;
   principal: number;
   original_amount_sgd_raw: number;
+  max_value_USD?: number;
+  min_value_USD?: number;
+  max_drawdown_percent?: number;
 };
 
 // Summary item for display

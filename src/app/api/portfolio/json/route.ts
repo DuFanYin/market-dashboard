@@ -88,20 +88,42 @@ async function saveAccountJson(content: string): Promise<void> {
     }
     
     const savedContent = await verifyResponse.text();
-    // Basic verification: check if content length matches (allowing for minor formatting differences)
-    // The server adds timestamp, so we compare the parsed JSON structure
+    // Basic verification: check if content can be parsed and has required fields
+    // The server adds/updates timestamp, so we verify structure rather than exact match
     try {
       const savedParsed = JSON.parse(savedContent);
       const expectedParsed = JSON.parse(content);
-      // Verify timestamp exists and structure matches
+      
+      // Verify timestamp exists (server always adds/updates it)
       if (!savedParsed.timestamp || typeof savedParsed.timestamp !== "string") {
         throw new Error("Saved blob does not contain expected timestamp");
       }
-      // Verify key fields match (excluding timestamp which is auto-added)
-      const savedKeys = Object.keys(savedParsed).filter(k => k !== "timestamp").sort();
-      const expectedKeys = Object.keys(expectedParsed).filter(k => k !== "timestamp").sort();
-      if (JSON.stringify(savedKeys) !== JSON.stringify(expectedKeys)) {
-        throw new Error("Saved blob structure does not match expected structure");
+      
+      // Verify critical required fields exist in saved content
+      // IBKR_account is required, so check it exists
+      if (!savedParsed.IBKR_account || typeof savedParsed.IBKR_account !== "object") {
+        throw new Error("Saved blob does not contain required IBKR_account field");
+      }
+      
+      // Verify that all keys from expected JSON exist in saved JSON (allowing for additional fields)
+      // This is more lenient - allows server to add fields like account_info if missing
+      const expectedKeys = Object.keys(expectedParsed).filter(k => k !== "timestamp");
+      const savedKeysSet = new Set(Object.keys(savedParsed));
+      
+      // Check that all expected keys (except timestamp) exist in saved content
+      for (const key of expectedKeys) {
+        if (!savedKeysSet.has(key)) {
+          throw new Error(`Saved blob is missing expected field: ${key}`);
+        }
+      }
+      
+      // Verify IBKR_account structure matches (required field)
+      if (expectedParsed.IBKR_account && typeof expectedParsed.IBKR_account === "object") {
+        const expectedIbkrKeys = Object.keys(expectedParsed.IBKR_account).sort();
+        const savedIbkrKeys = Object.keys(savedParsed.IBKR_account).sort();
+        if (JSON.stringify(expectedIbkrKeys) !== JSON.stringify(savedIbkrKeys)) {
+          throw new Error("Saved IBKR_account structure does not match expected structure");
+        }
       }
     } catch (parseError) {
       // If parsing fails, the content might not match - this is a problem

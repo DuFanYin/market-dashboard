@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { PortfolioData } from "@/types/portfolio";
 import type { CurrencyMode } from "@/lib/currency";
@@ -15,15 +15,43 @@ import styles from "./page.module.css";
 
 export default function PortfolioPage() {
   const router = useRouter();
-  const [data, setData] = useState<PortfolioData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Try to load from cache immediately to avoid black screen
+  const [data, setData] = useState<PortfolioData | null>(() => {
+    try {
+      const raw = sessionStorage.getItem("portfolio_cache_v1");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { ts?: number; payload?: PortfolioData };
+        if (parsed?.payload) {
+          return parsed.payload;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(false); // Start as false if we have cache
   const [error, setError] = useState<string | null>(null);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(!data); // false if we have cache
   const [isIncognito, setIsIncognito] = useState(false);
   const [currencyMode, setCurrencyMode] = useState<CurrencyMode>("USD");
-  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(() => {
+    try {
+      const raw = sessionStorage.getItem("portfolio_cache_v1");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { ts?: number; payload?: PortfolioData };
+        if (parsed?.ts) {
+          return new Date(parsed.ts);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
   const [timeAgo, setTimeAgo] = useState<string>("");
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const hasInitializedRef = useRef(false);
 
   const formatTimeAgo = (date: Date): string => {
     const now = new Date();
@@ -59,34 +87,22 @@ export default function PortfolioPage() {
   }, [lastRefreshTime]);
   const { marketStatus, nyTimeLabel } = useMarketData();
 
-  // Hydrate from cached payload (set by /dashboard) to avoid refetch on navigation
-  useEffect(() => {
-    if (data) return;
-    try {
-      const raw = sessionStorage.getItem("portfolio_cache_v1");
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { ts?: number; payload?: PortfolioData };
-      if (parsed?.payload) {
-        setData(parsed.payload);
-        setLastRefreshTime(parsed.ts ? new Date(parsed.ts) : new Date());
-        setIsInitialLoad(false);
-        setIsLoading(false);
-      }
-    } catch {
-      // ignore
-    }
-  }, [data]);
-
   const fetchPortfolio = useCallback(
-    async (isRefresh = false) => {
-    setIsLoading(true);
+    async (isRefresh = false, showLoading = true) => {
+    // Always set loading state when refreshing (even if we have cache)
+    // This ensures the refresh bar shows "Refreshing..." status
+    if (showLoading || isRefresh) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       // Add cache busting to ensure fresh data after JSON updates
-      const response = await fetch("/api/portfolio", {
+      // Include timestamp to bypass any CDN or browser cache
+      const response = await fetch(`/api/portfolio?t=${Date.now()}`, {
         cache: "no-store",
         headers: {
-          "Cache-Control": "no-cache",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
         },
       });
 
@@ -127,12 +143,22 @@ export default function PortfolioPage() {
     [router, isInitialLoad]
   );
 
+  // Refresh data in background if we have cache, or fetch if no cache
   useEffect(() => {
-    // If cache already hydrated data, skip auto-fetch; manual refresh still works.
-    if (!data) {
-    fetchPortfolio(false);
-    }
-  }, [fetchPortfolio, data]);
+    // Only run once on mount
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+    
+    // Use the initial data state (from cache if available)
+    const hasCache = data !== null;
+    // If we have cache data, refresh in background but still show loading state in refresh bar
+    // If no cache, fetch and show full loading state
+    // Pass isRefresh=true to ensure isLoading is set even with cache
+    void fetchPortfolio(true, !hasCache);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - only run once on mount
+
+  // Removed - moved to useEffect above
 
   const handleRefresh = useCallback(async () => {
     await fetchPortfolio(true);
@@ -206,6 +232,9 @@ export default function PortfolioPage() {
             originalAmountUsd={data.original_amount_usd}
             currentBalanceUsd={data.net_liquidation}
             yearBeginBalanceSgd={data.principal}
+            maxValue={data.max_value_USD}
+            minValue={data.min_value_USD}
+            maxDrawdownPercent={data.max_drawdown_percent}
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
             usdSgdRate={data.usd_sgd_rate}
             usdCnyRate={data.usd_cny_rate}

@@ -17,6 +17,9 @@ interface SummaryTableProps {
   currentBalanceUsd?: number;
   yearBeginBalanceSgd?: number;
   assetBreakdown?: AssetBreakdown;
+  maxValue?: number;
+  minValue?: number;
+  maxDrawdownPercent?: number;
   usdSgdRate?: number;
   usdCnyRate?: number;
   currencyMode?: CurrencyMode;
@@ -24,7 +27,7 @@ interface SummaryTableProps {
   onToggleIncognito?: () => void;
 }
 
-export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
+export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, maxValue, minValue, maxDrawdownPercent, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
   // 计算从当年年初到现在的自然日差（包含周末、假期），用于年化收益计算
   const today = new Date();
   const yearBeginDate = new Date(today.getFullYear(), 0, 1); // 当年 1 月 1 日
@@ -58,6 +61,14 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
     ? yearBeginPnL - unrealisedPnL
     : undefined;
   
+  // Use persisted max drawdown (historical maximum drawdown)
+  const maxDrawdown = maxDrawdownPercent;
+  
+  // Calculate current drawdown from peak (max_value) to current balance
+  const currentDrawdown = (maxValue !== undefined && currentBalanceUsd !== undefined && maxValue > 0)
+    ? ((currentBalanceUsd - maxValue) / maxValue) * 100
+    : undefined;
+  
   // Currency formatting helpers using shared utility functions
   const rates = {
     usdSgdRate: usdSgdRate || 1,
@@ -84,17 +95,12 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
           {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
             <>
               <tr className={styles.summaryRow}>
-                <td className={styles.summaryLabel}>Initial Balance</td>
+                <td className={styles.summaryLabel}>Balance</td>
                 <td className={styles.summaryValue}>
                   {yearBeginBalanceSgd !== undefined && yearBeginBalanceSgd > 0
                     ? applyMask(formatCurrencyValueFromSgdBase(yearBeginBalanceSgd))
                     : ""}
                 </td>
-                <td className={styles.summaryValue}></td>
-              </tr>
-              <tr className={styles.summaryRow}>
-                <td className={styles.summaryLabel}>Current Balance</td>
-                <td className={styles.summaryValue}></td>
                 <td className={styles.summaryValue}>
                   {currentBalanceUsd !== undefined
                     ? applyMask(formatCurrencyValue(currentBalanceUsd))
@@ -153,7 +159,6 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
               <React.Fragment key={firstItem.label}>
                 <tr className={styles.summaryRow}>
                   <td className={styles.summaryLabel}>{firstItem.label === "Account PnL" ? "Account PnL %" : firstItem.label}</td>
-                  <td className={styles.summaryValue}></td>
                   <td className={firstItem.label === "Account PnL" 
                     ? (yearBeginPnLPercent !== undefined
                       ? `${styles.summaryPercent} ${styles.summaryPercentNarrow} ${yearBeginPnLPercent >= 0 ? styles.positive : styles.negative}`
@@ -165,16 +170,25 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                         : "")
                       : firstItem.display}
                   </td>
+                  <td className={firstItem.label === "Account PnL" && yearBeginAnnualizedReturn !== undefined
+                    ? `${styles.summaryValue} ${yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative}`
+                    : styles.summaryValue}>
+                    {firstItem.label === "Account PnL" && yearBeginAnnualizedReturn !== undefined
+                      ? formatPercent(yearBeginAnnualizedReturn)
+                      : ""}
+                  </td>
                 </tr>
                   {firstItem.label === "Account PnL" && (
                   <tr className={styles.summaryRow}>
-                    <td className={styles.summaryLabel}>Annualized %</td>
-                    <td className={styles.summaryValue}></td>
-                    <td className={yearBeginAnnualizedReturn !== undefined
-                      ? `${styles.summaryValue} ${yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative}`
-                      : styles.summaryValue}>
-                      {yearBeginAnnualizedReturn !== undefined
-                        ? formatPercent(yearBeginAnnualizedReturn)
+                    <td className={styles.summaryLabel}>Max/Min</td>
+                    <td className={styles.summaryValue}>
+                      {maxValue !== undefined && maxValue > 0 && applyMask
+                        ? applyMask(formatCurrencyValue(maxValue))
+                        : ""}
+                    </td>
+                    <td className={styles.summaryValue}>
+                      {minValue !== undefined && minValue > 0 && applyMask
+                        ? applyMask(formatCurrencyValue(minValue))
                         : ""}
                     </td>
                   </tr>
@@ -182,6 +196,19 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
               </React.Fragment>
             );
           })()}
+          <tr className={styles.summaryRow}>
+            <td className={styles.summaryLabel}>Drawdown</td>
+            <td className={`${styles.summaryValue} ${currentDrawdown !== undefined && currentDrawdown < 0 ? styles.negative : ""}`}>
+              {currentDrawdown !== undefined && applyMask
+                ? applyMask(formatPercent(currentDrawdown))
+                : ""}
+            </td>
+            <td className={`${styles.summaryValue} ${maxDrawdown !== undefined && maxDrawdown < 0 ? styles.negative : ""}`}>
+              {maxDrawdown !== undefined && applyMask
+                ? applyMask(formatPercent(maxDrawdown))
+                : ""}
+            </td>
+          </tr>
           {items
             .slice(1)
             .map((item) => {
@@ -227,13 +254,15 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
                   </tr>
                   {item.label === "Account PnL" && (
                     <tr className={styles.summaryRow}>
-                      <td className={styles.summaryLabel}>Annualized %</td>
-                      <td className={styles.summaryValue}></td>
-                      <td className={yearBeginAnnualizedReturn !== undefined
-                        ? `${styles.summaryValue} ${yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative}`
-                        : styles.summaryValue}>
-                        {yearBeginAnnualizedReturn !== undefined
-                          ? formatPercent(yearBeginAnnualizedReturn)
+                      <td className={styles.summaryLabel}>Max/Min</td>
+                      <td className={styles.summaryValue}>
+                        {maxValue !== undefined && maxValue > 0 && applyMask
+                          ? applyMask(formatCurrencyValue(maxValue))
+                          : ""}
+                      </td>
+                      <td className={styles.summaryValue}>
+                        {minValue !== undefined && minValue > 0 && applyMask
+                          ? applyMask(formatCurrencyValue(minValue))
                           : ""}
                       </td>
                     </tr>

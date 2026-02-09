@@ -14,6 +14,9 @@ interface AccountSummaryProps {
   originalAmountUsd: number;
   currentBalanceUsd: number;
   yearBeginBalanceSgd: number;
+  maxValue?: number;
+  minValue?: number;
+  maxDrawdownPercent?: number;
   onToggleIncognito: () => void;
   usdSgdRate: number;
   usdCnyRate: number;
@@ -30,6 +33,9 @@ export function AccountSummary({
   originalAmountUsd,
   currentBalanceUsd,
   yearBeginBalanceSgd,
+  maxValue,
+  minValue,
+  maxDrawdownPercent,
   onToggleIncognito,
   usdSgdRate,
   usdCnyRate,
@@ -45,6 +51,9 @@ export function AccountSummary({
         currentBalanceUsd={currentBalanceUsd}
         yearBeginBalanceSgd={yearBeginBalanceSgd}
         assetBreakdown={assetBreakdown}
+        maxValue={maxValue}
+        minValue={minValue}
+        maxDrawdownPercent={maxDrawdownPercent}
         usdSgdRate={usdSgdRate}
         usdCnyRate={usdCnyRate}
         currencyMode={currencyMode}
