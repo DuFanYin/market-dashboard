@@ -1,10 +1,11 @@
 import { formatPercent } from "@/lib/format";
-import { formatCurrency, formatCurrencyNoPrefix, type CurrencyMode } from "@/lib/currency";
-import type { AssetAllocation, AssetBreakdown } from "@/hooks/usePortfolioCalculations";
+import { formatCurrency, formatCurrencyNoPrefix, type CurrencyMode } from "@/lib/format";
 import {
   calculateTotalUnrealizedPnL,
   calculateTotalPnLPercent,
-} from "@/lib/positionCalculations";
+  type AssetAllocation,
+  type AssetBreakdown,
+} from "@/lib/accountStats";
 import styles from "@/app/portfolio/page.module.css";
 
 interface LegendTableProps {

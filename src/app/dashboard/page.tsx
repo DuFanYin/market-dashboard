@@ -2,10 +2,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { useMarketData } from "@/hooks/useMarketData";
+import { useMarketData } from "@/hooks";
 import { MarketsTable } from "@/components/dashboard/MarketsTable";
 import { FearGreedPanel } from "@/components/dashboard/FearGreedPanel";
 import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
+import { HamburgerNav } from "@/components/shared/HamburgerNav";
 
 export default function Page() {
   const router = useRouter();
@@ -101,6 +102,7 @@ export default function Page() {
 
   return (
     <main className={styles.page}>
+      <HamburgerNav />
       <div className={styles.container}>
           <div>
           {/* Header (match Portfolio page sizing/position) */}

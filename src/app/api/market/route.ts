@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { MarketApiResponse, CnnIndexes } from "@/types/market";
+import type { MarketApiResponse, CnnIndexes } from "@/types";
 import { getCnnMarketIndexes, getCnnFearGreed, getOkxPrices, getAhr999, getGoldPrice } from "@/lib/data";
 
 export async function GET() {

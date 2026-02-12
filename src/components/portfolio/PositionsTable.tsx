@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 
-import type { Position } from "@/types/portfolio";
+import type { Position } from "@/types";
 import { formatMoney, formatPercent, formatNumber } from "@/lib/format";
 import {
   calculateTotalCost,
   calculateMarketValue,
   calculatePositionPercent,
-} from "@/lib/positionCalculations";
+} from "@/lib/accountStats";
 import styles from "@/app/portfolio/page.module.css";
 
 interface PositionsTableProps {

@@ -1,0 +1,75 @@
+/* =========================================================================
+ * Layout Shell (match Portfolio/Dashboard pages)
+ * ========================================================================= */
+.page {
+  min-height: 100vh;
+  height: 100vh;
+  padding: 16px;
+  color: #ffffff;
+  background-color: #000000;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* =========================================================================
+ * Header (match Portfolio/Dashboard pages)
+ * ========================================================================= */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+.headerTop {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  position: relative;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  grid-column: 2;
+  justify-self: center;
+  align-self: center;
+  margin-top: 50px;
+}
+
+/* =========================================================================
+ * Loading / Error states
+ * ========================================================================= */
+.placeholder,
+.error {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.placeholder {
+  color: #666666;
+}
+
+.error {
+  color: #ff6b6b;
+}

@@ -3,7 +3,7 @@ import { put, head } from "@vercel/blob";
 import { BlobNotFoundError } from "@vercel/blob";
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types/portfolio";
+import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types";
 import { getOkxPrices } from "@/lib/data";
 
 const BLOB_KEY = "account.json";
@@ -334,22 +334,26 @@ function buildResponse(
 
   const positions = portfolio.IBKR_account.positions;
   
-  // Calculate total cash: IBKR_account.cash + cash_account (with currency conversion)
-  let cash = portfolio.IBKR_account.cash;
+  // Track separate cash sources
+  const ibkrCash = portfolio.IBKR_account.cash;
+  let cashAccountUsd = 0;
   
-  // Add cash_account amounts (convert SGD to USD)
+  // Calculate cash_account in USD (convert SGD to USD)
   if (portfolio.cash_account) {
     const sgdCash = portfolio.cash_account.SGD_cash ?? 0;
     const usdCash = portfolio.cash_account.USD_cash ?? 0;
     
     // Convert SGD to USD
     if (sgdCash > 0 && usdSgdRate > 0) {
-      cash += sgdCash / usdSgdRate;
+      cashAccountUsd += sgdCash / usdSgdRate;
     }
     
     // Add USD cash directly
-    cash += usdCash;
+    cashAccountUsd += usdCash;
   }
+  
+  // Total cash = IBKR cash + cash account
+  const cash = ibkrCash + cashAccountUsd;
 
   for (const pos of positions) {
     if (pos.secType === "OPT") {
@@ -532,10 +536,19 @@ function buildResponse(
     }
   }
 
+  // Principal (original investment amount)
+  // Priority: original_amount_sgd -> principal_SGD, then convert to USD
+  const principalSgd = portfolio.original_amount_sgd ?? portfolio.account_info?.principal_SGD ?? 0;
+  const principalUsd = portfolio.original_amount_usd ?? 
+    (principalSgd && usdSgdRate ? principalSgd / usdSgdRate : 0);
+  
+  // IBKR-specific principal
+  const ibkrPrincipalSgd = portfolio.account_info?.IBKR_principal_SGD ?? 0;
+  const ibkrPrincipalUsd = ibkrPrincipalSgd && usdSgdRate ? ibkrPrincipalSgd / usdSgdRate : 0;
+  
+  // Keep original fields for backwards compatibility
   const originalAmountSgd = portfolio.original_amount_sgd ?? 0;
-  const originalAmountUsd =
-    portfolio.original_amount_usd ??
-    (originalAmountSgd && usdSgdRate ? originalAmountSgd / usdSgdRate : 0);
+  const originalAmountUsd = principalUsd;
   const yearBeginBalanceSgd = portfolio.account_info?.principal_SGD ?? 0;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
@@ -545,6 +558,8 @@ function buildResponse(
 
   return {
     cash: cash,
+    ibkr_cash: ibkrCash,
+    cash_account_usd: cashAccountUsd,
     net_liquidation: netLiquidation,
     total_stock_mv: totalStockMV,
     total_option_mv: totalOptionMV,
@@ -563,6 +578,8 @@ function buildResponse(
     original_amount_sgd: originalAmountSgd,
     original_amount_usd: originalAmountUsd,
     principal: yearBeginBalanceSgd,
+    principal_usd: principalUsd,
+    ibkr_principal_usd: ibkrPrincipalUsd,
     original_amount_sgd_raw: originalAmountSgd,
     max_value_USD: maxValue,
     min_value_USD: minValue,

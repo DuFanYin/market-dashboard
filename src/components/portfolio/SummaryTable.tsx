@@ -1,14 +1,14 @@
 import React from "react";
-import type { SummaryItem } from "@/types/portfolio";
+import type { SummaryItem } from "@/types";
 import { formatPercent } from "@/lib/format";
-import { formatCurrency, formatCurrencyNoPrefix, formatCurrencyFromSgdBase, type CurrencyMode } from "@/lib/currency";
+import { formatCurrency, formatCurrencyNoPrefix, formatCurrencyFromSgdBase, type CurrencyMode } from "@/lib/format";
 import {
   calculateAccountPnL,
   calculateAccountPnLPercent,
   calculateAnnualizedReturn,
   calculateTotalUnrealizedPnL,
-} from "@/lib/positionCalculations";
-import type { AssetBreakdown } from "@/hooks/usePortfolioCalculations";
+  type AssetBreakdown,
+} from "@/lib/accountStats";
 import styles from "@/app/portfolio/page.module.css";
 
 interface SummaryTableProps {

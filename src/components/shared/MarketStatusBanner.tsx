@@ -1,11 +1,9 @@
 "use client";
 
-import type { MarketStatus, MarketStatusInfo } from "@/hooks/useMarketData";
-import styles from "./MarketStatusBanner.module.css";
+import type { MarketStatus, MarketStatusInfo } from "@/hooks";
 
 interface MarketStatusBannerProps {
   marketStatus?: MarketStatusInfo;
-  // For backward compatibility - will use marketStatus if provided
   isUsMarketOpen?: boolean;
   nyTimeLabel: string;
   lastRefreshTime?: Date | null;
@@ -34,34 +32,34 @@ function getStatusLabel(status: MarketStatus): string {
 function getStatusClass(status: MarketStatus): string {
   switch (status) {
     case "pre-market":
-      return styles.statusPreMarket;
+      return "msb-status-pre";
     case "open":
-      return styles.statusOpen;
+      return "msb-status-open";
     case "post-market":
-      return styles.statusPostMarket;
+      return "msb-status-post";
     case "night":
-      return styles.statusNight;
+      return "msb-status-night";
     case "closed":
-      return styles.statusClosed;
+      return "msb-status-closed";
     default:
-      return styles.statusClosed;
+      return "msb-status-closed";
   }
 }
 
 function getBannerClass(status: MarketStatus): string {
   switch (status) {
     case "pre-market":
-      return styles.bannerPreMarket;
+      return "msb-banner-pre";
     case "open":
-      return styles.bannerOpen;
+      return "msb-banner-open";
     case "post-market":
-      return styles.bannerPostMarket;
+      return "msb-banner-post";
     case "night":
-      return styles.bannerNight;
+      return "msb-banner-night";
     case "closed":
-      return styles.bannerClosed;
+      return "msb-banner-closed";
     default:
-      return styles.bannerClosed;
+      return "msb-banner-closed";
   }
 }
 
@@ -74,30 +72,90 @@ export function MarketStatusBanner({
   isLoading,
   onRefresh,
 }: MarketStatusBannerProps) {
-  // Use marketStatus if provided, otherwise fall back to isUsMarketOpen for backward compatibility
   const status: MarketStatus = marketStatus?.status ?? (isUsMarketOpen ? "open" : "closed");
   const timeZone = marketStatus?.timeZone ?? "ET";
 
   return (
-    <div className={`${styles.marketBanner} ${getBannerClass(status)}`}>
-      <div className={styles.bannerContent}>
-        <div className={styles.bannerCenter}>
-          <span className={styles.bannerLabel}>US Stock Market: </span>
-          <span className={getStatusClass(status)}>{getStatusLabel(status)}</span>
-          <span className={styles.bannerTime}>
-            (NY {nyTimeLabel} {timeZone})
-          </span>
-        </div>
-        {lastRefreshTime && timeAgo && (
-          <div
-            className={styles.lastRefreshTime}
-            onClick={onRefresh}
-            style={{ cursor: isLoading ? "wait" : "pointer" }}
-          >
-            Last refreshed: {isLoading ? "Refreshing..." : timeAgo}
+    <>
+      <style>{`
+        .msb-banner {
+          padding: 6px 12px;
+          font-size: 12px;
+          text-align: center;
+          margin: 0;
+          margin-top: 8px;
+          user-select: none;
+        }
+        @media (min-width: 640px) {
+          .msb-banner { padding: 12px; font-size: 14px; }
+        }
+        .msb-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          user-select: none;
+        }
+        .msb-center {
+          text-align: center;
+          font-size: 14px;
+          user-select: none;
+        }
+        .msb-label {
+          display: none;
+          user-select: none;
+        }
+        @media (min-width: 640px) {
+          .msb-label { display: inline; }
+        }
+        .msb-time {
+          margin-left: 8px;
+          font-size: 14px;
+          color: #888888;
+          user-select: none;
+        }
+        .msb-banner-open { color: #2e7d32; }
+        .msb-banner-pre, .msb-banner-post, .msb-banner-night { color: #ffc107; }
+        .msb-banner-closed { color: #c62828; }
+        .msb-status-open { color: #2e7d32; font-weight: 600; user-select: none; }
+        .msb-status-pre, .msb-status-post, .msb-status-night { color: #ffc107; font-weight: 600; user-select: none; }
+        .msb-status-closed { color: #c62828; font-weight: 600; user-select: none; }
+        .msb-refresh {
+          font-size: 12px;
+          color: #888888;
+          text-align: center;
+          padding: 0 4px;
+          margin: 0;
+          margin-top: 6px;
+          transition: outline 0.2s;
+          border-radius: 2px;
+          user-select: none;
+        }
+        .msb-refresh:hover {
+          outline: 1px solid #ffffff;
+          outline-offset: 2px;
+        }
+      `}</style>
+      <div className={`msb-banner ${getBannerClass(status)}`}>
+        <div className="msb-content">
+          <div className="msb-center">
+            <span className="msb-label">US Stock Market: </span>
+            <span className={getStatusClass(status)}>{getStatusLabel(status)}</span>
+            <span className="msb-time">
+              (NY {nyTimeLabel} {timeZone})
+            </span>
           </div>
-        )}
+          {lastRefreshTime && timeAgo && (
+            <div
+              className="msb-refresh"
+              onClick={onRefresh}
+              style={{ cursor: isLoading ? "wait" : "pointer" }}
+            >
+              Last refreshed: {isLoading ? "Refreshing..." : timeAgo}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

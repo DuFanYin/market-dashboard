@@ -1,3 +1,12 @@
+/**
+ * Type Definitions
+ * 
+ * 所有类型定义集中在此文件
+ * 包含: Portfolio类型、Market类型
+ */
+
+// ========== Portfolio Types (投资组合类型) ==========
+
 // Raw position data from YAML file
 export type RawPosition = {
   symbol: string;
@@ -37,9 +46,10 @@ export type CashAccount = {
 // Account info structure
 export type AccountInfo = {
   principal_SGD?: number;
+  IBKR_principal_SGD?: number;
   max_value_USD?: number;
   min_value_USD?: number;
-  max_drawdown_percent?: number; // Historical maximum drawdown percentage
+  max_drawdown_percent?: number;
 };
 
 // Portfolio data structure
@@ -100,6 +110,8 @@ export type ChartSegment = {
 // Complete portfolio data response
 export type PortfolioData = {
   cash: number;
+  ibkr_cash: number;
+  cash_account_usd: number;
   net_liquidation: number;
   total_stock_mv: number;
   total_option_mv: number;
@@ -118,6 +130,8 @@ export type PortfolioData = {
   original_amount_sgd: number;
   original_amount_usd: number;
   principal: number;
+  principal_usd: number;
+  ibkr_principal_usd: number;
   original_amount_sgd_raw: number;
   max_value_USD?: number;
   min_value_USD?: number;
@@ -134,3 +148,76 @@ export type SummaryItem = {
   percentValue?: number;
 };
 
+// ========== Market Types (市场数据类型) ==========
+
+export type CnnIndexRow = {
+  name: string;
+  current: number;
+  prev: number;
+  change: number;
+  pct: number;
+};
+
+export type CnnIndexes = {
+  success: boolean;
+  data?: CnnIndexRow[];
+  reason?: string;
+};
+
+export type FearGreedDetail = { score: number | null; rating: string | null; value: number | null } | null;
+
+export type CnnFearGreed = {
+  success: boolean;
+  summary?: {
+    score: number | null;
+    rating: string | null;
+    prev: number | null;
+    w1: number | null;
+    m1: number | null;
+    y1: number | null;
+  };
+  details?: Record<string, FearGreedDetail>;
+  reason?: string;
+};
+
+export type OkxRow = {
+  inst: string;
+  success: boolean;
+  price?: number;
+  open?: number;
+  change?: number;
+  pct?: number;
+  reason?: string;
+};
+
+export type GoldPrice = {
+  success: boolean;
+  inst: string;
+  price?: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  prev?: number;
+  change?: number;
+  pct?: number;
+  reason?: string;
+};
+
+export type MarketApiResponse = {
+  success: boolean;
+  date: string;
+  cnnIndexes: CnnIndexes;
+  cnnFearGreed: CnnFearGreed;
+  okx: OkxRow[];
+  gold?: GoldPrice;
+  ahr?: {
+    success: boolean;
+    px?: number;
+    px_dt?: string;
+    sma200?: number;
+    valuation?: number;
+    ahr?: number;
+    zone?: string;
+    error?: string;
+  };
+} | { error: true; message: string };

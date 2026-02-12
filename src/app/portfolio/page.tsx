@@ -2,15 +2,16 @@
 
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { PortfolioData } from "@/types/portfolio";
-import type { CurrencyMode } from "@/lib/currency";
-import { usePortfolioCalculations } from "@/hooks/usePortfolioCalculations";
-import { useMarketData } from "@/hooks/useMarketData";
-import { PortfolioHeader } from "@/components/portfolio/PortfolioHeader";
-import { AccountSummary } from "@/components/portfolio/AccountSummary";
+import type { PortfolioData } from "@/types";
+import type { CurrencyMode } from "@/lib/format";
+import { usePortfolioCalculations, useMarketData } from "@/hooks";
+import { SummaryTable } from "@/components/portfolio/SummaryTable";
+import { PortfolioChart } from "@/components/portfolio/PortfolioChart";
+import { LegendTable } from "@/components/portfolio/LegendTable";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
 import { DataDownloadModal } from "@/components/portfolio/DataDownloadModal";
 import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
+import { HamburgerNav } from "@/components/shared/HamburgerNav";
 import styles from "./page.module.css";
 
 export default function PortfolioPage() {
@@ -204,9 +205,16 @@ export default function PortfolioPage() {
 
   return (
     <main className={styles.page}>
+      <HamburgerNav />
       <div className={styles.container}>
         <div>
-          <PortfolioHeader />
+          <header className={styles.header}>
+            <div className={styles.headerTop}>
+              <h1 className={styles.title} onClick={() => router.push("/dashboard")}>
+                Portfolio Summary
+              </h1>
+            </div>
+          </header>
           {error && (
             <div className={styles.errorMessage}>
               Error refreshing: {error}
@@ -224,18 +232,31 @@ export default function PortfolioPage() {
         </div>
 
         <div className={styles.summarySection}>
-          <AccountSummary
-            summaryItems={summaryItems}
-            assetAllocation={assetAllocation}
-            assetBreakdown={assetBreakdown}
-            applyMask={applyMask}
+          <SummaryTable 
+            items={summaryItems} 
             originalAmountUsd={data.original_amount_usd}
             currentBalanceUsd={data.net_liquidation}
             yearBeginBalanceSgd={data.principal}
+            assetBreakdown={assetBreakdown}
             maxValue={data.max_value_USD}
             minValue={data.min_value_USD}
             maxDrawdownPercent={data.max_drawdown_percent}
+            usdSgdRate={data.usd_sgd_rate}
+            usdCnyRate={data.usd_cny_rate}
+            currencyMode={currencyMode}
+            applyMask={applyMask}
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
+          />
+          <div className={styles.chartSection}>
+            <PortfolioChart 
+              assetAllocation={assetAllocation}
+              onClick={() => setIsDownloadModalOpen(true)}
+            />
+          </div>
+          <LegendTable 
+            assetAllocation={assetAllocation} 
+            assetBreakdown={assetBreakdown} 
+            applyMask={applyMask}
             usdSgdRate={data.usd_sgd_rate}
             usdCnyRate={data.usd_cny_rate}
             currencyMode={currencyMode}
@@ -246,7 +267,6 @@ export default function PortfolioPage() {
                 return "USD";
               });
             }}
-            onChartClick={() => setIsDownloadModalOpen(true)}
           />
         </div>
 

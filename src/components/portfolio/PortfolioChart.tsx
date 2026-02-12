@@ -1,5 +1,5 @@
-import type { AssetAllocation } from "@/hooks/usePortfolioCalculations";
-import { SEGMENT_COLORS_DARK } from "@/lib/portfolioConfig";
+import type { AssetAllocation } from "@/hooks";
+import { SEGMENT_COLORS_DARK } from "@/lib/accountStats";
 import styles from "@/app/portfolio/page.module.css";
 
 interface PortfolioChartProps {
