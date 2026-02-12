@@ -2,7 +2,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { useMarketData } from "@/hooks";
+import { useMarketData, useTimeAgo } from "@/hooks";
 import { MarketsTable } from "@/components/dashboard/MarketsTable";
 import { FearGreedPanel } from "@/components/dashboard/FearGreedPanel";
 import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
@@ -12,41 +12,10 @@ export default function Page() {
   const router = useRouter();
   const { data, marketStatus, nyTimeLabel, handleRefresh: originalHandleRefresh } = useMarketData();
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(new Date());
-  const [timeAgo, setTimeAgo] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const formatTimeAgo = (date: Date): string => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffSeconds = Math.floor(diffMs / 1000);
-    const diffMinutes = Math.floor(diffSeconds / 60);
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffSeconds < 60) {
-      return `${diffSeconds} second${diffSeconds !== 1 ? "s" : ""} ago`;
-    } else if (diffMinutes < 60) {
-      return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
-    } else {
-      return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
-    }
-  };
-
-  useEffect(() => {
-    if (!lastRefreshTime) return;
-
-    // Update immediately
-    setTimeAgo(formatTimeAgo(lastRefreshTime));
-
-    // Update every second
-    const interval = setInterval(() => {
-      setTimeAgo(formatTimeAgo(lastRefreshTime));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [lastRefreshTime]);
+  // Use consolidated hook
+  const timeAgo = useTimeAgo(lastRefreshTime);
 
   const handleRefresh = async () => {
     setIsLoading(true);

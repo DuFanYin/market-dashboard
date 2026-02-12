@@ -130,6 +130,7 @@ export type PortfolioData = {
   original_amount_sgd: number;
   original_amount_usd: number;
   principal: number;
+  principal_sgd: number;
   principal_usd: number;
   ibkr_principal_usd: number;
   original_amount_sgd_raw: number;

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import type { MarketApiResponse, PortfolioData, SummaryItem } from "@/types";
-import { formatMoney, formatPercent } from "@/lib/format";
+import { formatMoney, formatPercent, formatTimeAgo } from "@/lib/format";
 import {
   calculateAssetBreakdown,
   buildAssetAllocation,
@@ -10,98 +10,20 @@ import {
   type AssetBreakdown,
   type AssetAllocation,
 } from "@/lib/accountStats";
+import { computeUsMarketStatus, type MarketStatus, type MarketStatusInfo } from "@/lib/market";
 
 // ========== Re-export types ==========
 
-export type { AssetBreakdown, AssetAllocation };
+export type { AssetBreakdown, AssetAllocation, MarketStatus, MarketStatusInfo };
 
 // ========== Market Data Hook ==========
 
 type ValidResponse = Extract<MarketApiResponse, { success: boolean }>;
 
-export type MarketStatus = "pre-market" | "open" | "post-market" | "night" | "closed";
-
-export interface MarketStatusInfo {
-  status: MarketStatus;
-  isUsMarketOpen: boolean;
-  label: string;
-  timeZone: "EST" | "EDT";
-}
-
-function computeUsOpen(): MarketStatusInfo {
-  const now = new Date();
-  
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-
-  const parts = formatter.formatToParts(now);
-  const day = parts.find((p) => p.type === "weekday")?.value;
-  const hour = Number(parts.find((p) => p.type === "hour")?.value);
-  const minute = Number(parts.find((p) => p.type === "minute")?.value);
-
-  const tzParts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    timeZoneName: "short",
-  }).formatToParts(now);
-  const tzName = tzParts.find((p) => p.type === "timeZoneName")?.value ?? "";
-  
-  let timeZone: "EST" | "EDT";
-  if (tzName.includes("EDT") || tzName.includes("DT")) {
-    timeZone = "EDT";
-  } else if (tzName.includes("EST") || tzName.includes("ST")) {
-    timeZone = "EST";
-  } else {
-    const month = now.getUTCMonth() + 1;
-    timeZone = month >= 3 && month <= 11 ? "EDT" : "EST";
-  }
-
-  const weekday = ["Mon", "Tue", "Wed", "Thu", "Fri"].includes(day ?? "");
-  const totalMinutes = hour * 60 + minute;
-
-  let status: MarketStatus;
-  let isUsMarketOpen: boolean;
-
-  const isNightHours = totalMinutes >= 20 * 60 || totalMinutes < 4 * 60;
-
-  if (isNightHours) {
-    status = "night";
-    isUsMarketOpen = false;
-  } else if (!weekday) {
-    status = "closed";
-    isUsMarketOpen = false;
-  } else {
-    if (totalMinutes >= 4 * 60 && totalMinutes < 9 * 60 + 30) {
-      status = "pre-market";
-      isUsMarketOpen = false;
-    } else if (totalMinutes >= 9 * 60 + 30 && totalMinutes < 16 * 60) {
-      status = "open";
-      isUsMarketOpen = true;
-    } else if (totalMinutes >= 16 * 60 && totalMinutes < 20 * 60) {
-      status = "post-market";
-      isUsMarketOpen = false;
-    } else {
-      status = "night";
-      isUsMarketOpen = false;
-    }
-  }
-
-  return {
-    status,
-    isUsMarketOpen,
-    label: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
-    timeZone,
-  };
-}
-
 export function useMarketData() {
   const [data, setData] = useState<ValidResponse | null>(null);
   const [next5In, setNext5In] = useState<number>(60);
-  const init = computeUsOpen();
+  const init = computeUsMarketStatus();
   const [marketStatus, setMarketStatus] = useState<MarketStatusInfo>(init);
   const [isUsMarketOpen, setIsUsMarketOpen] = useState<boolean>(init.isUsMarketOpen);
   const [nyTimeLabel, setNyTimeLabel] = useState<string>(init.label);
@@ -135,7 +57,7 @@ export function useMarketData() {
 
     const countdownInterval = setInterval(() => {
       setNext5In((s) => (s > 1 ? s - 1 : 1));
-      const statusInfo = computeUsOpen();
+      const statusInfo = computeUsMarketStatus();
       setMarketStatus(statusInfo);
       setIsUsMarketOpen(statusInfo.isUsMarketOpen);
       setNyTimeLabel(statusInfo.label);
@@ -225,5 +147,184 @@ export function usePortfolioCalculations(data: PortfolioData | null, applyMask: 
     summaryItems,
     assetAllocation,
     marketValueChart,
+  };
+}
+
+// ========== Time Ago Hook ==========
+
+/**
+ * Hook to manage "time ago" display that updates every second
+ * @param lastRefreshTime - The reference date to calculate time ago from
+ * @returns Current time ago string
+ */
+export function useTimeAgo(lastRefreshTime: Date | null): string {
+  // Use a tick counter to trigger re-computation every second
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Derive timeAgo from lastRefreshTime and tick (tick forces re-computation)
+  return useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _tick = tick; // Reference tick to include in dependency
+    return lastRefreshTime ? formatTimeAgo(lastRefreshTime) : "";
+  }, [lastRefreshTime, tick]);
+}
+
+// ========== Portfolio Data Hook ==========
+
+const PORTFOLIO_CACHE_KEY = "portfolio_cache_v1";
+
+interface PortfolioCacheData {
+  ts?: number;
+  payload?: PortfolioData;
+}
+
+function getPortfolioCache(): { data: PortfolioData | null; timestamp: Date | null } {
+  try {
+    const raw = sessionStorage.getItem(PORTFOLIO_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as PortfolioCacheData;
+      if (parsed?.payload) {
+        return {
+          data: parsed.payload,
+          timestamp: parsed.ts ? new Date(parsed.ts) : null,
+        };
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { data: null, timestamp: null };
+}
+
+function setPortfolioCache(payload: PortfolioData): void {
+  try {
+    sessionStorage.setItem(
+      PORTFOLIO_CACHE_KEY,
+      JSON.stringify({ ts: Date.now(), payload })
+    );
+  } catch {
+    // ignore
+  }
+}
+
+interface UsePortfolioDataOptions {
+  /** Whether to redirect to dashboard if 404 on initial load */
+  redirectOnNotFound?: boolean;
+  /** Router push function for redirects */
+  routerPush?: (path: string) => void;
+}
+
+interface UsePortfolioDataReturn {
+  data: PortfolioData | null;
+  isLoading: boolean;
+  isInitialLoad: boolean;
+  error: string | null;
+  lastRefreshTime: Date | null;
+  timeAgo: string;
+  refresh: () => Promise<void>;
+}
+
+/**
+ * Hook for fetching and caching portfolio data
+ * Combines data fetching, caching, and time ago display
+ */
+export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePortfolioDataReturn {
+  const { redirectOnNotFound = false, routerPush } = options;
+  
+  // Always start with null to avoid hydration mismatch
+  const [data, setData] = useState<PortfolioData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const hasInitializedRef = useRef(false);
+
+  const timeAgo = useTimeAgo(lastRefreshTime);
+  
+
+  const fetchPortfolio = useCallback(
+    async (isRefresh = false, showLoading = true) => {
+      if (showLoading || isRefresh) {
+        setIsLoading(true);
+      }
+      setError(null);
+      
+      try {
+        const response = await fetch(`/api/portfolio?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        });
+
+        if (response.status === 404) {
+          if (isInitialLoad && !isRefresh && redirectOnNotFound && routerPush) {
+            routerPush("/dashboard");
+            return;
+          }
+          throw new Error("Portfolio data file not found");
+        }
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || "Failed to load portfolio data.");
+        }
+
+        const payload = (await response.json()) as PortfolioData;
+        setData(payload);
+        setLastRefreshTime(new Date());
+        setIsInitialLoad(false);
+        setPortfolioCache(payload);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error occurred.");
+        if (isInitialLoad && !isRefresh) {
+          setData(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isInitialLoad, redirectOnNotFound, routerPush]
+  );
+
+  // Initialize on mount: load cache first, then fetch fresh data
+  useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+    
+    // Load from cache first
+    const cached = getPortfolioCache();
+    if (cached.data) {
+      setData(cached.data);
+      setLastRefreshTime(cached.timestamp);
+      setIsInitialLoad(false);
+    }
+    
+    // Always fetch fresh data (show loading only if no cache)
+    void fetchPortfolio(true, !cached.data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refresh = useCallback(async () => {
+    await fetchPortfolio(true);
+  }, [fetchPortfolio]);
+
+  return {
+    data,
+    isLoading,
+    isInitialLoad,
+    error,
+    lastRefreshTime,
+    timeAgo,
+    refresh,
   };
 }

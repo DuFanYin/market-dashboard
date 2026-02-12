@@ -68,7 +68,6 @@ export function SankeyDiagram({
   assetBreakdown,
   portfolioData,
 }: SankeyDiagramProps) {
-
   const { nodes, links, displayGains, displayLosses } = useMemo(() => {
     // ========== 使用集中计算模块 ==========
     const stats = calculateAccountStats(portfolioData, assetBreakdown, assetAllocation);
@@ -416,7 +415,7 @@ export function SankeyDiagram({
 
   if (nodes.length === 0) {
     return (
-      <p style={{
+      <div style={{
         width: "100%",
         height: "100%",
         display: "flex",
@@ -426,7 +425,7 @@ export function SankeyDiagram({
         color: "#666666",
       }}>
         No portfolio data available
-      </p>
+      </div>
     );
   }
 
@@ -434,9 +433,7 @@ export function SankeyDiagram({
     <div 
       style={{
         width: "100%",
-        height: 350,
-        maxWidth: 1100,
-        margin: "auto",
+        height: "100%",
       }}
     >
       <ReactEChartsCore

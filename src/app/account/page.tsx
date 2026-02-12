@@ -1,74 +1,32 @@
 "use client";
 
-import { useCallback, useState, useEffect, useRef } from "react";
-import type { PortfolioData } from "@/types";
-import { usePortfolioCalculations } from "@/hooks";
+import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import { usePortfolioCalculations, usePortfolioData } from "@/hooks";
 import { HamburgerNav } from "@/components/shared/HamburgerNav";
-import { SankeyDiagram } from "@/components/account/SankeyDiagram";
 import styles from "./page.module.css";
 
+// Dynamic import with SSR disabled for ECharts components
+const SankeyDiagram = dynamic(
+  () => import("@/components/account/SankeyDiagram").then((mod) => mod.SankeyDiagram),
+  { ssr: false, loading: () => <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>Loading chart...</div> }
+);
+
+const HistoryChart = dynamic<{ resetTrigger?: number }>(
+  () => import("@/components/account/HistoryChart").then((mod) => mod.HistoryChart),
+  { ssr: false, loading: () => <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>Loading chart...</div> }
+);
+
 export default function AccountPage() {
-  const [data, setData] = useState<PortfolioData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const hasInitializedRef = useRef(false);
-
-  const fetchPortfolio = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/portfolio?t=${Date.now()}`, {
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-        },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Failed to load portfolio data.");
-      }
-
-      const payload = (await response.json()) as PortfolioData;
-      setData(payload);
-      try {
-        sessionStorage.setItem(
-          "portfolio_cache_v1",
-          JSON.stringify({ ts: Date.now(), payload })
-        );
-      } catch {
-        // ignore
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (hasInitializedRef.current) return;
-    hasInitializedRef.current = true;
-    
-    // Try to load from cache first (client-side only)
-    try {
-      const raw = sessionStorage.getItem("portfolio_cache_v1");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { ts?: number; payload?: PortfolioData };
-        if (parsed?.payload) {
-          setData(parsed.payload);
-        }
-      }
-    } catch {
-      // ignore
-    }
-    
-    // Then fetch fresh data
-    void fetchPortfolio();
-  }, [fetchPortfolio]);
+  // Use consolidated hook
+  const { data, isLoading, error } = usePortfolioData();
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   const applyMask = useCallback((value: string): string => value, []);
+  
+  const handleResetZoom = useCallback(() => {
+    setResetTrigger((prev) => prev + 1);
+  }, []);
 
   const { assetAllocation, assetBreakdown } = usePortfolioCalculations(data, applyMask);
 
@@ -95,7 +53,8 @@ export default function AccountPage() {
   }
 
   return (
-    <main className={styles.page}>
+    // Click anywhere outside green box to reset chart zoom
+    <main className={styles.page} onClick={handleResetZoom}>
       <HamburgerNav />
       <div className={styles.container}>
         <header className={styles.header}>
@@ -103,13 +62,24 @@ export default function AccountPage() {
             <h1 className={styles.title}>Account</h1>
           </div>
         </header>
-        {data && (
-          <SankeyDiagram
-            assetAllocation={assetAllocation}
-            assetBreakdown={assetBreakdown}
-            portfolioData={data}
-          />
-        )}
+        
+        <div className={styles.content}>
+          {/* Top section: Sankey Diagram */}
+          <div className={styles.sankeySection}>
+            {data && (
+              <SankeyDiagram
+                assetAllocation={assetAllocation}
+                assetBreakdown={assetBreakdown}
+                portfolioData={data}
+              />
+            )}
+          </div>
+          
+          {/* Bottom section: History Line Chart - stop propagation to prevent reset */}
+          <div className={styles.chartSection} onClick={(e) => e.stopPropagation()}>
+            <HistoryChart resetTrigger={resetTrigger} />
+          </div>
+        </div>
       </div>
     </main>
   );

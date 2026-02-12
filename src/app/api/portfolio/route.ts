@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
-import { put, head } from "@vercel/blob";
-import { BlobNotFoundError } from "@vercel/blob";
-import path from "node:path";
-import { promises as fs } from "node:fs";
-import type { RawPosition, PortfolioYaml, Quote, Position, ChartSegment, PortfolioData } from "@/types";
+import type { RawPosition, Quote, Position, ChartSegment, PortfolioData } from "@/types";
 import { getOkxPrices } from "@/lib/data";
+import { loadPortfolioJson, savePortfolioJson, appendHistoryIfNewMinute, type AccountData } from "@/lib/storage";
 
-const BLOB_KEY = "account.json";
-const LOCAL_FILE_PATH = path.join(process.cwd(), "data", "account.json");
 const tradierBaseUrl = (process.env.TRADIER_BASE_URL ?? "https://api.tradier.com/v1/").replace(/\/+$/, "") + "/";
-
-// Check if LOCAL env variable is set to true/1
-const useLocal = process.env.LOCAL === "true" || process.env.LOCAL === "1";
 
 export const dynamic = "force-dynamic";
 
@@ -66,139 +58,6 @@ function asNumber(value: unknown): number {
 function ensureArray<T>(item: T | T[] | undefined): T[] {
   if (item === undefined) return [];
   return Array.isArray(item) ? item : [item];
-}
-
-type AccountData = PortfolioYaml & {
-  original_amount_sgd?: number;
-  original_amount_usd?: number;
-  BTC_account?: {
-    amount?: number;
-    cost_sgd?: number;
-  };
-};
-
-async function loadPortfolioJson(): Promise<AccountData> {
-  if (useLocal) {
-    // Read from local file
-    try {
-      const raw = await fs.readFile(LOCAL_FILE_PATH, "utf8");
-      const parsed = JSON.parse(raw) as AccountData;
-      
-      if (!parsed || typeof parsed !== "object") {
-        throw new Error("Failed to parse portfolio JSON file.");
-      }
-      
-      if (!parsed.IBKR_account) {
-        throw new Error("IBKR_account field is required in portfolio JSON file.");
-      }
-      
-      return parsed;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new Error("Portfolio data not found. Please input JSON data in the modal first.");
-      }
-      throw error;
-    }
-  } else {
-    // Read from Blob
-    try {
-      const blobInfo = await head(BLOB_KEY);
-      if (!blobInfo) {
-        throw new BlobNotFoundError();
-      }
-      
-      // Add timestamp query parameter to bypass CDN cache
-      const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
-      const response = await fetch(urlWithCacheBuster, {
-        cache: "no-store",
-      });
-      
-      if (!response.ok) {
-        throw new Error("Blob fetch failed");
-      }
-      
-      const raw = await response.text();
-      const parsed = JSON.parse(raw) as AccountData;
-      
-      if (!parsed || typeof parsed !== "object") {
-        throw new Error("Failed to parse portfolio JSON file.");
-      }
-      
-      if (!parsed.IBKR_account) {
-        throw new Error("IBKR_account field is required in portfolio JSON file.");
-      }
-      
-      return parsed;
-    } catch (error) {
-      if (error instanceof BlobNotFoundError) {
-        throw new Error("Portfolio data not found. Please input JSON data in the modal first.");
-      }
-      throw error;
-    }
-  }
-}
-
-async function savePortfolioJson(portfolio: AccountData): Promise<void> {
-  const content = JSON.stringify(portfolio, null, 2);
-  
-  if (useLocal) {
-    // Save to local file
-    await fs.mkdir(path.dirname(LOCAL_FILE_PATH), { recursive: true });
-    await fs.writeFile(LOCAL_FILE_PATH, content, "utf8");
-  } else {
-    // Save to Blob - ensure the operation completes
-    const blobResult = await put(BLOB_KEY, content, {
-      contentType: "application/json",
-      access: "public",
-      addRandomSuffix: false, // Keep same filename
-    });
-    
-    // Verify the blob was created successfully
-    if (!blobResult || !blobResult.url) {
-      throw new Error("Blob save operation did not return a valid URL");
-    }
-    
-    // Wait a moment for the blob to be fully committed
-    // Vercel Blob may need a brief moment for consistency
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    
-    // Verify by reading back immediately (with cache busting)
-    const verifyUrl = `${blobResult.url}?t=${Date.now()}`;
-    const verifyResponse = await fetch(verifyUrl, {
-      cache: "no-store",
-      headers: {
-        "Cache-Control": "no-cache",
-      },
-    });
-    
-    if (!verifyResponse.ok) {
-      throw new Error(`Failed to verify blob save: ${verifyResponse.status} ${verifyResponse.statusText}`);
-    }
-    
-    const savedContent = await verifyResponse.text();
-    // Basic verification: check if content structure matches
-    try {
-      const savedParsed = JSON.parse(savedContent);
-      const expectedParsed = JSON.parse(content);
-      // Verify key fields match (excluding timestamp which may differ)
-      const savedKeys = Object.keys(savedParsed).filter(k => k !== "timestamp").sort();
-      const expectedKeys = Object.keys(expectedParsed).filter(k => k !== "timestamp").sort();
-      if (JSON.stringify(savedKeys) !== JSON.stringify(expectedKeys)) {
-        throw new Error("Saved blob structure does not match expected structure");
-      }
-      // Verify critical fields match
-      if (savedParsed.IBKR_account && expectedParsed.IBKR_account) {
-        const savedIbkrKeys = Object.keys(savedParsed.IBKR_account).sort();
-        const expectedIbkrKeys = Object.keys(expectedParsed.IBKR_account).sort();
-        if (JSON.stringify(savedIbkrKeys) !== JSON.stringify(expectedIbkrKeys)) {
-          throw new Error("Saved IBKR_account structure does not match");
-        }
-      }
-    } catch (parseError) {
-      // If parsing fails, the content might not match - this is a problem
-      throw new Error(`Failed to verify saved content: ${parseError instanceof Error ? parseError.message : "Unknown error"}`);
-    }
-  }
 }
 
 async function fetchUsdSgdRate(): Promise<number> {
@@ -578,6 +437,7 @@ function buildResponse(
     original_amount_sgd: originalAmountSgd,
     original_amount_usd: originalAmountUsd,
     principal: yearBeginBalanceSgd,
+    principal_sgd: principalSgd,
     principal_usd: principalUsd,
     ibkr_principal_usd: ibkrPrincipalUsd,
     original_amount_sgd_raw: originalAmountSgd,
@@ -792,6 +652,17 @@ export async function GET() {
         // Log error but don't fail the request
         console.error("[portfolio API] Failed to update account_info max/min values:", updateError);
       }
+    }
+
+    // Append history data point if it's a new minute
+    try {
+      const appended = await appendHistoryIfNewMinute(response);
+      if (appended) {
+        console.log("[portfolio API] Appended new history data point");
+      }
+    } catch (historyError) {
+      // Log error but don't fail the request
+      console.error("[portfolio API] Failed to append history:", historyError);
     }
 
     return NextResponse.json(response);
