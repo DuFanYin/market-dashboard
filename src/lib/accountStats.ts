@@ -107,8 +107,10 @@ export interface AccountStats {
   visibleAssets: AssetAllocation[];
   assetMarketValue: number;   // 不含现金的市值
   
-  // 账户数据
+  // 账户数据 (当前市值/成本，用于节点颜色等)
   accountData: AccountDataItem[];
+  /** 从文件读取的本金按账户分配 (Principal → Accounts 流量)，总和 = principal_usd */
+  principalAccountData: AccountDataItem[];
 }
 
 export interface AccountDataItem {
@@ -422,7 +424,7 @@ export function calculateAnnualizedReturn(
 }
 
 /**
- * 构建账户数据列表
+ * 构建账户数据列表 (当前市值/成本)
  */
 export function buildAccountData(
   cashAccountUsd: number,
@@ -433,6 +435,29 @@ export function buildAccountData(
     { name: "Cash Acct", value: cashAccountUsd, color: SEGMENT_COLORS.cash },
     { name: "IBKR", value: ibkrTotalValue, color: "#4a90d9" },
     { name: "Crypto Acct", value: cryptoCost, color: SEGMENT_COLORS.crypto },
+  ].filter(a => a.value > 0);
+}
+
+/**
+ * 从文件读取的本金 (principal_sgd → principal_usd) 按账户分配，用于 Sankey Principal → Accounts 流量。
+ * IBKR 使用文件中的 IBKR_principal_SGD 转 USD；其余 (principal_usd - ibkr_principal_usd) 按 Cash:Crypto 当前比例分配。
+ */
+export function buildPrincipalAccountData(
+  principalUsd: number,
+  ibkrPrincipalUsd: number,
+  cashAccountUsd: number,
+  cryptoCost: number
+): AccountDataItem[] {
+  if (principalUsd <= 0) return [];
+  const ibkrPrincipal = Math.min(ibkrPrincipalUsd, principalUsd);
+  const remainder = principalUsd - ibkrPrincipal;
+  const nonIbkrTotal = cashAccountUsd + cryptoCost;
+  const cashPrincipal = nonIbkrTotal > 0 ? remainder * (cashAccountUsd / nonIbkrTotal) : remainder;
+  const cryptoPrincipal = nonIbkrTotal > 0 ? remainder * (cryptoCost / nonIbkrTotal) : 0;
+  return [
+    { name: "Cash Acct", value: cashPrincipal, color: SEGMENT_COLORS.cash },
+    { name: "IBKR", value: ibkrPrincipal, color: "#4a90d9" },
+    { name: "Crypto Acct", value: cryptoPrincipal, color: SEGMENT_COLORS.crypto },
   ].filter(a => a.value > 0);
 }
 
@@ -548,7 +573,8 @@ export function calculateAccountStats(
   const cash = assetBreakdown.cash;
   const totalMarketValue = assetBreakdown.totalMarketValue;
   const totalCost = assetBreakdown.totalCost;
-  const principal = portfolioData.principal_usd || portfolioData.original_amount_usd || totalCost || totalMarketValue;
+  // Principal: from API only (read from history file in SGD, converted to USD by API). No calculation/fallback from totalCost or totalMarketValue.
+  const principal = portfolioData.principal_usd ?? portfolioData.original_amount_usd ?? 0;
   
   // 现金相关
   const ibkrCash = portfolioData.ibkr_cash || 0;
@@ -575,8 +601,12 @@ export function calculateAccountStats(
   const totalRealizedPnL = Math.max(0, totalAccountPnL - totalUnrealisedPnL);
   const hasProfit = totalRealizedPnL > 0.01;
   
-  // 账户数据
+  // 账户数据 (当前值)
   const accountData = buildAccountData(cashAccountUsd, ibkrTotalValue, cryptoCost);
+  // 本金按账户分配 (从文件 principal_sgd → principal_usd)，用于 Sankey Principal → Accounts
+  const principalUsd = portfolioData.principal_usd ?? portfolioData.original_amount_usd ?? 0;
+  const ibkrPrincipalUsd = portfolioData.ibkr_principal_usd ?? 0;
+  const principalAccountData = buildPrincipalAccountData(principalUsd, ibkrPrincipalUsd, cashAccountUsd, cryptoCost);
   
   // 不含现金的市值
   const assetMarketValue = totalMarketValue - cash;
@@ -604,5 +634,6 @@ export function calculateAccountStats(
     visibleAssets,
     assetMarketValue,
     accountData,
+    principalAccountData,
   };
 }

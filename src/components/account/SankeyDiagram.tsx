@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import * as echarts from "echarts/core";
 import { SankeyChart } from "echarts/charts";
@@ -19,6 +19,8 @@ interface SankeyDiagramProps {
   assetAllocation: AssetAllocation[];
   assetBreakdown: AssetBreakdown;
   portfolioData: PortfolioData;
+  /** Optional: format USD value for display (e.g. with currency conversion) */
+  formatValue?: (value: number) => string;
 }
 
 type EChartsNode = {
@@ -67,7 +69,9 @@ export function SankeyDiagram({
   assetAllocation,
   assetBreakdown,
   portfolioData,
+  formatValue,
 }: SankeyDiagramProps) {
+  const fmt = useCallback((v: number) => (formatValue ? formatValue(v) : `$${formatMoney(v)}`), [formatValue]);
   const { nodes, links, displayGains, displayLosses } = useMemo(() => {
     // ========== 使用集中计算模块 ==========
     const stats = calculateAccountStats(portfolioData, assetBreakdown, assetAllocation);
@@ -87,33 +91,32 @@ export function SankeyDiagram({
       positionLosses: totalLosses,
       displayGains,
       displayLosses,
-      totalRealizedPnL,
-      hasProfit,
       visibleAssets,
-      assetMarketValue,
       accountData,
+      principalAccountData,
+      totalRealizedPnL,
     } = stats;
 
+    const totalCashFlow = totalCashInput;
     const nodes: EChartsNode[] = [];
     const links: EChartsLink[] = [];
     
-    // ========== Column 0: Principal ==========
+    // ========== Column 0: Principal, rPnL ==========
     nodes.push({
       name: "Principal",
       depth: 0,
       itemStyle: { color: "#9ca3af" },
       label: { position: "left" },
     });
-    
-    // ========== Column 4: Profit (if any) ==========
-    if (hasProfit) {
+    if (totalRealizedPnL > 0.01) {
       nodes.push({
-        name: "rProfit",
-        depth: 4,
+        name: "rPnL",
+        depth: 0,
         itemStyle: { color: "#2e7d32" },
+        label: { position: "left" },
       });
     }
-    
+
     // ========== Column 1: Accounts (order: Cash, IBKR, Crypto) ==========
     accountData.forEach(acc => {
       nodes.push({
@@ -123,8 +126,8 @@ export function SankeyDiagram({
         label: { position: "left" },
       });
     });
-    
-    // Column 2 nodes: Cash, visible assets, uProfit
+
+    // Column 2: Cash, visible assets, uProfit (rProfit not connected for now)
     [
       { name: "Cash", color: SEGMENT_COLORS.cash, condition: totalCashInput > 0 },
       ...visibleAssets.map(asset => ({ name: asset.label, color: asset.color, condition: true })),
@@ -159,7 +162,7 @@ export function SankeyDiagram({
     // Column 3 nodes: Positions and Cash3
     [
       ...orderedPositions.map(pos => ({ name: getPositionId(pos), color: getAssetColor(pos), condition: true })),
-      { name: "Cash3", color: SEGMENT_COLORS.cash, condition: totalCashInput > 0 },
+      { name: "Cash3", color: SEGMENT_COLORS.cash, condition: totalCashFlow > 0 },
     ].forEach(({ name, color, condition }) => {
       if (condition) {
         nodes.push({
@@ -170,12 +173,10 @@ export function SankeyDiagram({
       }
     });
     
-    // ========== Column 4 & 5 nodes ==========
+    // ========== Column 4: Account (merge Value + Cash), uLoss ==========
     [
-      { name: "Value", depth: 4, color: "#1976d2", condition: true },
+      { name: "Account", depth: 4, color: "#1976d2", condition: true },
       { name: "uLoss", depth: 4, color: "#c62828", condition: totalLosses > 0.01 },
-      { name: "Cash4", depth: 4, color: SEGMENT_COLORS.cash, condition: totalCashInput > 0 },
-      { name: "Account", depth: 5, color: "#1976d2", condition: true },
     ].forEach(({ name, depth, color, condition }) => {
       if (condition) {
         nodes.push({
@@ -188,8 +189,8 @@ export function SankeyDiagram({
     
     // ========== Links ==========
     
-    // Principal → Accounts
-    accountData.forEach(acc => {
+    // Principal → Accounts（使用从文件读取的 principal_sgd 转 USD 的分配，不用当前账户市值）
+    (principalAccountData.length > 0 ? principalAccountData : accountData).forEach(acc => {
       links.push({
         source: "Principal",
         target: acc.name,
@@ -197,7 +198,15 @@ export function SankeyDiagram({
         lineStyle: { color: acc.color, opacity: 0.4 },
       });
     });
-    
+    // rPnL → IBKR (realized PnL at layer 0, link to IBKR)
+    if (totalRealizedPnL > 0.01 && accountData.some(a => a.name === "IBKR")) {
+      links.push({
+        source: "rPnL",
+        target: "IBKR",
+        value: totalRealizedPnL,
+        lineStyle: { color: "#2e7d32", opacity: 0.4 },
+      });
+    }
     // IBKR → Asset classes and Cash
     const ibkrAcc = accountData.find(a => a.name === "IBKR");
     if (ibkrAcc) {
@@ -223,12 +232,11 @@ export function SankeyDiagram({
       }
     }
     
-    // Additional account links: Crypto, Cash, Profit
+    // Additional account links: Crypto, Cash (rProfit not connected for now)
     const cryptoAsset = visibleAssets.find(a => a.key === "crypto");
     [
       { source: "Crypto Acct", target: cryptoAsset?.label || "", value: cryptoCost, color: SEGMENT_COLORS.crypto, condition: accountData.some(a => a.name === "Crypto Acct") && cryptoAsset },
       { source: "Cash Acct", target: "Cash", value: cashAccountUsd, color: SEGMENT_COLORS.cash, condition: accountData.some(a => a.name === "Cash Acct") && cashAccountUsd > 0 },
-      { source: "rProfit", target: "Account", value: totalRealizedPnL, color: "#2e7d32", condition: hasProfit },
     ].forEach(({ source, target, value, color, condition }) => {
       if (condition) {
         links.push({
@@ -275,14 +283,14 @@ export function SankeyDiagram({
       });
     }
     
-    // Positions → Value
+    // Positions → Account (merged Value + Cash)
     orderedPositions.forEach(pos => {
       const id = getPositionId(pos);
       const marketValue = pos.price * pos.qty;
       if (marketValue > 0) {
         links.push({
           source: id,
-          target: "Value",
+          target: "Account",
           value: marketValue,
           lineStyle: { color: getAssetColor(pos), opacity: 0.4 },
         });
@@ -304,27 +312,21 @@ export function SankeyDiagram({
       });
     }
     
-    // Value → Account
-    links.push({
-      source: "Value",
-      target: "Account",
-      value: assetMarketValue,
-      lineStyle: { color: "#1976d2", opacity: 0.4 },
-    });
-    
-    // Cash → Cash3 → Cash4 → Account
-    if (totalCashInput > 0) {
-      [
-        { source: "Cash", target: "Cash3" },
-        { source: "Cash3", target: "Cash4" },
-        { source: "Cash4", target: "Account" },
-      ].forEach(({ source, target }) => {
+    // Cash → Cash3 (totalCashInput when > 0); Cash3 → Account (totalCashFlow)
+    if (totalCashFlow > 0) {
+      if (totalCashInput > 0) {
         links.push({
-          source,
-          target,
+          source: "Cash",
+          target: "Cash3",
           value: totalCashInput,
           lineStyle: { color: SEGMENT_COLORS.cash, opacity: 0.4 },
         });
+      }
+      links.push({
+        source: "Cash3",
+        target: "Account",
+        value: totalCashFlow,
+        lineStyle: { color: SEGMENT_COLORS.cash, opacity: 0.4 },
       });
     }
     
@@ -362,13 +364,13 @@ export function SankeyDiagram({
           const { source, target, value } = params.data;
           const sourceTotal = sourceNodeTotals[source || ""] || 0;
           const percentage = sourceTotal > 0 ? ((value || 0) / sourceTotal * 100).toFixed(1) : "0";
-          return `<strong>${source} → ${target}</strong><br/>$${formatMoney(value || 0)} (${percentage}%)`;
+          return `<strong>${source} → ${target}</strong><br/>${fmt(value || 0)} (${percentage}%)`;
         }
         const { name } = params.data;
         const nodeValue = nodeValues[name || ""] || 0;
         // Display "Cash3" and "Cash4" as "Cash" in tooltip
         const displayName = (name === "Cash3" || name === "Cash4") ? "Cash" : name;
-        return `<strong>${displayName}</strong><br/>$${formatMoney(nodeValue)}`;
+        return `<strong>${displayName}</strong><br/>${fmt(nodeValue)}`;
       },
     },
     series: [
@@ -411,7 +413,7 @@ export function SankeyDiagram({
         },
       },
     ],
-  }), [nodes, links, sourceNodeTotals, nodeValues]);
+  }), [nodes, links, sourceNodeTotals, nodeValues, fmt]);
 
   if (nodes.length === 0) {
     return (

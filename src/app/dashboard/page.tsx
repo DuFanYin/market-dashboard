@@ -71,23 +71,19 @@ export default function Page() {
 
   return (
     <main className={styles.page}>
-      <HamburgerNav />
       <div className={styles.container}>
-          <div>
-          {/* Header (match Portfolio page sizing/position) */}
+        <div className={styles.topSection}>
           <header className={styles.header}>
             <div className={styles.headerTop}>
-              <div />
+              <HamburgerNav />
               <h1 className={styles.title} onClick={() => router.push("/portfolio")}>
-              Market Dashboard
-            </h1>
+                Market
+              </h1>
               <div />
-          </div>
-        </header>
-
-        {/* US Stock Market status banner */}
-          <MarketStatusBanner 
-            marketStatus={marketStatus} 
+            </div>
+          </header>
+          <MarketStatusBanner
+            marketStatus={marketStatus}
             nyTimeLabel={nyTimeLabel}
             lastRefreshTime={lastRefreshTime}
             timeAgo={timeAgo}
@@ -96,7 +92,6 @@ export default function Page() {
           />
         </div>
 
-        {/* Main grid */}
         <div className={styles.contentGrid}>
           <MarketsTable rows={marketRows} ahr={ahr} />
           <FearGreedPanel fg={fg} />

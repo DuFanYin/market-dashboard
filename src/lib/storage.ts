@@ -10,6 +10,7 @@ import { BlobNotFoundError } from "@vercel/blob";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import type { PortfolioYaml } from "@/types";
+import { isUsMarketOpen } from "@/lib/market";
 
 // Constants
 export const BLOB_KEY = "account.json";
@@ -484,10 +485,10 @@ export function createHistoryEntry(portfolioData: {
 }
 
 /**
- * Append history entry only if it's a new minute
+ * Append history entry only if it's a new minute and US market is open
  * Convenience function that creates entry and appends in one call
  * @param portfolioData - Current portfolio response data
- * @returns true if new data point was added, false if same minute
+ * @returns true if new data point was added, false if same minute or market closed
  */
 export async function appendHistoryIfNewMinute(portfolioData: {
   net_liquidation: number;
@@ -499,6 +500,9 @@ export async function appendHistoryIfNewMinute(portfolioData: {
   total_etf_mv?: number;
   cash?: number;
 }): Promise<boolean> {
+  if (!isUsMarketOpen()) {
+    return false;
+  }
   const entry = createHistoryEntry(portfolioData);
   return appendHistory(entry);
 }

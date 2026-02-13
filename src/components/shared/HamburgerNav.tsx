@@ -4,47 +4,50 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 const navItems = [
-  { path: "/dashboard", label: "Market Dashboard" },
-  { path: "/portfolio", label: "Portfolio Summary" },
+  { path: "/dashboard", label: "Market" },
+  { path: "/portfolio", label: "Portfolio" },
   { path: "/account", label: "Account" },
+  { path: "/data", label: "Data" },
 ];
+
+const HOVER_LEAVE_DELAY_MS = 120;
 
 export function HamburgerNav() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
+  const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+  const clearLeaveTimeout = () => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
     }
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  };
+
+  const handleMouseEnter = () => {
+    clearLeaveTimeout();
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    leaveTimeoutRef.current = setTimeout(() => setIsOpen(false), HOVER_LEAVE_DELAY_MS);
+  };
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
+      if (event.key === "Escape") setIsOpen(false);
     }
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-    }
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen]);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
+
+  useEffect(() => {
+    return () => clearLeaveTimeout();
+  }, []);
 
   const handleNavigation = (path: string) => {
-    setIsOpen(false);
     router.push(path);
   };
 
@@ -52,10 +55,10 @@ export function HamburgerNav() {
     <>
       <style>{`
         .hn-container {
-          position: fixed;
-          top: 16px;
-          left: 16px;
+          position: relative;
           z-index: 1000;
+          justify-self: start;
+          align-self: center;
         }
         .hn-button {
           display: flex;
@@ -94,7 +97,7 @@ export function HamburgerNav() {
           position: absolute;
           top: 40px;
           left: 0;
-          min-width: 200px;
+          min-width: 150px;
           background-color: #0a0a0a;
           border: 1px solid #333333;
           border-radius: 8px;
@@ -115,7 +118,7 @@ export function HamburgerNav() {
           color: #cccccc;
           background: transparent;
           border: none;
-          text-align: left;
+          text-align: center;
           cursor: pointer;
           transition: background-color 0.2s, color 0.2s;
           position: relative;
@@ -139,10 +142,15 @@ export function HamburgerNav() {
           border-radius: 0 2px 2px 0;
         }
       `}</style>
-      <div className="hn-container" ref={menuRef}>
+      <div
+        className="hn-container"
+        ref={menuRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <button
+          type="button"
           className="hn-button"
-          onClick={() => setIsOpen(!isOpen)}
           aria-label="Navigation menu"
           aria-expanded={isOpen}
         >

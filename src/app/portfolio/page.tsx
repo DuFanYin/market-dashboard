@@ -8,7 +8,6 @@ import { SummaryTable } from "@/components/portfolio/SummaryTable";
 import { PortfolioChart } from "@/components/portfolio/PortfolioChart";
 import { LegendTable } from "@/components/portfolio/LegendTable";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
-import { DataDownloadModal } from "@/components/portfolio/DataDownloadModal";
 import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
 import { HamburgerNav } from "@/components/shared/HamburgerNav";
 import styles from "./page.module.css";
@@ -17,7 +16,6 @@ export default function PortfolioPage() {
   const router = useRouter();
   const [isIncognito, setIsIncognito] = useState(false);
   const [currencyMode, setCurrencyMode] = useState<CurrencyMode>("USD");
-  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
 
   // Use consolidated hooks
   const { marketStatus, nyTimeLabel } = useMarketData();
@@ -74,13 +72,13 @@ export default function PortfolioPage() {
 
   return (
     <main className={styles.page}>
-      <HamburgerNav />
       <div className={styles.container}>
         <div>
           <header className={styles.header}>
             <div className={styles.headerTop}>
+              <HamburgerNav />
               <h1 className={styles.title} onClick={() => router.push("/dashboard")}>
-                Portfolio Summary
+                Portfolio
               </h1>
             </div>
           </header>
@@ -117,10 +115,7 @@ export default function PortfolioPage() {
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
           />
           <div className={styles.chartSection}>
-            <PortfolioChart 
-              assetAllocation={assetAllocation}
-              onClick={() => setIsDownloadModalOpen(true)}
-            />
+            <PortfolioChart assetAllocation={assetAllocation} />
           </div>
           <LegendTable 
             assetAllocation={assetAllocation} 
@@ -148,20 +143,6 @@ export default function PortfolioPage() {
           />
         </div>
       </div>
-      <DataDownloadModal
-        isOpen={isDownloadModalOpen}
-        onClose={() => setIsDownloadModalOpen(false)}
-        data={data}
-        assetBreakdown={assetBreakdown}
-        assetAllocation={assetAllocation}
-        summaryItems={summaryItems}
-        originalAmountUsd={data.original_amount_usd}
-        currentBalanceUsd={data.net_liquidation}
-        onSaveSuccess={() => {
-          // Force refresh portfolio data after JSON save
-          void handleRefresh();
-        }}
-      />
     </main>
   );
 }

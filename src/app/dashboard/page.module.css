@@ -4,10 +4,12 @@
 .page {
   min-height: 100vh;
   height: 100vh;
+  width: 100%;
   padding: 16px;
   color: #ffffff;
   background-color: #000000;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .container {
@@ -22,7 +24,12 @@
   gap: 0;
 }
 
-.container > div:first-child {
+.topSection {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.container > .topSection {
   margin-bottom: 20px;
 }
 
@@ -33,6 +40,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  width: 100%;
 }
 
 @media (min-width: 1024px) {
@@ -52,6 +60,7 @@
   justify-content: center;
   margin-bottom: 0;
   gap: 8px;
+  width: 100%;
 }
 
 .headerTop {
@@ -61,6 +70,7 @@
   width: 100%;
   max-width: 1400px;
   position: relative;
+  padding-top: 50px;
 }
 
 .title {
@@ -72,7 +82,7 @@
   grid-column: 2;
   justify-self: center;
   align-self: center;
-  margin-top: 50px;
+  margin: 0;
 }
 
 .title:hover {

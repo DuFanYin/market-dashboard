@@ -395,20 +395,19 @@ function buildResponse(
     }
   }
 
-  // Principal (original investment amount)
-  // Priority: original_amount_sgd -> principal_SGD, then convert to USD
-  const principalSgd = portfolio.original_amount_sgd ?? portfolio.account_info?.principal_SGD ?? 0;
-  const principalUsd = portfolio.original_amount_usd ?? 
+  // Principal (original investment amount) — from portfolio config only; no overwriting from other sources
+  const principalSgd =
+    portfolio.original_amount_sgd ?? portfolio.account_info?.principal_SGD ?? 0;
+  const principalUsd =
+    portfolio.original_amount_usd ??
     (principalSgd && usdSgdRate ? principalSgd / usdSgdRate : 0);
-  
-  // IBKR-specific principal
+
   const ibkrPrincipalSgd = portfolio.account_info?.IBKR_principal_SGD ?? 0;
   const ibkrPrincipalUsd = ibkrPrincipalSgd && usdSgdRate ? ibkrPrincipalSgd / usdSgdRate : 0;
-  
-  // Keep original fields for backwards compatibility
+
   const originalAmountSgd = portfolio.original_amount_sgd ?? 0;
-  const originalAmountUsd = principalUsd;
-  const yearBeginBalanceSgd = portfolio.account_info?.principal_SGD ?? 0;
+  const originalAmountUsd = portfolio.original_amount_usd ?? (principalSgd && usdSgdRate ? principalSgd / usdSgdRate : 0);
+  const yearBeginBalanceSgd = portfolio.account_info?.principal_SGD ?? principalSgd;
   const accountPnl = netLiquidation - originalAmountUsd;
   const accountPnlPercent = originalAmountUsd !== 0 ? (accountPnl / originalAmountUsd) * 100 : 0;
   const maxValue = portfolio.account_info?.max_value_USD;
@@ -561,10 +560,8 @@ export async function GET() {
     }
 
     // Reload portfolio data before building response to ensure we have latest account_info
-    // This is important because account_info might have been updated in previous requests
-    // (e.g., when updating exchange rates)
     portfolio = await loadPortfolioJson();
-    
+
     const response = buildResponse(portfolio, quotes, cryptoPrices, usdSgdRate, usdCnyRate);
 
     // Update max_value and min_value based on current net_liquidation

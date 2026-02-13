@@ -46,9 +46,11 @@ function calculatePnl(entry: HistoryEntry): HistoryEntryWithPnl | null {
 
 export interface HistoryChartProps {
   resetTrigger?: number; // Increment to trigger reset
+  /** Optional: format USD value for display (e.g. with currency conversion) */
+  formatValue?: (value: number) => string;
 }
 
-export function HistoryChart({ resetTrigger }: HistoryChartProps) {
+export function HistoryChart({ resetTrigger, formatValue }: HistoryChartProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,39 +97,42 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
 
     if (validHistory.length === 0) return null;
 
-    // Build arrays with inserted zero-crossing points
+    // Build arrays with inserted zero-crossing points; use timestamps for real time scale
+    const timestamps: number[] = [];
     const dates: string[] = [];
     const netLiquidation: number[] = [];
     const pnlPositive: (number | null)[] = [];
     const pnlNegative: (number | null)[] = [];
     const expandedHistory: typeof validHistory = [];
-    
+
+    const toTs = (e: HistoryEntry) => e.timestamp ?? new Date(e.datetime).getTime();
+
     for (let i = 0; i < validHistory.length; i++) {
       const curr = validHistory[i];
+      const currTs = toTs(curr);
       const currPnl = curr.account_pnl_percent;
       const prev = i > 0 ? validHistory[i - 1] : null;
       const prevPnl = prev?.account_pnl_percent ?? null;
-      
+      const prevTs = prev ? toTs(prev) : currTs;
+
       // Check for zero crossing
       if (prevPnl !== null && prevPnl * currPnl < 0) {
-        // Insert interpolated zero point
-        // Linear interpolation: find where line crosses 0
         const ratio = Math.abs(prevPnl) / (Math.abs(prevPnl) + Math.abs(currPnl));
         const interpNl = prev!.net_liquidation + ratio * (curr.net_liquidation - prev!.net_liquidation);
-        
-        // Use same datetime as current point with "(0)" suffix for uniqueness
+        const interpTs = prevTs + ratio * (currTs - prevTs);
+        timestamps.push(interpTs);
         dates.push(curr.datetime + "*");
         netLiquidation.push(interpNl);
         pnlPositive.push(0);
         pnlNegative.push(0);
         expandedHistory.push({ ...curr, account_pnl: 0, account_pnl_percent: 0, net_liquidation: interpNl });
       }
-      
-      // Add current point
+
+      timestamps.push(currTs);
       dates.push(curr.datetime);
       netLiquidation.push(curr.net_liquidation);
       expandedHistory.push(curr);
-      
+
       if (currPnl >= 0) {
         pnlPositive.push(currPnl);
         pnlNegative.push(null);
@@ -140,15 +145,16 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
     // For tooltip, use expanded history
     const tooltipHistory = expandedHistory;
 
-    // Find principal changes (deposits) - principal is in SGD
-    const principalChanges: Array<{ xAxis: string; amount: number }> = [];
+    // Find principal changes (deposits) - principal is in SGD; store timestamp for time axis
+    const principalChanges: Array< { xAxis: number; datetime: string; amount: number }> = [];
     for (let i = 1; i < validHistory.length; i++) {
       const prevPrincipal = validHistory[i - 1].principal_sgd ?? 0;
       const currPrincipal = validHistory[i].principal_sgd ?? 0;
       if (currPrincipal > prevPrincipal) {
         const deposit = currPrincipal - prevPrincipal;
         principalChanges.push({
-          xAxis: validHistory[i].datetime,
+          xAxis: toTs(validHistory[i]),
+          datetime: validHistory[i].datetime,
           amount: deposit,
         });
       }
@@ -171,20 +177,20 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
         backgroundColor: "rgba(0, 0, 0, 0.85)",
         borderColor: "transparent",
         textStyle: { color: "#fff", fontSize: 12 },
-        formatter: (params: Array<{ seriesName: string; value: number; axisValue: string; dataIndex: number }>) => {
+        formatter: (params: Array<{ seriesName: string; value: number; axisValue: number; dataIndex: number }>) => {
           if (!params || params.length === 0) return "";
-          const date = params[0].axisValue;
+          const axisVal = params[0].axisValue as number;
           const dataIndex = params[0].dataIndex;
           const entry = tooltipHistory[dataIndex];
+          const dateStr = entry?.datetime ?? new Date(axisVal).toISOString().slice(0, 16).replace("T", " ");
+          const deposit = principalChanges.find((c) => c.xAxis === axisVal);
           
-          // Check if there's a deposit at this point
-          const deposit = principalChanges.find((c) => c.xAxis === date);
-          
-          let html = `<strong>${date}</strong><br/>`;
+          const fmt = (v: number) => (formatValue ? formatValue(v) : `$${formatMoney(v)}`);
+          let html = `<strong>${dateStr}</strong><br/>`;
           // Show Net Liquidation
           const nlParam = params.find((p) => p.seriesName === "Net Liquidation");
           if (nlParam) {
-            html += `<span style="color:#1976d2">Net Liquidation: $${formatMoney(nlParam.value)}</span><br/>`;
+            html += `<span style="color:#1976d2">Net Liquidation: ${fmt(nlParam.value)}</span><br/>`;
           }
           
           // Show P&L (from either positive or negative series)
@@ -194,7 +200,7 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
             const pnlDollar = entry?.account_pnl ?? 0;
             const pnlColor = pnlPercent >= 0 ? "#2e7d32" : "#c62828";
             const pnlSign = pnlDollar >= 0 ? "+" : "";
-            html += `<span style="color:${pnlColor}">P&L: ${pnlSign}$${formatMoney(Math.abs(pnlDollar))} (${pnlPercent >= 0 ? "+" : ""}${pnlPercent.toFixed(2)}%)</span><br/>`;
+            html += `<span style="color:${pnlColor}">P&L: ${pnlSign}${fmt(Math.abs(pnlDollar))} (${pnlPercent >= 0 ? "+" : ""}${pnlPercent.toFixed(2)}%)</span><br/>`;
           }
           
           // Add deposit info if present (principal is in SGD)
@@ -219,24 +225,18 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
       },
       xAxis: [
         {
-          type: "category",
-          data: dates,
+          type: "time",
+          min: timestamps[0],
+          max: timestamps[timestamps.length - 1],
           axisLine: { show: false },
           axisLabel: {
             color: "#666",
             fontSize: 10,
             rotate: 45,
-            formatter: (value: string) => {
-              // Hide interpolated zero points (marked with *)
-              if (value.endsWith("*")) {
-                return "";
-              }
-              // Show only date part (MM-DD), no time
-              if (value.includes(" ")) {
-                const [date] = value.split(" ");
-                return date.slice(5); // MM-DD
-              }
-              return value.slice(5); // MM-DD
+            formatter: (value: number) => {
+              // Format in Eastern (exchange time) so axis date matches tooltip/datetime
+              const s = new Date(value).toLocaleString("en-CA", { timeZone: "America/New_York", month: "2-digit", day: "2-digit" });
+              return s.replace(/\//g, "-"); // MM-DD
             },
           },
           splitLine: { show: false },
@@ -268,7 +268,7 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
         {
           name: "Net Liquidation",
           type: "line",
-          data: netLiquidation,
+          data: timestamps.map((t, i) => [t, netLiquidation[i]]),
           yAxisIndex: 0,
           smooth: false,
           symbol: "none",
@@ -295,7 +295,7 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
         {
           name: "P&L % (positive)",
           type: "line",
-          data: pnlPositive,
+          data: timestamps.map((t, i) => [t, pnlPositive[i] ?? null]),
           yAxisIndex: 1,
           smooth: false,
           symbol: "none",
@@ -313,17 +313,16 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
             label: {
               show: false,
             },
-            // Use coordinates to limit line to data range
             data: [[
-              { xAxis: dates[0], yAxis: 0 },
-              { xAxis: dates[dates.length - 1], yAxis: 0 },
+              { xAxis: timestamps[0], yAxis: 0 },
+              { xAxis: timestamps[timestamps.length - 1], yAxis: 0 },
             ]],
           },
         },
         {
           name: "P&L % (negative)",
           type: "line",
-          data: pnlNegative,
+          data: timestamps.map((t, i) => [t, pnlNegative[i] ?? null]),
           yAxisIndex: 1,
           smooth: false,
           symbol: "none",
@@ -333,7 +332,7 @@ export function HistoryChart({ resetTrigger }: HistoryChartProps) {
         },
       ],
     };
-  }, [history]);
+  }, [history, formatValue]);
 
   if (isLoading) {
     return (
