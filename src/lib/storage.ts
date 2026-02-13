@@ -1,26 +1,34 @@
 /**
  * Storage Utilities
  * 
- * Shared file/blob operations for API routes
- * Supports both local file storage and Vercel Blob storage
+ * Uses PostgreSQL exclusively for both account data (JSONB) and history data.
+ * No local file or Vercel Blob storage dependencies.
  */
 
-import { put, head } from "@vercel/blob";
-import { BlobNotFoundError } from "@vercel/blob";
-import path from "node:path";
-import { promises as fs } from "node:fs";
 import type { PortfolioYaml, PortfolioData } from "@/types";
 import { computeUpdatedAccountInfoWithMdd } from "@/lib/accountStats";
 import { isUsMarketOpen } from "@/lib/market";
 
-// Constants
-export const BLOB_KEY = "account.json";
-export const HISTORY_BLOB_KEY = "history.jsonl";
-export const LOCAL_FILE_PATH = path.join(process.cwd(), "data", "account.json");
-export const LOCAL_HISTORY_PATH = path.join(process.cwd(), "data", "history.jsonl");
+// PostgreSQL client - use dynamic import to avoid issues if not installed
+let pg: typeof import("pg") | null = null;
+async function getPgClient() {
+  if (!pg) {
+    try {
+      pg = await import("pg");
+    } catch {
+      throw new Error("PostgreSQL client (pg) is not installed. Run: npm install pg @types/pg");
+    }
+  }
+  return pg;
+}
 
-// Check if LOCAL env variable is set to true/1
-export const useLocal = process.env.LOCAL === "true" || process.env.LOCAL === "1";
+// Neon PostgreSQL connection configuration
+export const DATABASE_URL = process.env.DATABASE_URL || "";
+export const HISTORY_TABLE_NAME = "history";
+export const ACCOUNT_TABLE_NAME = "account";
+
+// Check if we should use Neon database for history (use connection string)
+export const useNeonHistory = !!DATABASE_URL && DATABASE_URL.includes("postgresql://");
 
 // ========== History Data Types ==========
 
@@ -75,43 +83,48 @@ export type AccountData = PortfolioYaml & {
 };
 
 /**
- * Read raw JSON content from storage (local file or Blob)
+ * Read account data from PostgreSQL database as JSONB
+ * @returns Raw JSON string or null if not found
+ */
+async function readAccountFromDatabase(): Promise<string | null> {
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  const pgModule = await getPgClient();
+  const client = new pgModule.Client({ connectionString: DATABASE_URL });
+
+  try {
+    await client.connect();
+    const result = await client.query(
+      `SELECT data FROM ${ACCOUNT_TABLE_NAME} ORDER BY id DESC LIMIT 1`
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    // Convert JSONB to JSON string
+    const jsonbData = result.rows[0].data;
+    return JSON.stringify(jsonbData, null, 2);
+  } catch (error) {
+    console.error("[storage] Failed to read account from database:", error);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Read raw JSON content from storage (PostgreSQL JSONB only)
  * @returns Raw JSON string or null if not found
  */
 export async function readJsonRaw(): Promise<string | null> {
-  if (useLocal) {
-    try {
-      const raw = await fs.readFile(LOCAL_FILE_PATH, "utf8");
-      return raw;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        return null;
-      }
-      console.error("[storage] Local file read error:", error);
-      throw error;
-    }
-  } else {
-    try {
-      const blobInfo = await head(BLOB_KEY);
-      if (blobInfo) {
-        // Add timestamp query parameter to bypass CDN cache
-        const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
-        const response = await fetch(urlWithCacheBuster, {
-          cache: "no-store",
-        });
-        if (response.ok) {
-          return await response.text();
-        }
-      }
-      return null;
-    } catch (error) {
-      if (error instanceof BlobNotFoundError) {
-        return null;
-      }
-      console.error("[storage] Blob read error:", error);
-      throw error;
-    }
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured for account storage");
   }
+
+  return await readAccountFromDatabase();
 }
 
 /**
@@ -140,66 +153,53 @@ export async function loadPortfolioJson(): Promise<AccountData> {
 }
 
 /**
- * Save raw JSON content to storage (local file or Blob)
+ * Save account data to PostgreSQL database as JSONB
+ * Resets the table by deleting all existing records before inserting new one
+ * @param content - JSON string to save
+ */
+async function saveAccountToDatabase(content: string): Promise<void> {
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  const pgModule = await getPgClient();
+  const client = new pgModule.Client({ connectionString: DATABASE_URL });
+
+  try {
+    await client.connect();
+    
+    // Parse JSON to validate
+    const accountData = JSON.parse(content);
+    
+    // Reset: Delete all existing records first
+    await client.query(`DELETE FROM ${ACCOUNT_TABLE_NAME}`);
+    console.log("[storage] Deleted all existing account records");
+    
+    // Insert new record
+    await client.query(
+      `INSERT INTO ${ACCOUNT_TABLE_NAME} (data) VALUES ($1)`,
+      [accountData]
+    );
+    console.log("[storage] Inserted new account data into database");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[storage] Failed to save account to database:", errorMessage);
+    throw new Error(`Failed to save account to database: ${errorMessage}`);
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Save raw JSON content to storage (PostgreSQL JSONB only)
  * @param content - JSON string to save
  */
 export async function saveJsonRaw(content: string): Promise<void> {
-  if (useLocal) {
-    await fs.mkdir(path.dirname(LOCAL_FILE_PATH), { recursive: true });
-    await fs.writeFile(LOCAL_FILE_PATH, content, "utf8");
-  } else {
-    // Save to Blob
-    const blobResult = await put(BLOB_KEY, content, {
-      contentType: "application/json",
-      access: "public",
-      addRandomSuffix: false,
-    });
-    
-    if (!blobResult || !blobResult.url) {
-      throw new Error("Blob save operation did not return a valid URL");
-    }
-    
-    // Wait for blob to be committed
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    
-    // Verify by reading back immediately
-    const verifyUrl = `${blobResult.url}?t=${Date.now()}`;
-    const verifyResponse = await fetch(verifyUrl, {
-      cache: "no-store",
-      headers: {
-        "Cache-Control": "no-cache",
-      },
-    });
-    
-    if (!verifyResponse.ok) {
-      throw new Error(`Failed to verify blob save: ${verifyResponse.status} ${verifyResponse.statusText}`);
-    }
-    
-    // Verify content structure
-    const savedContent = await verifyResponse.text();
-    try {
-      const savedParsed = JSON.parse(savedContent);
-      const expectedParsed = JSON.parse(content);
-      
-      // Verify key fields match (excluding timestamp)
-      const savedKeys = Object.keys(savedParsed).filter(k => k !== "timestamp").sort();
-      const expectedKeys = Object.keys(expectedParsed).filter(k => k !== "timestamp").sort();
-      if (JSON.stringify(savedKeys) !== JSON.stringify(expectedKeys)) {
-        throw new Error("Saved blob structure does not match expected structure");
-      }
-      
-      // Verify IBKR_account structure matches
-      if (savedParsed.IBKR_account && expectedParsed.IBKR_account) {
-        const savedIbkrKeys = Object.keys(savedParsed.IBKR_account).sort();
-        const expectedIbkrKeys = Object.keys(expectedParsed.IBKR_account).sort();
-        if (JSON.stringify(savedIbkrKeys) !== JSON.stringify(expectedIbkrKeys)) {
-          throw new Error("Saved IBKR_account structure does not match");
-        }
-      }
-    } catch (parseError) {
-      throw new Error(`Failed to verify saved content: ${parseError instanceof Error ? parseError.message : "Unknown error"}`);
-    }
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured for account storage");
   }
+
+  await saveAccountToDatabase(content);
 }
 
 /**
@@ -259,199 +259,254 @@ export async function saveJsonWithValidation(jsonString: string): Promise<{ ok: 
 // ========== History Data Functions ==========
 
 /**
- * Read history JSONL from storage
+ * Read history from Neon PostgreSQL database using direct connection
+ * @returns Array of history entries
+ */
+async function readHistoryFromNeon(): Promise<HistoryEntry[]> {
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  const pgModule = await getPgClient();
+  const client = new pgModule.Client({ connectionString: DATABASE_URL });
+
+  try {
+    await client.connect();
+    console.log("[storage] Connected to PostgreSQL database");
+
+    const result = await client.query(
+      `SELECT datetime, timestamp, net_liquidation, principal_sgd, usd_sgd_rate, 
+              total_stock_mv, total_option_mv, total_crypto_mv, total_etf_mv, cash 
+       FROM ${HISTORY_TABLE_NAME} 
+       ORDER BY timestamp ASC`
+    );
+
+    const entries: HistoryEntry[] = result.rows.map((row) => ({
+      datetime: row.datetime,
+      timestamp: Number(row.timestamp),
+      net_liquidation: Number(row.net_liquidation),
+      principal_sgd: Number(row.principal_sgd),
+      usd_sgd_rate: Number(row.usd_sgd_rate),
+      total_stock_mv: row.total_stock_mv ? Number(row.total_stock_mv) : undefined,
+      total_option_mv: row.total_option_mv ? Number(row.total_option_mv) : undefined,
+      total_crypto_mv: row.total_crypto_mv ? Number(row.total_crypto_mv) : undefined,
+      total_etf_mv: row.total_etf_mv ? Number(row.total_etf_mv) : undefined,
+      cash: row.cash ? Number(row.cash) : undefined,
+    }));
+
+    return entries;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[storage] PostgreSQL read error:", errorMessage);
+    throw new Error(`Failed to read history from database: ${errorMessage}`);
+  } finally {
+    await client.end();
+  }
+}
+
+
+/**
+ * Read history from Neon database (always use database, no file fallback)
  * @returns Array of history entries
  */
 export async function readHistory(): Promise<HistoryEntry[]> {
-  let raw: string | null = null;
+  console.log(`[storage] readHistory called: useNeonHistory=${useNeonHistory}, DATABASE_URL=${DATABASE_URL ? "set" : "not set"}`);
   
-  if (useLocal) {
-    try {
-      raw = await fs.readFile(LOCAL_HISTORY_PATH, "utf8");
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        return [];
-      }
-      console.error("[storage] Local history read error:", error);
-      throw error;
-    }
-  } else {
-    try {
-      const blobInfo = await head(HISTORY_BLOB_KEY);
-      if (blobInfo) {
-        const urlWithCacheBuster = `${blobInfo.url}?t=${Date.now()}`;
-        const response = await fetch(urlWithCacheBuster, {
-          cache: "no-store",
-        });
-        if (response.ok) {
-          raw = await response.text();
-        }
-      }
-    } catch (error) {
-      if (error instanceof BlobNotFoundError) {
-        return [];
-      }
-      console.error("[storage] Blob history read error:", error);
-      throw error;
-    }
+  if (!useNeonHistory) {
+    const errorMsg = `Database history is not configured. DATABASE_URL=${DATABASE_URL || "not set"}. Set DATABASE_URL in environment variables.`;
+    console.error(`[storage] ${errorMsg}`);
+    throw new Error(errorMsg);
   }
   
-  if (!raw || raw.trim() === "") {
-    return [];
-  }
-  
-  // Parse JSONL (one JSON object per line)
-  const entries: HistoryEntry[] = [];
-  const lines = raw.trim().split("\n");
-  for (const line of lines) {
-    if (line.trim()) {
-      try {
-        entries.push(JSON.parse(line) as HistoryEntry);
-      } catch (e) {
-        console.error("[storage] Failed to parse history line:", line, e);
-      }
-    }
-  }
-  
-  return entries;
+  return await readHistoryFromNeon();
 }
 
+
 /**
- * Sync local history to cloud if cloud is empty but local exists
- * Called automatically when appending in cloud mode
- * @returns true if synced, false if not needed
+ * Insert history entries into Neon PostgreSQL database using direct connection
+ * @param entries - Array of history entries to insert
  */
-async function syncLocalToCloudIfNeeded(): Promise<boolean> {
-  // Only sync when not in local mode
-  if (useLocal) return false;
-  
-  try {
-    // Check if cloud has data
-    const blobInfo = await head(HISTORY_BLOB_KEY);
-    if (blobInfo) {
-      const response = await fetch(`${blobInfo.url}?t=${Date.now()}`, { cache: "no-store" });
-      if (response.ok) {
-        const content = await response.text();
-        if (content.trim()) {
-          // Cloud already has data, no sync needed
-          return false;
-        }
-      }
-    }
-  } catch (error) {
-    if (!(error instanceof BlobNotFoundError)) {
-      throw error;
-    }
-    // Cloud doesn't exist, continue to check local
+async function insertHistoryToNeon(entries: HistoryEntry[]): Promise<void> {
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
   }
-  
-  // Cloud is empty, check if local exists
+
+  if (entries.length === 0) {
+    return;
+  }
+
+  const pgModule = await getPgClient();
+  const client = new pgModule.Client({ connectionString: DATABASE_URL });
+
   try {
-    const localRaw = await fs.readFile(LOCAL_HISTORY_PATH, "utf8");
-    if (localRaw.trim()) {
-      // Local has data, upload to cloud
-      console.log("[storage] Syncing local history to cloud...");
-      await put(HISTORY_BLOB_KEY, localRaw, {
-        contentType: "application/x-ndjson",
-        access: "public",
-        addRandomSuffix: false,
+    await client.connect();
+    console.log(`[storage] Inserting ${entries.length} entries into database`);
+
+    // Insert in batches to avoid issues with large payloads
+    const batchSize = 100;
+    for (let i = 0; i < entries.length; i += batchSize) {
+      const batch = entries.slice(i, i + batchSize);
+      
+      // Build INSERT query with ON CONFLICT DO NOTHING (upsert)
+      // Use proper parameterized query construction
+      const values: unknown[] = [];
+      const placeholders: string[] = [];
+      
+      batch.forEach((entry) => {
+        const startIdx = values.length + 1; // PostgreSQL uses 1-based indexing
+        placeholders.push(
+          `($${startIdx}, $${startIdx + 1}, $${startIdx + 2}, $${startIdx + 3}, $${startIdx + 4}, $${startIdx + 5}, $${startIdx + 6}, $${startIdx + 7}, $${startIdx + 8}, $${startIdx + 9})`
+        );
+        values.push(
+          entry.datetime,
+          entry.timestamp,
+          entry.net_liquidation,
+          entry.principal_sgd,
+          entry.usd_sgd_rate,
+          entry.total_stock_mv ?? null,
+          entry.total_option_mv ?? null,
+          entry.total_crypto_mv ?? null,
+          entry.total_etf_mv ?? null,
+          entry.cash ?? null
+        );
       });
-      console.log("[storage] Local history synced to cloud");
-      return true;
+
+      const query = `
+        INSERT INTO ${HISTORY_TABLE_NAME} 
+        (datetime, timestamp, net_liquidation, principal_sgd, usd_sgd_rate, 
+         total_stock_mv, total_option_mv, total_crypto_mv, total_etf_mv, cash)
+        VALUES ${placeholders.join(", ")}
+        ON CONFLICT (datetime) DO NOTHING
+      `;
+
+      const result = await client.query(query, values);
+      const insertedCount = result.rowCount || 0;
+      console.log(`[storage] Batch ${Math.floor(i / batchSize) + 1}: attempted ${batch.length}, inserted ${insertedCount} entries`);
     }
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[storage] PostgreSQL insert error:", errorMessage);
+    
+    // Check if it's a unique constraint violation (duplicate)
+    if (errorMessage.includes("duplicate") || errorMessage.includes("unique")) {
+      throw new Error("409_CONFLICT");
     }
-    // Local doesn't exist either
+    
+    throw new Error(`Failed to insert history to database: ${errorMessage}`);
+  } finally {
+    await client.end();
   }
-  
-  return false;
 }
 
 /**
- * Append a single entry to history (only if new minute)
- * @param entry - History entry to append
- * @returns true if appended, false if same minute already exists
+ * Insert a single history entry and return whether it was actually inserted
+ * @param entry - History entry to insert
+ * @returns number of rows inserted (0 if duplicate, 1 if new)
  */
+async function insertSingleHistoryEntry(entry: HistoryEntry): Promise<number> {
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  const pgModule = await getPgClient();
+  const client = new pgModule.Client({ connectionString: DATABASE_URL });
+
+  try {
+    await client.connect();
+    
+    const query = `
+      INSERT INTO ${HISTORY_TABLE_NAME} 
+      (datetime, timestamp, net_liquidation, principal_sgd, usd_sgd_rate, 
+       total_stock_mv, total_option_mv, total_crypto_mv, total_etf_mv, cash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ON CONFLICT (datetime) DO NOTHING
+    `;
+    
+    const result = await client.query(query, [
+      entry.datetime,
+      entry.timestamp,
+      entry.net_liquidation,
+      entry.principal_sgd,
+      entry.usd_sgd_rate,
+      entry.total_stock_mv ?? null,
+      entry.total_option_mv ?? null,
+      entry.total_crypto_mv ?? null,
+      entry.total_etf_mv ?? null,
+      entry.cash ?? null,
+    ]);
+    
+    return result.rowCount || 0;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[storage] PostgreSQL insert error:", errorMessage);
+    throw new Error(`Failed to insert history entry: ${errorMessage}`);
+  } finally {
+    await client.end();
+  }
+}
+
 export async function appendHistory(entry: HistoryEntry): Promise<boolean> {
-  // Sync local to cloud if needed (when cloud is empty but local exists)
-  if (!useLocal) {
-    await syncLocalToCloudIfNeeded();
+  if (!useNeonHistory) {
+    throw new Error("Database history is not configured. Set DATABASE_URL in environment variables.");
   }
   
-  if (useLocal) {
-    // For local, read last line to check if same minute
-    try {
-      const raw = await fs.readFile(LOCAL_HISTORY_PATH, "utf8");
-      const lines = raw.trim().split("\n").filter(l => l.trim());
-      if (lines.length > 0) {
-        const lastEntry = JSON.parse(lines[lines.length - 1]) as HistoryEntry;
-        if (lastEntry.datetime === entry.datetime) {
-          // Same minute, skip
-          return false;
-        }
-      }
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
-      // File doesn't exist, will create
+  console.log(`[storage] appendHistory called: datetime=${entry.datetime}`);
+  
+  // Insert entry - ON CONFLICT DO NOTHING handles duplicates
+  try {
+    const rowsInserted = await insertSingleHistoryEntry(entry);
+    if (rowsInserted > 0) {
+      console.log(`[storage] Successfully inserted entry with datetime ${entry.datetime} to database`);
+      return true;
+    } else {
+      console.log(`[storage] Entry with datetime ${entry.datetime} already exists (duplicate), skipping`);
+      return false;
     }
-    
-    const line = JSON.stringify(entry) + "\n";
-    await fs.mkdir(path.dirname(LOCAL_HISTORY_PATH), { recursive: true });
-    await fs.appendFile(LOCAL_HISTORY_PATH, line, "utf8");
-    return true;
-  } else {
-    // For Blob, read existing and check last entry
-    const existing = await readHistory();
-    
-    if (existing.length > 0) {
-      const lastEntry = existing[existing.length - 1];
-      if (lastEntry.datetime === entry.datetime) {
-        // Same minute, skip
-        return false;
-      }
-    }
-    
-    // Append new entry
-    existing.push(entry);
-    const newContent = existing.map(e => JSON.stringify(e)).join("\n") + "\n";
-    
-    const blobResult = await put(HISTORY_BLOB_KEY, newContent, {
-      contentType: "application/x-ndjson",
-      access: "public",
-      addRandomSuffix: false,
-    });
-    
-    if (!blobResult || !blobResult.url) {
-      throw new Error("History blob save operation did not return a valid URL");
-    }
-    return true;
+  } catch (error) {
+    console.error("[storage] Failed to append to database:", error);
+    throw error;
   }
 }
 
 /**
- * Save entire history (replaces existing)
+ * Save entire history (replaces existing) - always uses database
  * @param entries - Array of history entries
  */
 export async function saveHistory(entries: HistoryEntry[]): Promise<void> {
-  const content = entries.map(e => JSON.stringify(e)).join("\n") + (entries.length > 0 ? "\n" : "");
-  
-  if (useLocal) {
-    await fs.mkdir(path.dirname(LOCAL_HISTORY_PATH), { recursive: true });
-    await fs.writeFile(LOCAL_HISTORY_PATH, content, "utf8");
-  } else {
-    const blobResult = await put(HISTORY_BLOB_KEY, content, {
-      contentType: "application/x-ndjson",
-      access: "public",
-      addRandomSuffix: false,
-    });
-    
-    if (!blobResult || !blobResult.url) {
-      throw new Error("History blob save operation did not return a valid URL");
+  if (!useNeonHistory) {
+    throw new Error("Database history is not configured. Set DATABASE_URL in environment variables.");
+  }
+
+  if (!DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+
+  const pgModule = await getPgClient();
+  const client = new pgModule.Client({ connectionString: DATABASE_URL });
+
+  try {
+    await client.connect();
+    console.log("[storage] Connected to PostgreSQL for saveHistory");
+
+    // Delete all existing entries
+    try {
+      await client.query(`DELETE FROM ${HISTORY_TABLE_NAME}`);
+      console.log("[storage] Deleted all existing history entries");
+    } catch (error) {
+      // Ignore delete errors (table might be empty or not exist)
+      console.warn("[storage] Could not delete existing entries (may be empty):", error);
     }
+
+    // Insert all entries
+    if (entries.length > 0) {
+      await insertHistoryToNeon(entries);
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[storage] PostgreSQL saveHistory error:", errorMessage);
+    throw new Error(`Failed to save history: ${errorMessage}`);
+  } finally {
+    await client.end();
   }
 }
 

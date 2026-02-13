@@ -258,7 +258,10 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
       setError(null);
       
       try {
-        const response = await fetch(`/api/portfolio?t=${Date.now()}`, {
+        // When refreshing explicitly, ask backend to persist a history point if eligible
+        const baseUrl = isRefresh ? "/api/portfolio?persist=1" : "/api/portfolio";
+        const url = `${baseUrl}&t=${Date.now()}`;
+        const response = await fetch(url, {
           cache: "no-store",
           headers: {
             "Cache-Control": "no-cache, no-store, must-revalidate",

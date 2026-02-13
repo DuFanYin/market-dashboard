@@ -1,25 +1,24 @@
 import React from "react";
-import type { SummaryItem } from "@/types";
 import { formatPercent } from "@/lib/format";
 import { formatCurrency, formatCurrencyNoPrefix, formatCurrencyFromSgdBase, type CurrencyMode } from "@/lib/format";
 import {
   calculateAccountPnL,
-  calculateAccountPnLPercent,
   calculateAnnualizedReturn,
   calculateTotalUnrealizedPnL,
+  calculateAssetBreakdownPnL,
   type AssetBreakdown,
 } from "@/lib/accountStats";
 import styles from "@/app/portfolio/page.module.css";
 
 interface SummaryTableProps {
-  items: SummaryItem[];
-  originalAmountUsd?: number;
   currentBalanceUsd?: number;
   yearBeginBalanceSgd?: number;
   assetBreakdown?: AssetBreakdown;
   maxValue?: number;
   minValue?: number;
   maxDrawdownPercent?: number;
+  totalTheta?: number;
+  utilization?: number;
   usdSgdRate?: number;
   usdCnyRate?: number;
   currencyMode?: CurrencyMode;
@@ -27,7 +26,7 @@ interface SummaryTableProps {
   onToggleIncognito?: () => void;
 }
 
-export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, maxValue, minValue, maxDrawdownPercent, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
+export function SummaryTable({ currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, maxValue, minValue, maxDrawdownPercent, totalTheta, utilization, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
   // 计算从当年年初到现在的自然日差（包含周末、假期），用于年化收益计算
   const today = new Date();
   const yearBeginDate = new Date(today.getFullYear(), 0, 1); // 当年 1 月 1 日
@@ -44,9 +43,6 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
   // Calculate values for row 4-6 col 2 (relative to yearBeginBalanceSgd, converted to USD for comparison)
   const yearBeginPnL = (yearBeginBalanceUsd !== undefined && currentBalanceUsd !== undefined)
     ? calculateAccountPnL(currentBalanceUsd, yearBeginBalanceUsd)
-    : undefined;
-  const yearBeginPnLPercent = (yearBeginBalanceUsd !== undefined && yearBeginBalanceUsd > 0 && yearBeginPnL !== undefined)
-    ? calculateAccountPnLPercent(yearBeginPnL, yearBeginBalanceUsd)
     : undefined;
   // 年化收益 2：currentBalanceUsd 相对 yearBeginBalanceUsd（从 SGD 转换），从当年年初起算
   const yearBeginAnnualizedReturn = (yearBeginBalanceUsd !== undefined && currentBalanceUsd !== undefined && yearBeginDaysDiff > 0 && yearBeginBalanceUsd > 0)
@@ -65,9 +61,32 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
   const maxDrawdown = maxDrawdownPercent;
   
   // Calculate current drawdown from peak (max_value) to current balance
-  const currentDrawdown = (maxValue !== undefined && currentBalanceUsd !== undefined && maxValue > 0)
+  const currentDrawdownPercent = (maxValue !== undefined && currentBalanceUsd !== undefined && maxValue > 0)
     ? ((currentBalanceUsd - maxValue) / maxValue) * 100
     : undefined;
+  const currentDrawdownAmount = (maxValue !== undefined && currentBalanceUsd !== undefined && maxValue > 0)
+    ? currentBalanceUsd - maxValue
+    : undefined;
+  
+  // Calculate MDD amount from maxDrawdownPercent and maxValue
+  const maxDrawdownAmount = (maxValue !== undefined && maxDrawdownPercent !== undefined && maxValue > 0)
+    ? maxValue * (maxDrawdownPercent / 100)
+    : undefined;
+  
+  // Calculate unrealised PnL positive and negative parts separately from asset breakdown
+  const { gains, losses } = assetBreakdown 
+    ? calculateAssetBreakdownPnL(assetBreakdown)
+    : { gains: 0, losses: 0 };
+  const uProfit = gains > 0 ? gains : undefined;
+  const uLoss = losses > 0 ? -losses : undefined; // Keep as negative value for display
+  
+  // Calculate unrealised PnL percentage
+  const uPnlPercent = (yearBeginBalanceUsd !== undefined && yearBeginBalanceUsd > 0 && unrealisedPnL !== undefined)
+    ? (unrealisedPnL / yearBeginBalanceUsd) * 100
+    : undefined;
+  
+  // Calculate account age (days since year begin)
+  const accountAge = yearBeginDaysDiff;
   
   // Currency formatting helpers using shared utility functions
   const rates = {
@@ -92,184 +111,149 @@ export function SummaryTable({ items, originalAmountUsd, currentBalanceUsd, year
     >
       <table className={styles.summaryTable}>
         <tbody>
-          {originalAmountUsd !== undefined && currentBalanceUsd !== undefined && applyMask && (
-            <>
-              <tr className={styles.summaryRow}>
-                <td className={styles.summaryLabel}>Balance</td>
-                <td className={styles.summaryValue}>
-                  {yearBeginBalanceSgd !== undefined && yearBeginBalanceSgd > 0
-                    ? applyMask(formatCurrencyValueFromSgdBase(yearBeginBalanceSgd))
-                    : ""}
-                </td>
-                <td className={styles.summaryValue}>
-                  {currentBalanceUsd !== undefined
-                    ? applyMask(formatCurrencyValue(currentBalanceUsd))
-                    : ""}
-                </td>
-              </tr>
-              <tr className={styles.summaryRow}>
-                <td className={styles.summaryLabel}>r/u PnL</td>
-                <td className={`${styles.summaryValue} ${realisedPnL !== undefined 
-                  ? (realisedPnL >= 0 ? styles.positive : styles.negative)
-                  : ""}`}>
-                  {realisedPnL !== undefined && applyMask
-                    ? applyMask(formatCurrencyValueNoPrefix(realisedPnL))
-                    : ""}
-                </td>
-                <td className={`${styles.summaryValue} ${unrealisedPnL !== undefined 
-                  ? (unrealisedPnL >= 0 ? styles.positive : styles.negative)
-                  : ""}`}>
-                  {unrealisedPnL !== undefined && applyMask
-                    ? applyMask(formatCurrencyValueNoPrefix(unrealisedPnL))
-                    : ""}
-                </td>
-              </tr>
-              <tr className={styles.summaryRow}>
-                <td className={styles.summaryLabel}>Account PnL</td>
-                <td className={styles.summaryValue}></td>
-                <td className={`${styles.summaryValue} ${yearBeginPnL !== undefined 
-                  ? (yearBeginPnL >= 0 ? styles.positive : styles.negative)
-                  : ""}`}>
-                  {yearBeginPnL !== undefined && applyMask
-                    ? applyMask(formatCurrencyValueNoPrefix(yearBeginPnL))
-                    : ""}
-                </td>
-              </tr>
-            </>
-          )}
-          {items.length > 0 && (() => {
-            const firstItem = items[0];
-            const className =
-              firstItem.isUpnl && typeof firstItem.numericValue === "number"
-                ? `${styles.summaryValue} ${firstItem.numericValue >= 0 ? styles.positive : styles.negative}`
-                : styles.summaryValue;
-            
-            // Special handling for Utilization - put value in third column
-            if (firstItem.label === "Utilization") {
-              return (
-                <tr key={firstItem.label} className={styles.summaryRow}>
-                  <td className={styles.summaryLabel}>{firstItem.label}</td>
-                  <td className={styles.summaryValue}></td>
-                  <td className={styles.summaryValue}>{firstItem.display}</td>
-                </tr>
-              );
-            }
-            
-            return (
-              <React.Fragment key={firstItem.label}>
-                <tr className={styles.summaryRow}>
-                  <td className={styles.summaryLabel}>{firstItem.label === "Account PnL" ? "Account PnL %" : firstItem.label}</td>
-                  <td className={firstItem.label === "Account PnL" 
-                    ? (yearBeginPnLPercent !== undefined
-                      ? `${styles.summaryPercent} ${styles.summaryPercentNarrow} ${yearBeginPnLPercent >= 0 ? styles.positive : styles.negative}`
-                      : `${styles.summaryPercent} ${styles.summaryPercentNarrow}`)
-                    : className}>
-                    {firstItem.label === "Account PnL" 
-                      ? (yearBeginPnLPercent !== undefined
-                        ? formatPercent(yearBeginPnLPercent)
-                        : "")
-                      : firstItem.display}
-                  </td>
-                  <td className={firstItem.label === "Account PnL" && yearBeginAnnualizedReturn !== undefined
-                    ? `${styles.summaryValue} ${yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative}`
-                    : styles.summaryValue}>
-                    {firstItem.label === "Account PnL" && yearBeginAnnualizedReturn !== undefined
-                      ? formatPercent(yearBeginAnnualizedReturn)
-                      : ""}
-                  </td>
-                </tr>
-                  {firstItem.label === "Account PnL" && (
-                  <tr className={styles.summaryRow}>
-                    <td className={styles.summaryLabel}>Max/Min</td>
-                    <td className={styles.summaryValue}>
-                      {maxValue !== undefined && maxValue > 0 && applyMask
-                        ? applyMask(formatCurrencyValue(maxValue))
-                        : ""}
-                    </td>
-                    <td className={styles.summaryValue}>
-                      {minValue !== undefined && minValue > 0 && applyMask
-                        ? applyMask(formatCurrencyValue(minValue))
-                        : ""}
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            );
-          })()}
+          {/* Row 1: Balance Bef. (label) | Balance Bef. value (col2) | Acct Min (label) | Acct Min value (col4) | Utilization (label) | Utilization value (col6) */}
           <tr className={styles.summaryRow}>
-            <td className={styles.summaryLabel}>Drawdown</td>
-            <td className={`${styles.summaryValue} ${currentDrawdown !== undefined && currentDrawdown < 0 ? styles.negative : ""}`}>
-              {currentDrawdown !== undefined && applyMask
-                ? applyMask(formatPercent(currentDrawdown))
+            <td className={styles.summaryLabel}>Balance Bef.</td>
+            <td className={styles.summaryValue}>
+              {yearBeginBalanceSgd !== undefined && yearBeginBalanceSgd > 0 && applyMask
+                ? applyMask(formatCurrencyValueFromSgdBase(yearBeginBalanceSgd))
                 : ""}
             </td>
+            <td className={styles.summaryLabel}>Acct Min</td>
+            <td className={styles.summaryValue}>
+              {minValue !== undefined && minValue > 0 && applyMask
+                ? applyMask(formatCurrencyValue(minValue))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>Utilization</td>
+            <td className={styles.summaryValue}>
+              {utilization !== undefined && applyMask
+                ? applyMask(formatPercent(utilization * 100))
+                : ""}
+            </td>
+          </tr>
+          
+          {/* Row 2: Balance Aft. (label) | Balance Aft. value (col2) | Acct Max (label) | Acct Max value (col4) | Total Theta (label) | Total Theta value (col6) */}
+          <tr className={styles.summaryRow}>
+            <td className={styles.summaryLabel}>Balance Aft.</td>
+            <td className={styles.summaryValue}>
+              {currentBalanceUsd !== undefined && applyMask
+                ? applyMask(formatCurrencyValue(currentBalanceUsd))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>Acct Max</td>
+            <td className={styles.summaryValue}>
+              {maxValue !== undefined && maxValue > 0 && applyMask
+                ? applyMask(formatCurrencyValue(maxValue))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>Total Theta</td>
+            <td className={styles.summaryValue}>
+              {totalTheta !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(totalTheta))
+                : ""}
+            </td>
+          </tr>
+          
+          {/* Row 3: uProfit (label) | uProfit value (col2) | Drawdown (label) | Drawdown value (col4) | Acct Age (label) | Acct Age value (col6) */}
+          <tr className={styles.summaryRow}>
+            <td className={`${styles.summaryLabel} ${uProfit !== undefined ? styles.positive : ""}`}>uProfit</td>
+            <td className={`${styles.summaryValue} ${uProfit !== undefined ? styles.positive : ""}`}>
+              {uProfit !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(uProfit))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>Drawdown</td>
+            <td className={`${styles.summaryValue} ${currentDrawdownAmount !== undefined && currentDrawdownAmount < 0 ? styles.negative : ""}`}>
+              {currentDrawdownAmount !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(currentDrawdownAmount))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>Acct Age</td>
+            <td className={styles.summaryValue}>
+              {accountAge !== undefined ? `${accountAge}d` : ""}
+            </td>
+          </tr>
+          
+          {/* Row 4: uLoss (label) | uLoss value (col2) | Drawdown % (label) | Drawdown % value (col4) | (empty) | (empty) */}
+          <tr className={styles.summaryRow}>
+            <td className={`${styles.summaryLabel} ${uLoss !== undefined ? styles.negative : ""}`}>uLoss</td>
+            <td className={`${styles.summaryValue} ${uLoss !== undefined ? styles.negative : ""}`}>
+              {uLoss !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(uLoss))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>Drawdown %</td>
+            <td className={`${styles.summaryValue} ${currentDrawdownPercent !== undefined && currentDrawdownPercent < 0 ? styles.negative : ""}`}>
+              {currentDrawdownPercent !== undefined && applyMask
+                ? applyMask(formatPercent(currentDrawdownPercent))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}></td>
+            <td className={styles.summaryValue}></td>
+          </tr>
+          
+          {/* Row 5: Net uPnl (label) | Net uPnl value (col2) | MDD (label) | MDD value (col4) | (empty) | (empty) */}
+          <tr className={styles.summaryRow}>
+            <td className={styles.summaryLabel}>Net uPnl</td>
+            <td className={`${styles.summaryValue} ${unrealisedPnL !== undefined 
+              ? (unrealisedPnL >= 0 ? styles.positive : styles.negative)
+              : ""}`}>
+              {unrealisedPnL !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(unrealisedPnL))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>MDD</td>
+            <td className={`${styles.summaryValue} ${maxDrawdownAmount !== undefined && maxDrawdownAmount < 0 ? styles.negative : ""}`}>
+              {maxDrawdownAmount !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(maxDrawdownAmount))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}></td>
+            <td className={styles.summaryValue}></td>
+          </tr>
+          
+          {/* Row 6: uPnl % (label) | uPnl % value (col2) | MDD % (label) | MDD % value (col4) | (empty) | (empty) */}
+          <tr className={styles.summaryRow}>
+            <td className={styles.summaryLabel}>uPnl %</td>
+            <td className={`${styles.summaryValue} ${uPnlPercent !== undefined 
+              ? (uPnlPercent >= 0 ? styles.positive : styles.negative)
+              : ""}`}>
+              {uPnlPercent !== undefined && applyMask
+                ? applyMask(formatPercent(uPnlPercent))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>MDD %</td>
             <td className={`${styles.summaryValue} ${maxDrawdown !== undefined && maxDrawdown < 0 ? styles.negative : ""}`}>
               {maxDrawdown !== undefined && applyMask
                 ? applyMask(formatPercent(maxDrawdown))
                 : ""}
             </td>
+            <td className={styles.summaryLabel}></td>
+            <td className={styles.summaryValue}></td>
           </tr>
-          {items
-            .slice(1)
-            .map((item) => {
-              const className =
-                item.isUpnl && typeof item.numericValue === "number"
-                  ? `${styles.summaryValue} ${item.numericValue >= 0 ? styles.positive : styles.negative}`
-                  : styles.summaryValue;
-              const percentClass =
-                typeof item.percentValue === "number"
-                  ? `${styles.summaryPercent} ${item.percentValue >= 0 ? styles.positive : styles.negative}`
-                  : styles.summaryPercent;
-              
-              // Special handling for Utilization - put value in third column
-              if (item.label === "Utilization") {
-                return (
-                  <tr key={item.label} className={styles.summaryRow}>
-                    <td className={styles.summaryLabel}>{item.label}</td>
-                    <td className={styles.summaryValue}></td>
-                    <td className={styles.summaryValue}>{item.display}</td>
-                  </tr>
-                );
-              }
-              
-              return (
-                <React.Fragment key={item.label}>
-                  <tr className={styles.summaryRow}>
-                    <td className={styles.summaryLabel}>{item.label === "Account PnL" ? "Account PnL %" : item.label}</td>
-                    <td className={item.label === "Account PnL" 
-                      ? (yearBeginPnLPercent !== undefined
-                        ? `${styles.summaryPercent} ${styles.summaryPercentNarrow} ${yearBeginPnLPercent >= 0 ? styles.positive : styles.negative}`
-                        : `${styles.summaryPercent} ${styles.summaryPercentNarrow}`)
-                      : className}>
-                      {item.label === "Account PnL" 
-                        ? (yearBeginPnLPercent !== undefined
-                          ? formatPercent(yearBeginPnLPercent)
-                          : "")
-                        : item.display}
-                    </td>
-                    <td className={item.label === "Account PnL"
-                      ? `${percentClass} ${styles.summaryPercentNarrow}`
-                      : percentClass}>
-                    </td>
-                  </tr>
-                  {item.label === "Account PnL" && (
-                    <tr className={styles.summaryRow}>
-                      <td className={styles.summaryLabel}>Max/Min</td>
-                      <td className={styles.summaryValue}>
-                        {maxValue !== undefined && maxValue > 0 && applyMask
-                          ? applyMask(formatCurrencyValue(maxValue))
-                          : ""}
-                      </td>
-                      <td className={styles.summaryValue}>
-                        {minValue !== undefined && minValue > 0 && applyMask
-                          ? applyMask(formatCurrencyValue(minValue))
-                          : ""}
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              );
-            })}
+          
+          {/* Row 7: YTM % (label) | YTM % value (col2) | rPNL (label) | rPNL value (col4) | (empty) | (empty) */}
+          <tr className={styles.summaryRow}>
+            <td className={styles.summaryLabel}>YTM %</td>
+            <td className={`${styles.summaryValue} ${yearBeginAnnualizedReturn !== undefined 
+              ? (yearBeginAnnualizedReturn >= 0 ? styles.positive : styles.negative)
+              : ""}`}>
+              {yearBeginAnnualizedReturn !== undefined && applyMask
+                ? applyMask(formatPercent(yearBeginAnnualizedReturn))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}>rPNL</td>
+            <td className={`${styles.summaryValue} ${realisedPnL !== undefined 
+              ? (realisedPnL >= 0 ? styles.positive : styles.negative)
+              : ""}`}>
+              {realisedPnL !== undefined && applyMask
+                ? applyMask(formatCurrencyValueNoPrefix(realisedPnL))
+                : ""}
+            </td>
+            <td className={styles.summaryLabel}></td>
+            <td className={styles.summaryValue}></td>
+          </tr>
         </tbody>
       </table>
     </div>

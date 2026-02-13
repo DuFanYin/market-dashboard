@@ -11,10 +11,12 @@
   "dependencies": {
     "@nivo/core": "^0.99.0",
     "@nivo/sankey": "^0.99.0",
+    "@types/pg": "^8.16.0",
     "@vercel/blob": "^0.26.0",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
     "next": "^16.1.0",
+    "pg": "^8.18.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },

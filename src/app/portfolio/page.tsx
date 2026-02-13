@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { CurrencyMode } from "@/lib/format";
 import { usePortfolioCalculations, useMarketData, usePortfolioData } from "@/hooks";
 import { SummaryTable } from "@/components/portfolio/SummaryTable";
-import { PortfolioChart } from "@/components/portfolio/PortfolioChart";
 import { LegendTable } from "@/components/portfolio/LegendTable";
 import { PositionsTable } from "@/components/portfolio/PositionsTable";
 import { MarketStatusBanner } from "@/components/shared/MarketStatusBanner";
@@ -100,23 +99,20 @@ export default function PortfolioPage() {
 
         <div className={styles.summarySection}>
           <SummaryTable 
-            items={summaryItems} 
-            originalAmountUsd={data.original_amount_usd}
             currentBalanceUsd={data.net_liquidation}
             yearBeginBalanceSgd={data.principal}
             assetBreakdown={assetBreakdown}
             maxValue={data.max_value_USD}
             minValue={data.min_value_USD}
             maxDrawdownPercent={data.max_drawdown_percent}
+            totalTheta={data.total_theta}
+            utilization={data.utilization}
             usdSgdRate={data.usd_sgd_rate}
             usdCnyRate={data.usd_cny_rate}
             currencyMode={currencyMode}
             applyMask={applyMask}
             onToggleIncognito={() => setIsIncognito(!isIncognito)}
           />
-          <div className={styles.chartSection}>
-            <PortfolioChart assetAllocation={assetAllocation} />
-          </div>
           <LegendTable 
             assetAllocation={assetAllocation} 
             assetBreakdown={assetBreakdown} 

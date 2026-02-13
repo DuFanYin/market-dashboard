@@ -7,7 +7,7 @@ import { HamburgerNav } from "@/components/shared/HamburgerNav";
 import { formatPortfolioExport } from "@/lib/portfolioExport";
 import styles from "./page.module.css";
 
-type TabId = "summary" | "json" | "jsonl";
+type TabId = "summary" | "json" | "history";
 
 export default function DataPage() {
   const router = useRouter();
@@ -22,9 +22,9 @@ export default function DataPage() {
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [isSavingJson, setIsSavingJson] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [jsonlContent, setJsonlContent] = useState("");
-  const [isJsonlLoading, setIsJsonlLoading] = useState(false);
-  const [jsonlError, setJsonlError] = useState<string | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<Array<Record<string, unknown>>>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const loadJson = useCallback(async () => {
     try {
@@ -41,18 +41,24 @@ export default function DataPage() {
     }
   }, []);
 
-  const loadJsonl = useCallback(async () => {
+  const loadHistory = useCallback(async () => {
     try {
-      setIsJsonlLoading(true);
-      setJsonlError(null);
+      setIsHistoryLoading(true);
+      setHistoryError(null);
       const res = await fetch("/api/history", { cache: "no-store" });
-      if (!res.ok) throw new Error(`Failed to load (${res.status})`);
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => ({}))) as { error?: string; details?: string };
+        const errorMsg = errorData.details || errorData.error || `HTTP ${res.status}`;
+        throw new Error(`Failed to load history: ${errorMsg}`);
+      }
       const entries = (await res.json()) as Array<Record<string, unknown>>;
-      setJsonlContent(entries.map((e) => JSON.stringify(e)).join("\n") + (entries.length ? "\n" : ""));
-    } catch {
-      setJsonlError("Failed to load history.");
+      setHistoryEntries(entries);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to load history.";
+      console.error("[DataPage] Failed to load history:", errorMsg);
+      setHistoryError(errorMsg);
     } finally {
-      setIsJsonlLoading(false);
+      setIsHistoryLoading(false);
     }
   }, []);
 
@@ -61,8 +67,8 @@ export default function DataPage() {
   }, [activeTab, jsonContent, isJsonLoading, jsonError, loadJson]);
 
   useEffect(() => {
-    if (activeTab === "jsonl") void loadJsonl();
-  }, [activeTab, loadJsonl]);
+    if (activeTab === "history") void loadHistory();
+  }, [activeTab, loadHistory]);
 
   const handleSaveJson = async () => {
     if (!jsonContent.trim()) {
@@ -115,8 +121,9 @@ export default function DataPage() {
     }
   };
 
-  const handleCopyJsonl = async () => {
+  const handleCopyHistory = async () => {
     try {
+      const jsonlContent = historyEntries.map((e) => JSON.stringify(e)).join("\n") + (historyEntries.length ? "\n" : "");
       await navigator.clipboard.writeText(jsonlContent);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 1000);
@@ -163,10 +170,10 @@ export default function DataPage() {
           </button>
           <button
             type="button"
-            className={`${styles.tab} ${activeTab === "jsonl" ? styles.tabActive : ""}`}
-            onClick={() => setActiveTab("jsonl")}
+            className={`${styles.tab} ${activeTab === "history" ? styles.tabActive : ""}`}
+            onClick={() => setActiveTab("history")}
           >
-            JSONL
+            History
           </button>
         </div>
 
@@ -201,14 +208,98 @@ export default function DataPage() {
               {jsonError && <div className={styles.errorText}>{jsonError}</div>}
             </div>
           )}
-          {activeTab === "jsonl" && (
+          {activeTab === "history" && (
             <>
-              {isJsonlLoading && <div className={styles.statusText}>Loading history...</div>}
-              {!isJsonlLoading && jsonlError && <div className={styles.errorText}>{jsonlError}</div>}
-              {!isJsonlLoading && !jsonlError && (
+              {isHistoryLoading && <div className={styles.statusText}>Loading history...</div>}
+              {!isHistoryLoading && historyError && <div className={styles.errorText}>{historyError}</div>}
+              {!isHistoryLoading && !historyError && (
                 <>
-                  {!jsonlContent && <div className={styles.statusText}>No history data.</div>}
-                  {jsonlContent && <pre className={styles.preText}>{jsonlContent}</pre>}
+                  {historyEntries.length === 0 && <div className={styles.statusText}>No history data.</div>}
+                  {historyEntries.length > 0 && (
+                    <div className={styles.tableContainer}>
+                      <table className={styles.historyTable}>
+                        <thead>
+                          <tr>
+                            <th>Date/Time</th>
+                            <th>Net Liquidation</th>
+                            <th>Principal (SGD)</th>
+                            <th>USD/SGD Rate</th>
+                            <th>Stock MV</th>
+                            <th>Option MV</th>
+                            <th>Crypto MV</th>
+                            <th>ETF MV</th>
+                            <th>Cash</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {historyEntries.map((entry, idx) => (
+                            <tr key={idx}>
+                              <td>{String(entry.datetime || "")}</td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.net_liquidation === "number"
+                                  ? entry.net_liquidation.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.principal_sgd === "number"
+                                  ? entry.principal_sgd.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.usd_sgd_rate === "number" ? entry.usd_sgd_rate.toFixed(4) : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.total_stock_mv === "number"
+                                  ? entry.total_stock_mv.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.total_option_mv === "number"
+                                  ? entry.total_option_mv.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.total_crypto_mv === "number"
+                                  ? entry.total_crypto_mv.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.total_etf_mv === "number"
+                                  ? entry.total_etf_mv.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                              <td className={styles.numberCell}>
+                                {typeof entry.cash === "number"
+                                  ? entry.cash.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                  : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </>
               )}
             </>
@@ -236,14 +327,14 @@ export default function DataPage() {
               {isSavingJson ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
             </button>
           )}
-          {activeTab === "jsonl" && (
+          {activeTab === "history" && (
             <button
               type="button"
               className={`${styles.btn} ${copySuccess ? styles.btnSuccess : ""}`}
-              onClick={handleCopyJsonl}
-              disabled={!jsonlContent}
+              onClick={handleCopyHistory}
+              disabled={historyEntries.length === 0}
             >
-              {copySuccess ? "Copied!" : "Copy to Clipboard"}
+              {copySuccess ? "Copied!" : "Copy JSONL to Clipboard"}
             </button>
           )}
         </div>

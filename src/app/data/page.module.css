@@ -169,3 +169,56 @@
   justify-content: center;
   min-height: 200px;
 }
+
+/* History table */
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  color: #ffffff;
+  background-color: #000000;
+}
+
+.historyTable thead {
+  position: sticky;
+  top: 0;
+  background-color: #1a1a1a;
+  z-index: 10;
+}
+
+.historyTable th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #ffffff;
+  border-bottom: 2px solid #333333;
+  white-space: nowrap;
+  background-color: #1a1a1a;
+}
+
+.historyTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #222222;
+  color: #cccccc;
+}
+
+.historyTable tbody tr:hover {
+  background-color: #1a1a1a;
+}
+
+.historyTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.numberCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}

@@ -12,9 +12,14 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("[history API] Failed to read history:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[history API] Failed to read history:", errorMessage);
+    console.error("[history API] Full error:", error);
     return NextResponse.json(
-      { error: "Failed to read history data" },
+      { 
+        error: "Failed to read history data",
+        details: errorMessage,
+      },
       { status: 500 }
     );
   }
