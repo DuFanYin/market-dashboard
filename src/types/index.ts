@@ -133,10 +133,13 @@ export type PortfolioData = {
   principal_sgd: number;
   principal_usd: number;
   ibkr_principal_usd: number;
+  cash_principal_usd: number;
+  crypto_principal_usd: number;
   original_amount_sgd_raw: number;
   max_value_USD?: number;
   min_value_USD?: number;
   max_drawdown_percent?: number;
+  crypto_cash_usd: number;
 };
 
 // Summary item for display

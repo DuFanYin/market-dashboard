@@ -9,7 +9,8 @@ import { put, head } from "@vercel/blob";
 import { BlobNotFoundError } from "@vercel/blob";
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import type { PortfolioYaml } from "@/types";
+import type { PortfolioYaml, PortfolioData } from "@/types";
+import { computeUpdatedAccountInfoWithMdd } from "@/lib/accountStats";
 import { isUsMarketOpen } from "@/lib/market";
 
 // Constants
@@ -69,6 +70,7 @@ export type AccountData = PortfolioYaml & {
   BTC_account?: {
     amount?: number;
     cost_sgd?: number;
+    cash_balance_SGD?: number;
   };
 };
 
@@ -505,4 +507,30 @@ export async function appendHistoryIfNewMinute(portfolioData: {
   }
   const entry = createHistoryEntry(portfolioData);
   return appendHistory(entry);
+}
+
+/**
+ * Update account_info max/min/MDD in portfolio based on latest portfolio response,
+ * persist to storage, and reflect updated values back into response.
+ *
+ * 纯持久化逻辑，供 API route 调用。
+ */
+export async function updateAccountInfoWithMdd(
+  portfolio: AccountData,
+  response: PortfolioData
+): Promise<{ portfolio: AccountData; response: PortfolioData }> {
+  const result = computeUpdatedAccountInfoWithMdd(portfolio, response);
+  if (!result) {
+    return { portfolio, response };
+  }
+
+  const updatedPortfolio: AccountData = {
+    ...portfolio,
+    account_info: result.accountInfo,
+    timestamp: new Date().toISOString(),
+  };
+
+  await savePortfolioJson(updatedPortfolio);
+
+  return { portfolio: updatedPortfolio, response: result.response };
 }

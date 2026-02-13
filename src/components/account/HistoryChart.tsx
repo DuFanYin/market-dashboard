@@ -166,9 +166,9 @@ export function HistoryChart({ resetTrigger, formatValue }: HistoryChartProps) {
     const allPnl = validHistory.map((h) => h.account_pnl_percent);
     const pnlPctMin = Math.min(...allPnl);
     const pnlPctMax = Math.max(...allPnl);
-    // Make symmetric around 0 so the 0 line is centered
-    // Use minimal padding (1.05) to avoid extending beyond data points
-    const pnlAbsMax = Math.max(Math.abs(pnlPctMin), Math.abs(pnlPctMax), 0.1) * 1.05;
+    // Symmetric around 0, but expand to 3x max excursion for better headroom
+    const baseAbsMax = Math.max(Math.abs(pnlPctMin), Math.abs(pnlPctMax), 0.1);
+    const pnlAbsMax = baseAbsMax * 2;
 
     return {
       backgroundColor: "transparent",
@@ -229,6 +229,7 @@ export function HistoryChart({ resetTrigger, formatValue }: HistoryChartProps) {
           min: timestamps[0],
           max: timestamps[timestamps.length - 1],
           axisLine: { show: false },
+          axisTick: { show: false },
           axisLabel: {
             color: "#666",
             fontSize: 10,
@@ -306,9 +307,10 @@ export function HistoryChart({ resetTrigger, formatValue }: HistoryChartProps) {
             silent: true,
             symbol: "none",
             lineStyle: {
-              color: "#666",
-              width: 2,
-              type: "solid",
+              color: "#aaaaaa",
+              width: 1,
+              type: "dashed",
+              opacity: 0.6,
             },
             label: {
               show: false,

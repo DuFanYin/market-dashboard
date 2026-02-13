@@ -69,8 +69,10 @@ export function CostValuePieChart({ assetBreakdown, formatValue }: CostValuePieC
     return {
       tooltip: {
         trigger: "item",
-        formatter: (params: { name: string; value: number }) =>
-          `${params.name}: ${fmt(params.value)}`,
+        formatter: (params: { name: string; value: number; percent?: number }) => {
+          const percentStr = params.percent !== undefined ? ` (${params.percent.toFixed(2)}%)` : "";
+          return `${params.name}: ${fmt(params.value)}${percentStr}`;
+        },
       },
       series: [
         {
