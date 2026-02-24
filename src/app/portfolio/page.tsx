@@ -102,6 +102,7 @@ export default function PortfolioPage() {
             currentBalanceUsd={data.net_liquidation}
             yearBeginBalanceSgd={data.principal}
             assetBreakdown={assetBreakdown}
+            positions={data.positions}
             maxValue={data.max_value_USD}
             minValue={data.min_value_USD}
             maxDrawdownPercent={data.max_drawdown_percent}

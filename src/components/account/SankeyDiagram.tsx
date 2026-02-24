@@ -109,15 +109,15 @@ export function SankeyDiagram({
   formatValue,
 }: SankeyDiagramProps) {
   const fmt = useCallback((v: number) => (formatValue ? formatValue(v) : `$${formatMoney(v)}`), [formatValue]);
-  const { nodes, links, displayGains, displayLosses } = useMemo(() => {
+  const { nodes, links, totalGains, totalLosses } = useMemo(() => {
     // ========== 使用集中计算模块 ==========
     const stats = calculateAccountStats(portfolioData, assetBreakdown, assetAllocation);
     
     if (stats.totalMarketValue <= 0) {
-      return { nodes: [], links: [], displayGains: 0, displayLosses: 0 };
+      return { nodes: [], links: [], totalGains: 0, totalLosses: 0 };
     }
 
-    // 解构所需数据
+    // 解构所需数据 (positionGains/Losses = per-position upnl aggregation, not asset-class net)
     const {
       positions,
       totalCashInput,
@@ -127,8 +127,6 @@ export function SankeyDiagram({
       cryptoCashUsd,
       positionGains: totalGains,
       positionLosses: totalLosses,
-      displayGains,
-      displayLosses,
       visibleAssets,
       accountData,
       principalAccountData,
@@ -262,21 +260,22 @@ export function SankeyDiagram({
         lineStyle: { color: linkColor, opacity: 0.5 },
       });
     });
-    // 实现盈亏与 IBKR 的关系：
-    // - 盈利：rProfit → IBKR（绿色增强 IBKR 流入）
-    // - 亏损：IBKR → rLoss（红色从 IBKR 流出）
-    const hasIbkrAccount = accountData.some(a => a.name === "IBKR");
-    if (hasIbkrAccount && Math.abs(totalRealizedPnL) > 0.01) {
+    // 实现盈亏的连接：
+    // - 默认连到 IBKR（符合历史设计）
+    // - 如果 IBKR 节点被过滤掉（IBKR 市值为 0），则连到 Account，避免 rProfit/rLoss 变成“孤点”而不渲染
+    const hasIbkrAccount = accountData.some((a) => a.name === "IBKR");
+    const realizedAnchor = hasIbkrAccount ? "IBKR" : "Account";
+    if (Math.abs(totalRealizedPnL) > 0.01) {
       if (totalRealizedPnL > 0) {
         links.push({
           source: "rProfit",
-          target: "IBKR",
+          target: realizedAnchor,
           value: totalRealizedPnL,
           lineStyle: { color: SANKEY_COLORS.rpnl, opacity: 0.7 },
         });
       } else {
         links.push({
-          source: "IBKR",
+          source: realizedAnchor,
           target: "rLoss",
           value: Math.abs(totalRealizedPnL),
           lineStyle: { color: SANKEY_COLORS.uloss, opacity: 0.7 },
@@ -411,7 +410,7 @@ export function SankeyDiagram({
       });
     }
     
-    return { nodes, links, displayGains, displayLosses };
+    return { nodes, links, totalGains, totalLosses };
   }, [assetAllocation, assetBreakdown, portfolioData]);
 
   // Calculate node values and source totals for tooltip
@@ -427,11 +426,11 @@ export function SankeyDiagram({
     nodes.forEach(node => {
       nodeValues[node.name] = Math.max(outgoing[node.name] || 0, incoming[node.name] || 0);
     });
-    // Override uProfit and uLoss with assetBreakdown-based values (consistent with SummaryTable)
-    if (displayGains && displayGains > 0) nodeValues["uProfit"] = displayGains;
-    if (displayLosses && displayLosses > 0) nodeValues["uLoss"] = displayLosses;
+    // Override uProfit and uLoss with position-level gains/losses (consistent with SummaryTable and link values)
+    if (totalGains > 0.01) nodeValues["uProfit"] = totalGains;
+    if (totalLosses > 0.01) nodeValues["uLoss"] = totalLosses;
     return { nodeValues, sourceNodeTotals: outgoing };
-  }, [links, nodes, displayGains, displayLosses]);
+  }, [links, nodes, totalGains, totalLosses]);
 
   const option = useMemo(() => ({
     tooltip: {

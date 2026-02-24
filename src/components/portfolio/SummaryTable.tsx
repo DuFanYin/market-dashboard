@@ -1,11 +1,12 @@
 import React from "react";
+import type { Position } from "@/types";
 import { formatPercent } from "@/lib/format";
 import { formatCurrency, formatCurrencyNoPrefix, formatCurrencyFromSgdBase, type CurrencyMode } from "@/lib/format";
 import {
   calculateAccountPnL,
   calculateAnnualizedReturn,
   calculateTotalUnrealizedPnL,
-  calculateAssetBreakdownPnL,
+  calculatePositionLevelPnL,
   type AssetBreakdown,
 } from "@/lib/accountStats";
 import styles from "@/app/portfolio/page.module.css";
@@ -14,6 +15,7 @@ interface SummaryTableProps {
   currentBalanceUsd?: number;
   yearBeginBalanceSgd?: number;
   assetBreakdown?: AssetBreakdown;
+  positions?: Position[];
   maxValue?: number;
   minValue?: number;
   maxDrawdownPercent?: number;
@@ -26,7 +28,7 @@ interface SummaryTableProps {
   onToggleIncognito?: () => void;
 }
 
-export function SummaryTable({ currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, maxValue, minValue, maxDrawdownPercent, totalTheta, utilization, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
+export function SummaryTable({ currentBalanceUsd, yearBeginBalanceSgd, assetBreakdown, positions, maxValue, minValue, maxDrawdownPercent, totalTheta, utilization, usdSgdRate, usdCnyRate, currencyMode, applyMask, onToggleIncognito }: SummaryTableProps) {
   // 计算从当年年初到现在的自然日差（包含周末、假期），用于年化收益计算
   const today = new Date();
   const yearBeginDate = new Date(today.getFullYear(), 0, 1); // 当年 1 月 1 日
@@ -73,9 +75,9 @@ export function SummaryTable({ currentBalanceUsd, yearBeginBalanceSgd, assetBrea
     ? maxValue * (maxDrawdownPercent / 100)
     : undefined;
   
-  // Calculate unrealised PnL positive and negative parts separately from asset breakdown
-  const { gains, losses } = assetBreakdown 
-    ? calculateAssetBreakdownPnL(assetBreakdown)
+  // Calculate unrealised PnL positive and negative parts from each position (not netted by asset class)
+  const { gains, losses } = positions && positions.length > 0
+    ? calculatePositionLevelPnL(positions)
     : { gains: 0, losses: 0 };
   const uProfit = gains > 0 ? gains : undefined;
   const uLoss = losses > 0 ? -losses : undefined; // Keep as negative value for display

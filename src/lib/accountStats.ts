@@ -1021,8 +1021,10 @@ export function calculateAccountStats(
   const totalAccountPnL = totalMarketValue - principal;
   // 未实现盈亏直接复用 PortfolioData 中的聚合结果，避免再次遍历 positions
   const totalUnrealisedPnL = portfolioData.total_upnl;
-  // Realized PnL 与原实现保持一致：只统计“实现盈利”的部分，用于 Sankey 流向
-  const totalRealizedPnL = Math.max(0, totalAccountPnL - totalUnrealisedPnL);
+  // Realized PnL (signed): accountPnL - unrealizedPnL
+  // Positive => realized profit (rProfit), Negative => realized loss (rLoss)
+  // NOTE: Previously this was clamped to >= 0, which prevented rLoss from ever rendering.
+  const totalRealizedPnL = totalAccountPnL - totalUnrealisedPnL;
   const hasProfit = totalRealizedPnL > 0.01;
   
   // 账户数据 (当前值)
