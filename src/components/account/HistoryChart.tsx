@@ -175,9 +175,9 @@ export function HistoryChart({ resetTrigger, formatValue }: HistoryChartProps) {
     const allPnl = validHistory.map((h) => h.account_pnl_percent);
     const pnlPctMin = Math.min(...allPnl);
     const pnlPctMax = Math.max(...allPnl);
-    // Symmetric around 0, but expand to 3x max excursion for better headroom
+    // Symmetric around 0; add a small buffer so lines don't touch the top/bottom
     const baseAbsMax = Math.max(Math.abs(pnlPctMin), Math.abs(pnlPctMax), 0.1);
-    const pnlAbsMax = baseAbsMax * 2;
+    const pnlAbsMax = baseAbsMax * 1.1;
 
     return {
       backgroundColor: "transparent",
